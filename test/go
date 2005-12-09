@@ -1,0 +1,4 @@
+cd ..
+export PYTHONPATH=../../tappy:${PYTHONPATH}
+PY=/usr/bin/env python
+${PY} ./tappy/tappy.py -d

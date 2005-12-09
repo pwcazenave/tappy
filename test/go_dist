@@ -1,0 +1,6 @@
+#!/bin/sh
+cd ..
+cd doc
+./go
+cd ..
+python ./setup.py sdist

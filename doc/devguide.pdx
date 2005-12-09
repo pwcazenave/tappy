@@ -1,0 +1,13 @@
+=include default_cfg.pdx
+=cfg
+title=tappy Developer's Guide
+toc_p=1
+=end cfg
+=include article_style.pdx
+
+=head1 Overview
+
+=head1 Architecture
+
+=head1 Edit Cycle
+

@@ -1,0 +1,12 @@
+#INSTALL
+
+This is a standard distutils install, e.g.:
+
+   mkdir workdir
+   mv xyz-0.1.tar.gz workdir
+   cd workdir
+   gzip -cd xyz-0.1.tar.gz | tar xvf -
+   cd xyz-0.1
+   python setup.py build
+   python setup.py install   (possibly as root)
+

@@ -1,0 +1,135 @@
+#===article_style.pdx===
+#=========================
+# Html
+#=========================
+=cfg
+top_left==&nbsp;
+top_center=<P ALIGN=CENTER>@banner@</P>
+top_center+=<P ALIGN=CENTER><FONT SIZE=6>@title@</FONT></P>
+top_center+=<P ALIGN=CENTER>@menu@</P>
+top_right==&nbsp;
+bot_left==&nbsp;
+bot_center=<HR>
+bot_center+=Creator: L<"mailto:@author_email@","@author@">
+bot_center+=<BR>Updated/Created: @date@
+bot_right==&nbsp;
+left_width==100
+right_width==100
+center_width==600
+all_width==800
+=end cfg
+=preamble_begin_for html
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+
+<HEAD>
+<TITLE>@title@</TITLE>
+<META NAME="title" CONTENT="@title@">
+<META NAME="subject" CONTENT="@subject@">
+<META NAME="description" CONTENT="@desc@">
+<META NAME="creator" CONTENT="@author@">
+<META NAME="owner" CONTENT="@owner@">
+<META NAME="date" CONTENT="@date@">
+<META NAME="validuntil" CONTENT="@validuntil@">
+<META NAME="robots" CONTENT="@robots@">
+=end premable__begin_for html
+#
+=preamble_end_for html
+</HEAD>
+@body@
+<TABLE WIDTH=@all_width@>
+<TR>
+<TD VALIGN="TOP" WIDTH=@left_width@>@top_left@</TD>
+<TD VALIGN="TOP" WIDTH=@center_width@>@top_center@</TD>
+<TD VALIGN="TOP" WIDTH=@right_width@>@top_right@</TD>
+</TR>
+<TR>
+<TD VALIGN="TOP" WIDTH=@left_width@>@left_margin@</TD>
+<TD VALIGN="TOP" WIDTH=@center_width@>
+=end premable_end_for html
+#
+=postamble_for html
+</TD>
+<TD VALIGN="TOP" WIDTH=@right_width@>@right_margin@</TD>
+</TR>
+<TR>
+<TD VALIGN="TOP" WIDTH=@left_width@>@bot_left@</TD>
+<TD VALIGN="TOP" WIDTH=@center_width@>@bot_center@</TD>
+<TD VALIGN="TOP" WIDTH=@right_width@>@bot_right@</TD>
+</TR>
+</TABLE>
+</BODY>
+</HTML>
+=end postamble_for html
+#===================
+# Latex
+#===================
+=def docclass=article
+#
+=preamble_begin_for latex
+\documentclass[11pt,fleqn]{@docclass@}
+\usepackage{makeidx,verbatim,graphicx,fancyhdr,longtable,rotating}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1.5ex}
+\setlength{\mathindent}{5ex}
+\setlength{	opmargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+%%%\setlength{	extheight}{8.5in}
+\setlength{	extwidth}{6.5in}
+%%%\setlength{ootskip}{0in}
+
+\pagestyle{fancy}
+\lhead{@author@}
+\chead{@title@}
+head{}
+\lfoot{}
+\cfoot{	oday}
+foot{Page 	hepage}
+enewcommand{\headrulewidth}{0pt}
+enewcommand{ootrulewidth}{0.4pt}
+
+\makeindex 
+=end preamble_begin_for latex
+#
+=preamble_end_for latex
+egin{document}
+	itle{@title@}
+uthor{@author@ \ @author_email@}
+\maketitle
+=end preamble_end_for latex
+#
+=postamble_for latex
+\end{document}
+=end postamble_for latex
+#===================
+# Docbook
+#===================
+=def docclass=article
+#
+=preamble_begin_for docbook
+<!DOCTYPE CHAPTER PUBLIC "-//OASIS//DTD DocBook V3.1//EN"
+>
+<CHAPTER LABEL="1">
+<TITLE>@title@</TITLE>
+<!--
+<SUBJECT>
+<SUBJECTTERM>@subject@</SUBJECTTERM>
+</SUBJECT
+[<!ENTITY index SYSTEM "i32.sgml">]
+<META NAME="title" CONTENT="@title@">
+<META NAME="subject" CONTENT="@subject">
+<META NAME="description" CONTENT="@desc@">
+<META NAME="creator" CONTENT="@author@">
+<META NAME="owner" CONTENT="@owner@">
+<META NAME="date" CONTENT="@date@">
+<META NAME="validuntil" CONTENT="@validuntil@">
+<META NAME="robots" CONTENT="@robots@">
+-->
+=end preamble_begin_for docbook
+#
+=preamble_end_for docbook
+=end preamble_end_for docbook
+#
+=postamble_for docbook
+</CHAPTER>
+=end postamble_for docbook

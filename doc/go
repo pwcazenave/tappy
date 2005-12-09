@@ -1,0 +1,9 @@
+../tappy.py -h > tappy.help
+cp ../AUTHORS .
+cp ../CHANGES .
+cp ../INSTALL .
+cp ../README .
+pdx2html.py index.pdx
+pdx2html.py deshist.pdx
+pdx2html.py manual.pdx
+pdx2html.py devguide.pdx

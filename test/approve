@@ -1,0 +1,1 @@
+cp testdata/test_$1.txt testdata/oracle_$1.txt

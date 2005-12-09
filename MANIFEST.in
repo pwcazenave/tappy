@@ -1,0 +1,5 @@
+include AUTHORS CHANGES COPYING INSTALL MANIFEST.in README VERSION *.py
+recursive-include tappy *
+recursive-include doc  go* *.py *.pdx *.help *.html 
+recursive-include test *
+global-exclude *~ *.pyc *.pyo
