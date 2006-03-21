@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>pyparsing.LineEnd</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css"></link>
+</head>
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+
+<!-- =========== START OF NAVBAR =========== -->
+<table class="navbar" border="0" width="100%" cellpadding="0" bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="center">
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="pyparsing-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="trees.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="indices.html">Index</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar" align="right" width="100%">
+      <table border="0" cellpadding="0" cellspacing="0">
+      <tr><th class="navbar" align="center">
+        <p class="nomargin">
+          pyparsing
+      </p></th></tr></table>
+    </th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <font size="-1"><b class="breadcrumbs">
+        <a href="pyparsing-module.html">Module&nbsp;pyparsing</a> ::
+        Class&nbsp;LineEnd
+      </b></font></br>
+    </td>
+    <td><table cellpadding="0" cellspacing="0">
+      <tr><td align="right"><font size="-2">[<a href="frames.html"target="_top">frames</a>&nbsp;|&nbsp;<a href="pyparsing.LineEnd-class.html" target="_top">no&nbsp;frames</a>]</font></td></tr>
+    </table></td>
+</tr></table>
+
+<!-- =========== START OF CLASS DESCRIPTION =========== -->
+<h2 class="class">Type LineEnd</h2>
+
+<pre class="base-tree">
+   <a href="__builtin__.object-class.html"><code>object</code></a> --+            
+            |            
+<a href="pyparsing.ParserElement-class.html"><code>ParserElement</code></a> --+        
+                |        
+            <a href="pyparsing.Token-class.html"><code>Token</code></a> --+    
+                    |    
+        <a href="pyparsing.PositionToken-class.html"><code>PositionToken</code></a> --+
+                        |
+                       <b>LineEnd</b>
+</pre><br />
+
+<hr/>
+
+Matches if current position is at the end of a line within the parse 
+string
+<hr/>
+
+
+<!-- =========== START OF METHOD SUMMARY =========== -->
+<table class="summary" border="1" cellpadding="3" cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="summary">
+  <th colspan="2">Method Summary</th></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="__init__"></a><span class="summary-sig"><span class="summary-sig-name">__init__</span>(<span class=summary-sig-arg>self</span>)</span></code>
+</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="parseImpl"></a><span class="summary-sig"><span class="summary-sig-name">parseImpl</span>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>instring</span>,
+          <span class=summary-sig-arg>loc</span>,
+          <span class=summary-sig-arg>doActions</span>)</span></code>
+</td></tr>
+  <tr><td colspan="2">
+    <b>Inherited from <a href="pyparsing.Token-class.html"><code>Token</code></a>:</b>
+      <a href="pyparsing.Token-class.html#setName"><code>setName</code></a>
+      <br />
+    <b>Inherited from <a href="pyparsing.ParserElement-class.html"><code>ParserElement</code></a>:</b>
+      <a href="pyparsing.ParserElement-class.html#__add__"><code>__add__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#__invert__"><code>__invert__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#__or__"><code>__or__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#__radd__"><code>__radd__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#__repr__"><code>__repr__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#__ror__"><code>__ror__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#__rxor__"><code>__rxor__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#__str__"><code>__str__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#__xor__"><code>__xor__</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#checkRecursion"><code>checkRecursion</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#ignore"><code>ignore</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#leaveWhitespace"><code>leaveWhitespace</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#parse"><code>parse</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#parseFile"><code>parseFile</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#parseString"><code>parseString</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#parseWithTabs"><code>parseWithTabs</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#postParse"><code>postParse</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#preParse"><code>preParse</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#scanString"><code>scanString</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#setDebug"><code>setDebug</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#setParseAction"><code>setParseAction</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#setResultsName"><code>setResultsName</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#skipIgnorables"><code>skipIgnorables</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#streamline"><code>streamline</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#suppress"><code>suppress</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#transformString"><code>transformString</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#tryParse"><code>tryParse</code></a>, 
+      <a href="pyparsing.ParserElement-class.html#validate"><code>validate</code></a>
+      <br />
+    <b>Inherited from <a href="__builtin__.object-class.html"><code>object</code></a>:</b>
+      <a href="__builtin__.object-class.html#__delattr__"><code>__delattr__</code></a>, 
+      <a href="__builtin__.object-class.html#__getattribute__"><code>__getattribute__</code></a>, 
+      <a href="__builtin__.object-class.html#__hash__"><code>__hash__</code></a>, 
+      <a href="__builtin__.object-class.html#__new__"><code>__new__</code></a>, 
+      <a href="__builtin__.object-class.html#__reduce__"><code>__reduce__</code></a>, 
+      <a href="__builtin__.object-class.html#__reduce_ex__"><code>__reduce_ex__</code></a>, 
+      <a href="__builtin__.object-class.html#__setattr__"><code>__setattr__</code></a>
+    </td></tr>
+</table><br />
+
+
+<!-- =========== START OF CLASS VARIABLE SUMMARY =========== -->
+<table class="summary" border="1" cellpadding="3" cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="summary">
+  <th colspan="2">Class Variable Summary</th></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1"><code>list</code></font></td>
+<td><b><a href="pyparsing.LineEnd-class.html#__slotnames__"><code>__slotnames__</code></a></b> = <span title="[]"><code>[]                                       </code>
+</span></td></tr>
+</table><br />
+
+
+<!-- =========== START OF CLASS VARIABLE DETAILS =========== -->
+<table class="details" border="1" cellpadding="3" cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="details">
+  <th colspan="2">Class Variable Details</th></tr>
+</table>
+<table width="100%" class="var-details" bgcolor="#e0e0e0"><tr><td>
+<a name="__slotnames__"></a>
+<h3>__slotnames__</h3>
+<dl>
+  <dt></dt>
+  <dd>
+    <dl>
+      <dt><b>Type:</b></dt>
+      <dd>
+          <code>list</code>
+
+      </dd>
+<span title="[]">      <dt><b>Value:</b></dt>
+      <dd><table><tr><td>
+<pre class="variable">
+[]                                                                     </pre>
+        </td></tr></table></dd>
+</span>    </dl>
+  </dd>
+</dl></td></tr></table>
+<br />
+
+
+<!-- =========== START OF NAVBAR =========== -->
+<table class="navbar" border="0" width="100%" cellpadding="0" bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="center">
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="pyparsing-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="trees.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="indices.html">Index</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar" align="right" width="100%">
+      <table border="0" cellpadding="0" cellspacing="0">
+      <tr><th class="navbar" align="center">
+        <p class="nomargin">
+          pyparsing
+      </p></th></tr></table>
+    </th>
+  </tr>
+</table>
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td align="left"><font size="-2">Generated by Epydoc 2.1 on Mon Sep 27 00:24:58 2004</font></td>
+    <td align="right"><a href="http://epydoc.sourceforge.net"
+                      ><font size="-2">http://epydoc.sf.net</font></a></td>
+  </tr>
+</table>
+</body>
+</html>

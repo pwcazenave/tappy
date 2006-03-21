@@ -1,0 +1,11 @@
+ChangeLog
+LICENSE.txt
+README.txt
+ez_setup.py
+setup.py
+filelike/__init__.py
+filelike/pipeline.py
+filelike/wrappers.py
+filelike.egg-info/PKG-INFO
+filelike.egg-info/SOURCES.txt
+filelike.egg-info/top_level.txt

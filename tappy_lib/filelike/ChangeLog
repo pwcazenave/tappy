@@ -1,0 +1,22 @@
+
+Version 0.2.0:
+
+  Architectural Changes:
+
+    * Moved wrapper classes into filelike.wrappers
+    * Created filelike.pipeline, which employs operator abuse to compose
+      file wrappers using a unix pipeline style
+  
+  Functional Changes:
+ 
+    * Allow _write() to return any unwritten data, which will be cached
+      for later writing.  None may be returned if all data is written.
+      Also give it a <flushing> argument to indicate when no more data
+      will be forthcoming
+    * Validate access mode before reading/writing in FileLikeBase
+    * Permit seperate reading and writing translation functions for TransFile
+    * Added the following FileWrapper subclasses:
+    			* PaddedToBlockSizeFile: ensure file's contents meet a blocksize
+    			* Head: similar to unix `head` command
+    			* Cat: similar to unix `cat` command
+    			* BZ2File: similar to that found in the std lib

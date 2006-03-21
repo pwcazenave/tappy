@@ -1,0 +1,354 @@
+==========
+Change Log
+==========
+
+Version 1.2.2 - September 27, 2004
+----------------------------------
+- Modified delimitedList to accept an expression as the delimiter, instead
+  of only accepting strings.
+  
+- Modified ParseResults, to convert integer field keys string (to avoid
+  confusion with list access).
+
+- Modified Combine, to convert all embedded tokens to strings before
+  combining.
+  
+- Fixed bug in MatchFirst in which parse actions would be called for 
+  expressions that only partially match. (Thanks, John Hunter!)
+  
+- Fixed bug in fourFn.py example that fixes right-associativity of ^ 
+  operator. (Thanks, Andrea Griffini!)
+
+- Added class FollowedBy(expression), to look ahead in the input string 
+  without consuming tokens.
+
+- Added class NoMatch that never matches any input. Can be useful in
+  debugging, and in very specialized grammars.
+  
+- Added example pgn.py, for parsing chess game files stored in Portable
+  Game Notation. (Thanks, Alberto Santini!)
+
+
+Version 1.2.1 - August 19, 2004
+-------------------------------
+- Added SkipTo(expression) token type, simplifying grammars that only
+  want to specify delimiting expressions, and want to match any characters
+  between them.
+  
+- Added helper method dictOf(key,value), making it easier to work with
+  the Dict class. (Inspired by Pavel Volkovitskiy, thanks!).
+
+- Added optional argument listAllMatches (default=False) to 
+  setResultsName().  Setting listAllMatches to True overrides the default
+  modal setting of tokens to results names; instead, the results name
+  acts as an accumulator for all matching tokens within the local 
+  repetition group. (Suggested by Amaury Le Leyzour - thanks!)
+  
+- Fixed bug in ParseResults, throwing exception when trying to extract
+  slice, or make a copy using [:]. (Thanks, Wilson Fowlie!)
+  
+- Fixed bug in transformString() when the input string contains <TAB>'s
+  (Thanks, Rick Walia!).
+  
+- Fixed bug in returning tokens from un-Grouped And's, Or's and 
+  MatchFirst's, where too many tokens would be included in the results, 
+  confounding parse actions and returned results.
+  
+- Fixed bug in naming ParseResults returned by And's, Or's, and Match
+  First's.
+
+- Fixed bug in LineEnd() - matching this token now correctly consumes
+  and returns the end of line "\n".
+  
+- Added a beautiful example for parsing Mozilla calendar files (Thanks, 
+  Petri Savolainen!).
+
+- Added support for dynamically modifying Forward expressions during
+  parsing.
+
+
+Version 1.2 - 20 June 2004
+--------------------------
+- Added definition for htmlComment to help support HTML scanning and
+  parsing.
+  
+- Fixed bug in generating XML for Dict classes, in which trailing item was
+  duplicated in the output XML.
+
+- Fixed release bug in which scanExamples.py was omitted from release
+  files.
+
+- Fixed bug in transformString() when parse actions are not defined on the
+  outermost parser element.
+
+- Added example urlExtractor.py, as another example of using scanString
+  and parse actions.
+  
+
+Version 1.2beta3 - 4 June 2004
+------------------------------
+- Added White() token type, analogous to Word, to match on whitespace
+  characters.  Use White in parsers with significant whitespace (such as 
+  configuration file parsers that use indentation to indicate grouping).  
+  Construct White with a string containing the whitespace characters to be 
+  matched.  Similar to Word, White also takes optional min, max, and exact 
+  parameters. 
+
+- As part of supporting whitespace-signficant parsing, added parseWithTabs() 
+  method to ParserElement, to override the default behavior in parseString
+  of automatically expanding tabs to spaces.  To retain tabs during
+  parsing, call parseWithTabs() before calling parseString(), parseFile() or 
+  scanString(). (Thanks, Jean-Guillaume Paradis for catching this, and for
+  your suggestions on whitespace-significant parsing.)
+  
+- Added transformString() method to ParseElement, as a complement to 
+  scanString().  To use transformString, define a grammar and attach a parse
+  action to the overall grammar that modifies the returned token list.  
+  Invoking transformString() on a target string will then scan for matches, 
+  and replace the matched text patterns according to the logic in the parse 
+  action.  transformString() returns the resulting transformed string.
+  (Note: transformString() does *not* automatically expand tabs to spaces.)
+  Also added scanExamples.py to the examples directory to show sample uses of
+  scanString() and transformString().
+  
+- Removed group() method that was introduced in beta2.  This turns out NOT to
+  be equivalent to nesting within a Group() object, and I'd prefer not to sow
+  more seeds of confusion.
+  
+- Fixed behavior of asXML() where tags for groups were incorrectly duplicated.
+  (Thanks, Brad Clements!)
+  
+- Changed beta version message to display to stderr instead of stdout, to 
+  make asXML() easier to use.  (Thanks again, Brad.)
+
+
+Version 1.2beta2 - 19 May 2004
+------------------------------
+- *** SIMPLIFIED API *** - Parse actions that do not modify the list of tokens
+  no longer need to return a value.  This simplifies those parse actions that
+  use the list of tokens to update a counter or record or display some of the
+  token content; these parse actions can simply end without having to specify
+  'return toks'.
+
+- *** POSSIBLE API INCOMPATIBILITY *** - Fixed CaselessLiteral bug, where the 
+  returned token text was not the original string (as stated in the docs), 
+  but the original string converted to upper case.  (Thanks, Dang Griffith!)  
+  **NOTE: this may break some code that relied on this erroneous behavior.
+  Users should scan their code for uses of CaselessLiteral.**
+
+- *** POSSIBLE CODE INCOMPATIBILITY *** - I have renamed the internal 
+  attributes on ParseResults from 'dict' and 'list' to '__tokdict' and 
+  '__toklist', to avoid collisions with user-defined data fields named 'dict'
+  and 'list'.  Any client code that accesses these attributes directly will
+  need to be modified.  Hopefully the implementation of methods such as keys(),
+  items(), len(), etc. on ParseResults will make such direct attribute
+  accessess unnecessary.
+  
+- Added asXML() method to ParseResults.  This greatly simplifies the process 
+  of parsing an input data file and generating XML-structured data.
+
+- Added getName() method to ParseResults.  This method is helpful when
+  a grammar specifies ZeroOrMore or OneOrMore of a MatchFirst or Or
+  expression, and the parsing code needs to know which expression matched.
+  (Thanks, Eric van der Vlist, for this idea!)
+  
+- Added items() and values() methods to ParseResults, to better support using
+  ParseResults as a Dictionary.
+
+- Added parseFile() as a convenience function to parse the contents of an 
+  entire text file.  Accepts either a file name or a file object.  (Thanks
+  again, Dang!)
+
+- Added group() method to And, Or, and MatchFirst, as a short-cut alternative
+  to enclosing a construct inside a Group object.
+  
+- Extended fourFn.py to support exponentiation, and simple built-in functions.
+
+- Added EBNF parser to examples, including a demo where it parses its own
+  EBNF!  (Thanks to Seo Sanghyeon!)
+  
+- Added Delphi Form parser to examples, dfmparse.py, plus a couple of
+  sample Delphi forms as tests.  (Well done, Dang!)
+
+- Another performance speedup, 5-10%, inspired by Dang!  Plus about a 20%
+  speedup, by pre-constructing and cacheing exception objects instead of 
+  constructing them on the fly.
+
+- Fixed minor bug when specifying oneOf() with 'caseless=True'.
+
+- Cleaned up and added a few more docstrings, to improve the generated docs.
+
+
+Version 1.1.2 - 21 Mar 2004
+---------------------------
+- Fixed minor bug in scanString(), so that start location is at the start of 
+  the matched tokens, not at the start of the whitespace before the matched 
+  tokens.
+
+- Inclusion of HTML documentation, generated using Epydoc.  Reformatted some
+  doc strings to better generate readable docs. (Beautiful work, Ed Loper,
+  thanks for Epydoc!)
+
+- Minor performance speedup, 5-15%
+
+- And on a process note, I've used the unittest module to define a series of
+  unit tests, to help avoid the embarrassment of the version 1.1 snafu.
+  
+
+Version 1.1.1 - 6 Mar 2004
+--------------------------
+- Fixed critical bug introduced in 1.1, which broke MatchFirst(!) token 
+  matching.
+  **THANK YOU, SEO SANGHYEON!!!**
+  
+- Added "from future import __generators__" to permit running under 
+  pre-Python 2.3.
+
+- Added example getNTPservers.py, showing how to use pyparsing to extract
+  a text pattern from the HTML of a web page.
+  
+  
+Version 1.1 - 3 Mar 2004
+-------------------------
+- ***Changed API*** - While testing out parse actions, I found that the value 
+  of loc passed in was not the starting location of the matched tokens, but
+  the location of the next token in the list.  With this version, the location
+  passed to the parse action is now the starting location of the tokens that
+  matched.
+  
+  A second part of this change is that the return value of parse actions no 
+  longer needs to return a tuple containing both the location and the parsed
+  tokens (which may optionally be modified); parse actions only need to return
+  the list of tokens.  Parse actions that return a tuple are deprecated; they 
+  will still work properly for conversion/compatibility, but this behavior will 
+  be removed in a future version.
+  
+- Added validate() method, to help diagnose infinite recursion in a grammar tree.
+  validate() is not 100% fool-proof, but it can help track down nasty infinite
+  looping due to recursively referencing the same grammar construct without some 
+  intervening characters.
+
+- Cleaned up default listing of some parse element types, to more closely match
+  ordinary BNF.  Instead of the form <classname>:[contents-list], some changes 
+  are:
+  . And(token1,token2,token3) is "{ token1 token2 token3 }"
+  . Or(token1,token2,token3) is "{ token1 ^ token2 ^ token3 }"
+  . MatchFirst(token1,token2,token3) is "{ token1 | token2 | token3 }"
+  . Optional(token) is "[ token ]"
+  . OneOrMore(token) is "{ token }..."
+  . ZeroOrMore(token) is "[ token ]..."
+  
+- Fixed an infinite loop in oneOf if the input string contains a duplicated
+  option. (Thanks Brad Clements)
+
+- Fixed a bug when specifying a results name on an Optional token. (Thanks 
+  again, Brad Clements)
+  
+- Fixed a bug introduced in 1.0.6 when I converted quotedString to use
+  CharsNotIn; I accidentally permitted quoted strings to span newlines.  I have
+  fixed this in this version to go back to the original behavior, in which
+  quoted strings do *not* span newlines.
+
+- Fixed minor bug in HTTP server log parser. (Thanks Jim Richardson)
+
+
+Version 1.0.6 -  13 Feb 2004
+----------------------------
+- Added CharsNotIn class (Thanks, Lee SangYeong).  This is the opposite of 
+  Word, in that it is constructed with a set of characters *not* to be matched.
+  (This enhancement also allowed me to clean up and simplify some of the
+  definitions for quoted strings, cStyleComment, and restOfLine.)
+  
+- **MINOR API CHANGE** - Added joinString argument to the __init__ method of 
+  Combine (Thanks, Thomas Kalka).  joinString defaults to "", but some 
+  applications might choose some other string to use instead, such as a blank 
+  or newline.  joinString was inserted as the second argument to __init__,
+  so if you have code that specifies an adjacent value, without using
+  'adjacent=', this code will break.
+
+- Modified LineStart to recognize the start of an empty line.
+
+- Added optional caseless flag to oneOf(), to create a list of CaselessLiteral
+  tokens instead of Literal tokens.
+
+- Added some enhancements to the SQL example:
+  . Oracle-style comments (Thanks to Harald Armin Massa)
+  . simple WHERE clause
+
+- Minor performance speedup - 5-15%
+
+
+Version 1.0.5 -  19 Jan 2004
+----------------------------
+- Added scanString() generator method to ParseElement, to support regex-like
+  pattern-searching
+
+- Added items() list to ParseResults, to return named results as a 
+  list of (key,value) pairs
+  
+- Fixed memory overflow in asList() for deeply nested ParseResults (Thanks,
+  Sverrir Valgeirsson)
+
+- Minor performance speedup - 10-15%
+
+
+Version 1.0.4 -  8 Jan 2004
+---------------------------
+- Added positional tokens StringStart, StringEnd, LineStart, and LineEnd
+
+- Added commaSeparatedList to pre-defined global token definitions; also added 
+  commasep.py to the examples directory, to demonstrate the differences between 
+  parsing comma-separated data and simple line-splitting at commas
+
+- Minor API change: delimitedList does not automatically enclose the
+  list elements in a Group, but makes this the responsibility of the caller;
+  also, if invoked using 'combine=True', the list delimiters are also included
+  in the returned text (good for scoped variables, such as a.b.c or a::b::c, or
+  for directory paths such as a/b/c)
+  
+- Performance speed-up again, 30-40%
+
+- Added httpServerLogParser.py to examples directory, as this is
+  a common parsing task
+  
+
+Version 1.0.3 - 23 Dec 2003
+---------------------------
+- Performance speed-up again, 20-40%
+
+- Added Python distutils installation setup.py, etc. (thanks, Dave Kuhlman)
+
+
+Version 1.0.2 - 18 Dec 2003
+---------------------------
+- **NOTE: Changed API again!!!** (for the last time, I hope)
+  
+  + Renamed module from parsing to pyparsing, to better reflect Python
+    linkage.
+
+- Also added dictExample.py to examples directory, to illustrate
+  usage of the Dict class.
+
+
+Version 1.0.1 - 17 Dec 2003
+---------------------------
+- **NOTE:  Changed API!**
+  
+  + Renamed 'len' argument on Word.__init__() to 'exact'
+
+- Performance speed-up, 10-30%
+
+
+Version 1.0.0 - 15 Dec 2003
+---------------------------
+- Initial public release
+
+Version 0.1.1 thru 0.1.17 - October-November, 2003
+--------------------------------------------------
+- initial development iterations:
+    - added Dict, Group
+    - added helper methods oneOf, delimitedList
+    - added helpers quotedString (and double and single), restOfLine, cStyleComment
+    - added MatchFirst as an alternative to the slower Or
+    - added UML class diagram
+    - fixed various logic bugs
