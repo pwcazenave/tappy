@@ -23,6 +23,7 @@ These can be set directly, or there is a routine astrolabe.util.load_params()
 which will assign them based on values in a parameter text file.
 
 """
+import os
 
 #
 # Abbreviation for standard timezone (e.g., "CST" for North American 
@@ -72,8 +73,9 @@ latitude = 0.0
 #    /home/wmcclain/astrolabe/data/vsop87d.txt
 #
 # This value is not required unless the vsop87d module is used.
-# 
-vsop87d_text_path = "/home/tcera/projects/time_series/development/tappy/astrolabe/data/vsop87d.txt"
+#
+pt = os.environ['TAPPY_LIB'].split(os.sep) + ['astrolabe', 'data', 'vsop87d.txt']
+vsop87d_text_path = os.sep.join(pt)
 
 #
 # The full path name of the VSOP87D binary data file, eg:

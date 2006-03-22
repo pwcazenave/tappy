@@ -92,17 +92,137 @@ def usage():
     print __doc__
 
 
+# Will hold list of pyparsing constructs.
+grammar = []
+
+# Set a default value for decimal_separator.
+decimal_sep = "."
 
 #====================================
-class ToInteger(TokenConverter):
-    """Converter to make token into an integer."""
-    def postParse( self, instring, loc, tokenlist ):
-        return int(tokenlist[0])
 
-class ToFloat(TokenConverter):
-    """Converter to make token into a float."""
-    def postParse( self, instring, loc, tokenlist ):
-        return float(tokenlist[0])
+def toInteger(instring, loc, tokenlist):
+    """Converts parsed integer string to an integer."""
+    return int(tokenlist[0])
+
+def toFloat(instring, loc, tokenlist):
+    """Converts parsed real string to a real."""
+    return float(tokenlist[0])
+
+def toString(instring, loc, tokenlist):
+    """Returns a integer or real as a string."""
+    return tokenlist[0]
+
+def integer(name, 
+            minimum=None, 
+            maximum=None, 
+            exact=None, 
+            sign=Optional(oneOf("- +")), 
+            parseAct=toInteger):
+    """Appends a skip/integer combination to the parse constructs."""
+    lint = Combine(sign + 
+                   Word(nums, 
+                        min=minimum, 
+                        max=maximum, 
+                        exact=exact))
+    grammar.append(SkipTo(lint))
+    grammar.append(lint
+                   .setResultsName(name)
+                   .setParseAction(parseAct))
+
+def positive_integer(name, 
+                     minimum=None, 
+                     maximum=None, 
+                     exact=None):
+    """Will only parse a positive integer."""
+    integer(name, 
+            minimum=minimum, 
+            maximum=maximum, 
+            exact=exact, 
+            sign=Optional("+"))
+
+def negative_integer(name, 
+                     minimum=None, 
+                     maximum=None, 
+                     exact=None):
+    """Will only parse a negative integer."""
+    integer(name, 
+            minimum=minimum, 
+            maximum=maximum, 
+            exact=exact, 
+            sign="-")
+
+def real(name, 
+         minimum=None, 
+         maximum=None, 
+         exact=None, 
+         sign=Optional(oneOf("- +")), 
+         parseAct=toFloat):
+    """Appends a skip/real pair to the parse constructs."""
+    lword = Combine(sign +
+                    Word(nums) + 
+                    decimal_sep + 
+                    Optional(Word(nums)) + 
+                    Optional(oneOf("E e") + Word(nums)))
+    grammar.append(SkipTo(lword))
+    grammar.append(lword
+                   .setResultsName(name)
+                   .setParseAction(parseAct))
+
+def positive_real(name, 
+                  minimum=None, 
+                  maximum=None, 
+                  exact=None):
+    """Will only parse a positive real."""
+    real(name, 
+         minimum=minimum, 
+         maximum=maximum, 
+         exact=exact, 
+         sign=Optional("+"))
+
+def negative_real(name, 
+                  minimum=None, 
+                  maximum=None, 
+                  exact=None):
+    """Will only parse a positive real."""
+    real(name, 
+         minimum=minimum, 
+         maximum=maximum, 
+         exact=exact, 
+         sign="-")
+
+def real_as_string(name, 
+                   minimum=None, 
+                   maximum=None, 
+                   exact=None, 
+                   sign=Optional(oneOf("- +")), 
+                   parseAct=toString):
+    """Parses a real number, but returns it as a string."""
+    real(name, 
+         minimum=minimum, 
+         maximum=maximum, 
+         exact=exact, 
+         sign=Optional("+"), 
+         parseAct=parseAct)
+
+def integer_as_string(name, 
+                      minimum=None, 
+                      maximum=None, 
+                      exact=None, 
+                      sign=Optional(oneOf("- +")), 
+                      parseAct=toString):
+    """Parses an integer, but returns is as a string."""
+    integer(name, 
+            minimum=minimum, 
+            maximum=maximum, 
+            exact=exact, 
+            sign=Optional("+"), 
+            parseAct=parseAct)
+
+def qstring(name):
+    """Parses a quoted (either double or single quotes) string."""
+    quoted_string = sglQuotedString | dblQuotedString
+    grammar.append(SkipTo(quoted_string))
+    grammar.append(quoted_string.setResultsName(name))
 
 class ParseFileLineByLine:
     """
@@ -184,16 +304,20 @@ class ParseFileLineByLine:
         # that would be the definition file for all files within the directory.
 
         # The definition file is pure Python.  The one variable that needs to
-        # be specified is 'parse'.  The 'parse' variable is a list of tuples
+        # be specified is 'parse'.  The 'parse' variable is a list of functions
         # defining the name, type, and because it is a list, the order of
         # variables on each line in the data file.  The variable name is a
         # string, the type variable is defined as integer, real, and qString.
 
         # parse = [
-        #          ('year', integer),
-        #          ('month', integer),
-        #          ('day', integer),
-        #          ('value', real),
+        #          integer('state', exact=3),
+        #          integer('station', exact=4),
+        #          positive_integer('month'),
+        #          integer('day'),
+        #          integer('year'),
+        #          integer('hour'),
+        #          integer('minute'),
+        #          positive_real('water_level'),
         #         ]
 
         definition_file_one = filen + "_def" + file_extension
@@ -206,69 +330,9 @@ class ParseFileLineByLine:
             self.parsedef = None
             return None
 
-        # Create some handy pyparsing constructs.  I kept 'decimal_sep' so that
-        # could easily change to parse if the decimal separator is a ",".
-        decimal_sep = "."
-        sign = oneOf("+ -")
-        # part of printables without decimal_sep, +, -
-        special_chars = string.replace('!"#$%&\'()*,./:;<=>?@[\\]^_`{|}~', 
-                                       decimal_sep, "") 
-        integer = ToInteger(
-                  Combine(Optional(sign) + 
-                          Word(nums))).setName("integer")
-        positive_integer = ToInteger(
-                           Combine(Optional("+") + 
-                                   Word(nums))).setName("integer")
-        negative_integer = ToInteger(
-                           Combine("-" + 
-                                   Word(nums))).setName("integer")
-        real = ToFloat(
-               Combine(Optional(sign) + 
-                       Word(nums) + 
-                       decimal_sep + 
-                       Optional(Word(nums)) + 
-                       Optional(oneOf("E e") + 
-                                Word(nums)))).setName("real")
-        positive_real = ToFloat(
-                        Combine(Optional("+") + 
-                                Word(nums) + 
-                                decimal_sep + 
-                                Optional(Word(nums)) + 
-                                Optional(oneOf("E e") + 
-                                         Word(nums)))).setName("real")
-        negative_real = ToFloat(
-                        Combine("-" + 
-                                Word(nums) + 
-                                decimal_sep + 
-                                Optional(Word(nums)) + 
-                                Optional(oneOf("E e") + 
-                                         Word(nums)))).setName("real")
-        qString = ( sglQuotedString | dblQuotedString ).setName("qString")
-    
-        # add other characters we should skip over between interesting fields
-        integer_junk = Optional(
-                       Suppress(
-                       Word(alphas + 
-                            special_chars + 
-                            decimal_sep))).setName("integer_junk")
-        real_junk = Optional(
-                    Suppress(
-                    Word(alphas + 
-                         special_chars))).setName("real_junk")
-        qString_junk = SkipTo(qString).setName("qString_junk")
-
-        # Now that 'integer', 'real', and 'qString' have been assigned I can
-        # execute the definition file.  
         execfile(self.parsedef)
 
-        # Build the grammar, combination of the 'integer', 'real, 'qString',
-        # and '*_junk' variables assigned above in the order specified in the
-        # definition file.
-        grammar = []
-        for nam, expr in parse:
-            grammar.append( eval(expr.name + "_junk"))
-            grammar.append( expr.setResultsName(nam) )
-        self.grammar = And( grammar[1:] + [restOfLine] )
+        self.grammar = And(grammar[1:] + [restOfLine])
 
     def __del__(self):
         """Delete (close) the file wrapper."""

@@ -56,6 +56,9 @@ import scipy as N
 from scipy.optimize import leastsq
 import datetime
 
+import tappy_lib
+import sparser
+
 #===globals======================
 modname="tappy"
 __version__="0.1"
@@ -101,17 +104,16 @@ class tappy:
 
         # Read in data file
         # Data file format is what can be downloaded from COOPS web site.
-        fp = open(filename, "r")
-        fp.readline()
+        fp = sparser.ParseFileLineByLine(filename, 'r')
         self.elevation = []
         self.dates = []
         for line in fp:
-            words = string.split(line)
-            self.elevation.append(float(words[3]))
-
-            dt = [int(i) for i in string.split(words[1], "/")]
-            hr = [int(i) for i in string.split(words[2], ":")]
-            self.dates.append(datetime.datetime(dt[2], dt[1], dt[0], hr[0], hr[1]))
+            self.elevation.append(line['water_level'])
+            self.dates.append(datetime.datetime(line['year'],
+                                                line['month'],
+                                                line['day'],
+                                                line['hour'],
+                                                line['minute']))
         self.elevation = N.array(self.elevation)
 
         self.astronomic()
@@ -391,8 +393,6 @@ class tappy:
 
     def astronomic(self):
         # Work from astrolabe and Jean Meeuss
-        ced = os.path.dirname(sys.argv[0])
-        sys.path.insert(0, '%s/astrolabe/lib/python' % (ced,))
         import astrolabe.calendar as cal
         import astrolabe.util as uti
         import astrolabe.elp2000 as elp
