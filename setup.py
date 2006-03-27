@@ -41,22 +41,15 @@ debug_p=0
 pkgname='tappy'
 version=string.strip(open("VERSION").readline())
 exec_prefix=sys.exec_prefix
-description = "tappy"
+description = "Tidal Analysis Program in PYthon"
 author = "Tim Cera"
 author_email = "timcera@earthlink.net"
 url="http://tappy.sourceforge.net"
 license = "GPL"
 
-scripts=[]
-py_modules=[]
-packages=['tappy']
-package_dir=[]
-ext_modules=[]
-#   [Extension('my_ext', ['my_ext.c', 'file1.c', 'file2.c'],
-#           include_dirs=[''],
-#           library_dirs=[''],
-#           libraries=[''],)
-#    ]
+scripts=['tappy.py']
+py_modules=['tappy_lib/pyparsing/pyparsing']
+packages=['tappy_lib', 'tappy_lib/astrolabe/lib/python/astrolabe']
 
 #===utilities==========================
 def debug(ftn,txt):
@@ -86,8 +79,7 @@ def main():
            scripts=scripts,
            py_modules = py_modules,
            packages = packages,
-           package_dir = package_dir,
-           ext_modules = ext_modules,
+	   package_data = {'tappy_lib' : ['astrolabe/data/vsop87d.txt']},
            )
 #==============================
 if __name__ == '__main__':
