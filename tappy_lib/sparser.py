@@ -255,49 +255,18 @@ class ParseFileLineByLine:
     '"a"' (append, not supported for .Z files).  
     """
 
-    def __init__(self, filename, mode = 'r'):
+    def __init__(self, filename, def_filename=None, mode = 'r'):
         """Opens input file, and if available the definition file.  If the
         definition file is available __init__ will then create some pyparsing
         helper variables.  """
-        if mode not in ['r', 'w', 'a']:
-            raise IOError, (0, 'Illegal mode: ' + repr(mode))
 
-        if string.find(filename, ':/') > 1: # URL
-            if mode == 'w':
-                raise IOError, "can't write to a URL"
-            import urllib
-            self.file = urllib.urlopen(filename)
-        else:
-            filename = os.path.expanduser(filename)
-            if mode == 'r' or mode == 'a':
-                if not os.path.exists(filename):
-                    raise IOError, (2, 'No such file or directory: ' + filename)
-            filen, file_extension = os.path.splitext(filename)
-            command_dict = {
-              ('.Z', 'r'): 
-                "self.file = os.popen('uncompress -c ' + filename, mode)",
-              ('.gz', 'r'): 
-                "self.file = gzip.GzipFile(filename, 'rb')",
-              ('.bz2', 'r'): 
-                "self.file = os.popen('bzip2 -dc ' + filename, mode)",
-              ('.Z', 'w'): 
-                "self.file = os.popen('compress > ' + filename, mode)",
-              ('.gz', 'w'): 
-                "self.file = gzip.GzipFile(filename, 'wb')",
-              ('.bz2', 'w'): 
-                "self.file = os.popen('bzip2 > ' + filename, mode)",
-              ('.Z', 'a'): 
-                "raise IOError, (0, 'Can\'t append to .Z files')",
-              ('.gz', 'a'): 
-                "self.file = gzip.GzipFile(filename, 'ab')",
-              ('.bz2', 'a'): 
-                "raise IOError, (0, 'Can\'t append to .bz2 files')",
-                           }
+        filen, file_extension = os.path.splitext(filename)
 
-            exec command_dict.get((file_extension, mode), 
-                                  'self.file = open(filename, mode)')
+        import filelike
+        self.file = filelike.open(filename, mode)
 
         self.grammar = None
+        self.parsedef = None
 
         # Try to find a parse ('*_def.ext') definition file.  First try to find
         # a file specific parse definition file, then look for 'sparse.def'
@@ -320,19 +289,24 @@ class ParseFileLineByLine:
         #          positive_real('water_level'),
         #         ]
 
+        
         definition_file_one = filen + "_def" + file_extension
-        definition_file_two = os.path.dirname(filen) + os.sep + "sparse.def"
+        if os.path.dirname(filen):
+            definition_file_two = os.path.dirname(filen) + os.sep + "sparse.def"
+        else:
+            definition_file_two = "sparse.def"
+
+        if os.path.exists(definition_file_two):
+            self.parsedef = definition_file_two
         if os.path.exists(definition_file_one):
             self.parsedef = definition_file_one
-        elif os.path.exists(definition_file_two):
-            self.parsedef = definition_file_two
-        else:
-            self.parsedef = None
-            return None
+        if def_filename:
+            if os.path.exists(def_filename):
+                self.parsedef = def_filename
 
-        execfile(self.parsedef)
-
-        self.grammar = And(grammar[1:] + [restOfLine])
+        if self.parsedef:
+            execfile(self.parsedef)
+            self.grammar = And(grammar[1:] + [restOfLine])
 
     def __del__(self):
         """Delete (close) the file wrapper."""
