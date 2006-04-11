@@ -97,17 +97,18 @@ def usage():
 class tappy:
     #---class variables---
     #--------------------------
-    def __init__(self, filename):
+    def __init__(self, filename, def_filename=None):
         ftn="tappy.__init__"
         #---instance variables---
         self.speed_dict = {}
 
         # Read in data file
         # Data file format is what can be downloaded from COOPS web site.
-        fp = sparser.ParseFileLineByLine(filename, 'r')
+        fp = sparser.ParseFileLineByLine(filename, def_filename=def_filename, mode='r')
         self.elevation = []
         self.dates = []
         for line in fp:
+            print line
             self.elevation.append(line['water_level'])
             self.dates.append(datetime.datetime(line['year'],
                                                 line['month'],
@@ -533,7 +534,14 @@ class tappy:
 
 #=============================
 def main(option_dict):
-    x=tappy(sys.argv[1])
+    if len(sys.argv) == 2:
+        def_filename = None
+    elif len(sys.argv) == 3:
+        def_filename = sys.argv[2]
+    else:
+        fatal('main', 'Need to pass input file name and optional defition file name')
+
+    x=tappy(sys.argv[1], def_filename=def_filename)
 
     if option_dict['ephemeris_table']:
         x.print_ephemeris_table()
