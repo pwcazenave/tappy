@@ -33,7 +33,6 @@ Two methods are provided for when code expects to deal with file-like objects:
     * is_filelike(obj):   checks that an object is file-like
     * to_filelike(obj):   wraps a variety of objects in a file-like interface
 
-
 The "wrappers" subpackage contains a collection of useful classes built on
 top of this framework.  These include:
     
@@ -67,11 +66,16 @@ first five lines of an encrypted file:
     from filelike.pipeline import DecryptFile, Head
     f = file("some_encrypted_file.bin") > DecryptFile(cipher) | Head(lines=5)
 
+
+Finally, the function filelike.open() mirrors the standard file opening function
+but tries to be clever about accessing the file - URLs are automatically fetched
+using urllib2, compressed files and decompressed on the fly, and so-forth.
+
 """ 
 
 __ver_major__ = 0
 __ver_minor__ = 2
-__ver_patch__ = 0
+__ver_patch__ = 1
 __ver_sub__ = ""
 __version__ = "%d.%d.%d%s" % (__ver_major__,__ver_minor__,
                               __ver_patch__,__ver_sub__)
@@ -79,6 +83,8 @@ __version__ = "%d.%d.%d%s" % (__ver_major__,__ver_minor__,
 
 import unittest
 import StringIO
+import urllib2
+import urlparse
 
 
 class FileLikeBase:
@@ -111,17 +117,17 @@ class FileLikeBase:
     
     """
     
-    def __init__(self,lookahead=100):
+    def __init__(self,bufsize=100):
         """FileLikeBase Constructor.
-        The optional argument <lookahead> specifies the number of bytes to
-        read at a time when looking a newline character.  Setting this to
+        The optional argument <bufsize> specifies the number of bytes to
+        read at a time when looking for a newline character.  Setting this to
         a larger number when lines are long should improve efficiency.
         """
         # File attributes
         self.closed = False
         self.softspace = 0
         # Our own attributes
-        self.__lookahead = lookahead
+        self._bufsize = bufsize
         self.__rbuffer = ""
         self.__wbuffer = ""
     
@@ -242,7 +248,7 @@ class FileLikeBase:
         indx = -1
         sizeSoFar = 0
         while indx == -1:
-            nextBit = self.read(self.__lookahead)
+            nextBit = self.read(self._bufsize)
             bits.append(nextBit)
             sizeSoFar += len(nextBit)
             if nextBit == "":
@@ -335,6 +341,86 @@ class FileLikeBase:
         raise IOError("Object not writable")
 
 
+class Opener:
+    """Class allowing clever opening of files.
+    
+    Instances of this class are callable using inst(filename,mode),
+    and are intended as a 'smart' replacement for the standard file
+    constructor and open command.  Given a filename and a mode, it returns
+    a file-like object representing that file, according to rules such
+    as:
+        
+        * URLs are opened using urllib2
+        * files with names ending in ".gz" are gunzipped on the fly
+        * etc...
+        
+    The precise rules that are implemented are determined by two lists
+    of functions - openers and decoders.  First, each successive opener
+    function is called with the filename and mode until one returns non-None.
+    The functions must attempt to open the givn filename and return it as
+    a filelike object.
+    Once the file has been opened, it is passed to each successive decoder
+    function.  These should return non-None if they perform some decoding
+    step on the file.  In this case, they must wrap and return the file-like
+    object, modifying its name if appropriate.
+    """
+    
+    def __init__(self,openers=(),decoders=()):
+        self.openers = [o for o in openers]
+        self.decoders = [d for d in decoders]
+    
+    def __call__(self,filename,mode="r"):
+        # Validate the mode string
+        for c in mode:
+            if c not in ("r","w","a"):
+                raise ValueError("Unexpected mode character: '%s'" % (c,))
+        # Open the file
+        for o in self.openers:
+            try:
+                f = o(filename,mode)
+            except IOError:
+                f = None
+            if f is not None:
+                break
+        else:
+            raise IOError("Could not open file %s in mode '%s'" \
+                                                        %(filename,mode))
+        # Decode the file as many times as required
+        goAgain = True
+        while goAgain:
+            for d in self.decoders:
+                res = d(f)
+                if res is not None:
+                    f = res
+                    break
+            else:
+                goAgain = False
+        # Return the final file object
+        return f
+
+##  Create default Opener that uses urllib2.urlopen() and file() as openers
+def _urllib_opener(filename,mode):
+    if mode != "r":
+        return None
+    comps = urlparse.urlparse(filename)
+    # ensure it's a URL
+    if comps[0] == "":
+        return None
+    f = urllib2.urlopen(filename)
+    f.name = f.geturl()
+    f.mode = mode
+    return f
+def _file_opener(filename,mode):
+    # Dont open URLS as local files
+    comps = urlparse.urlparse(filename)
+    if comps[0] != "":
+        return None
+    return file(filename,mode)
+
+open = Opener(openers=(_urllib_opener,_file_opener))
+
+
+
 def is_filelike(obj,mode="rw"):
     """Test whether an object implements the file-like interface.
     
@@ -381,6 +467,7 @@ def is_filelike(obj,mode="rw"):
     return True
 
 
+# Included here to avoid circular includes
 import filelike.wrappers
 
 def to_filelike(obj,mode="rw"):
@@ -418,6 +505,7 @@ def to_filelike(obj,mode="rw"):
             return filelike.wrappers.FileWrapper(obj)
     # TODO: lots more could be done here...
     raise ValueError("Could not make object file-like: %s", (obj,))
+
 
 ## TODO: unittests for is_filelike and to_filelike
 

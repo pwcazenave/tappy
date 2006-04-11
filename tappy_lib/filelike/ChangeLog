@@ -1,4 +1,10 @@
 
+Version 0.2.1
+
+	* Added filelike.open() functions, which tries to open files in
+	  a smart manner (e.g. fetching URLs, transparent unzipping, etc)
+
+
 Version 0.2.0:
 
   Architectural Changes:
