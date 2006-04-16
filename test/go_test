@@ -1,2 +1,0 @@
-#!/bin/sh
-python ./all_tests.py
