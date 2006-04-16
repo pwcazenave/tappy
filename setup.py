@@ -49,7 +49,7 @@ license = "GPL"
 
 scripts=['tappy.py']
 py_modules=['tappy_lib/pyparsing/pyparsing']
-packages=['tappy_lib', 'tappy_lib/astrolabe/lib/python/astrolabe']
+packages=['tappy_lib', 'tappy_lib/astrolabe/lib/python/astrolabe', 'tappy_lib/filelike/filelike']
 
 #===utilities==========================
 def debug(ftn,txt):
