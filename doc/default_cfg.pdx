@@ -1,8 +1,0 @@
-=cfg
-banner==<Center>tappy</CENTER>
-author = Tim Cera
-author_email= timcera@earthlink.net
-body==<BODY BGCOLOR="#ffffff" TEXT="#000000"  LINK="#0000ff" VLINK="#990099" ALINK="#FF0000">
-robots==none
-toc_p=1
-=end cfg

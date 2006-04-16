@@ -1,8 +1,0 @@
-=include default_cfg.pdx
-=cfg
-title=tappy Design History
-toc_p=1
-=end cfg
-=include article_style.pdx
-
-=head1 2005-06-13
