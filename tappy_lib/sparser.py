@@ -51,6 +51,7 @@ import re
 import gzip
 
 from pyparsing import *
+import filelike
 
 
 #===globals======================
@@ -262,7 +263,6 @@ class ParseFileLineByLine:
 
         filen, file_extension = os.path.splitext(filename)
 
-        import filelike
         self.file = filelike.open(filename, mode)
 
         self.grammar = None
@@ -326,9 +326,8 @@ class ParseFileLineByLine:
             try:
                 return self.grammar.parseString(line).asDict()
             except ParseException:
-                return self.readline()
-        else:
-            return line
+                pass
+        return line
 
     def readlines(self):
         """Returns a list of all lines (optionally parsed) in the file."""
@@ -338,7 +337,7 @@ class ParseFileLineByLine:
             # self.file.readlines() so that there wasn't two copies of the file
             # in memory.
             while 1:
-                line = self.file.readline()
+                line = self.readline()
                 if not line:
                     break
                 tot.append(line)

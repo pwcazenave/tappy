@@ -108,7 +108,8 @@ class tappy:
         self.elevation = []
         self.dates = []
         for line in fp:
-            print line
+            if not isinstance(line, dict):
+                continue
             self.elevation.append(line['water_level'])
             self.dates.append(datetime.datetime(line['year'],
                                                 line['month'],
