@@ -2,13 +2,365 @@
 Change Log
 ==========
 
+Version 1.4.2 - April, 2006
+------------------------------
+- Significant speedup from memoizing nested expressions (a technique 
+  known as "packrat parsing"), thanks to Chris Lesniewski-Laas!  Your 
+  mileage may vary, but my Verilog parser almost doubled in speed to 
+  over 600 lines/sec!
+  
+  This speedup may break existing programs that use parse actions that 
+  have side-effects.  For this reason, packrat parsing is disabled when
+  you first import pyparsing.  To activate the packrat feature, your
+  program must call the class method ParserElement.enablePackrat().  If
+  your program uses psyco to "compile as you go", you must call 
+  enablePackrat before calling psyco.full().  If you do not do this,
+  Python will crash.  For best results, call enablePackrat() immediately
+  after importing pyparsing.
+
+- Added new helper method countedArray(expr), for defining patterns that
+  start with a leading integer to indicate the number of array elements, 
+  followed by that many elements, matching the given expr parse 
+  expression.  For instance, this two-liner:
+    wordArray = countedArray(Word(alphas))
+    print wordArray.parseString("3 Practicality beats purity")[0]
+  returns the parsed array of words:
+    ['Practicality', 'beats', 'purity']
+  The leading token '3' is suppressed, although it is easily obtained
+  from the length of the returned array.
+  (Inspired by e-mail discussion with Ralf Vosseler.)
+
+- Added support for attaching multiple parse actions to a single 
+  ParserElement. (Suggested by Dan "Dang" Griffith - nice idea, Dan!)
+
+- Added support for asymmetric quoting characters in the recently-added
+  QuotedString class.  Now you can define your own quoted string syntax
+  like "<<This is a string in double angle brackets.>>".  To define
+  this custom form of QuotedString, your code would define:
+    dblAngleQuotedString = QuotedString('<<',endQuoteChar='>>')
+  QuotedString also supports escaped quotes, escape character other 
+  than '\', and multiline.
+
+- Changed the default value returned internally by Optional, so that
+  None can be used as a default value.  (Suggested by Steven Bethard - 
+  I finally saw the light!)
+
+- Added dump() method to ParseResults, to make it easier to list out
+  and diagnose values returned from calling parseString.
+
+- A new example, a search query string parser, submitted by Steven 
+  Mooij and Rudolph Froger - a very interesting application, thanks!
+
+- Added an example that parses the BNF in Python's Grammar file, in 
+  support of generating Python grammar documentation. (Suggested by
+  J H Stovall.)
+  
+- A new example, submitted by Tim Cera, of a flexible parser module,
+  using a simple config variable to adjust parsing for input formats
+  that have slight variations - thanks, Tim!
+  
+- Added an example for parsing Roman numerals, showing the capability
+  of parse actions to "compile" Roman numerals into their integer
+  values during parsing.
+
+- Added a new docs directory, for additional documentation or help.
+  Currently, this includes the text and examples from my recent
+  presentation at PyCon.
+  
+- Fixed another typo in CaselessKeyword, thanks Stefan Behnel.
+
+- Expanded oneOf to also accept tuples, not just lists.  This really 
+  should be sufficient...
+
+- Added deprecation warnings when tuple is returned from a parse action.
+  Looking back, I see that I originally deprecated this feature in March,
+  2004, so I'm guessing people really shouldn't have been using this 
+  feature - I'll drop it altogether in the next release, which will 
+  allow users to return a tuple from a parse action (which is really 
+  handy when trying to reconstuct tuples from a tuple string 
+  representation!).
+
+
+Version 1.4.1 - February, 2006
+------------------------------
+- Converted generator expression in QuotedString class to list 
+  comprehension, to retain compatibility with Python 2.3. (Thanks, Titus 
+  Brown for the heads-up!)
+
+- Added searchString() method to ParserElement, as an alternative to
+  using "scanString(instring).next()[0][0]" to search through a string 
+  looking for a substring matching a given parse expression. (Inspired by
+  e-mail conversation with Dave Feustel.)
+
+- Modified oneOf to accept lists of strings as well as a single string
+  of space-delimited literals.  (Suggested by Jacek Sieka - thanks!)
+
+- Removed deprecated use of Upcase in pyparsing test code. (Also caught by
+  Titus Brown.)
+
+- Removed lstrip() call from Literal - too aggressive in stripping
+  whitespace which may be valid for some grammars.  (Point raised by Jacek 
+  Sieka).  Also, made Literal more robust in the event of passing an empty 
+  string.
+  
+- Fixed bug in replaceWith when returning None.
+
+- Added cautionary documentation for Forward class when assigning a
+  MatchFirst expression, as in:
+    fwdExpr << a | b | c
+  Precedence of operators causes this to be evaluated as:
+    (fwdExpr << a) | b | c
+  thereby leaving b and c out as parseable alternatives.  Users must
+  explicitly group the values inserted into the Forward:
+    fwdExpr << (a | b | c)
+  (Suggested by Scot Wilcoxon - thanks, Scot!)
+  
+  
+Version 1.4 - January 18, 2006
+------------------------------
+- Added Regex class, to permit definition of complex embedded expressions 
+  using regular expressions. (Enhancement provided by John Beisley, great 
+  job!)
+
+- Converted implementations of Word, oneOf, quoted string, and comment 
+  helpers to utilize regular expression matching.  Performance improvements 
+  in the 20-40% range.
+
+- Added QuotedString class, to support definition of non-standard quoted 
+  strings (Suggested by Guillaume Proulx, thanks!)
+  
+- Added CaselessKeyword class, to streamline grammars with, well, caseless 
+  keywords (Proposed by Stefan Behnel, thanks!)
+  
+- Fixed bug in SkipTo, when using an ignoreable expression. (Patch provided 
+  by Anonymous, thanks, whoever-you-are!)
+  
+- Fixed typo in NoMatch class. (Good catch, Stefan Behnel!)
+
+- Fixed minor bug in _makeTags(), using string.printables instead of 
+  pyparsing.printables.
+
+- Cleaned up some of the expressions created by makeXXXTags helpers, to 
+  suppress extraneous <> characters.
+  
+- Added some grammar definition-time checking to verify that a grammar is 
+  being built using proper ParserElements.
+  
+- Added examples:
+  . LAparser.py - linear algebra C preprocessor (submitted by Mike Ellis, 
+    thanks Mike!)
+  . wordsToNum.py - converts word description of a number back to 
+    the original number (such as 'one hundred and twenty three' -> 123)
+  . updated fourFn.py to support unary minus, added BNF comments
+
+
+Version 1.3.3 - September 12, 2005
+----------------------------------
+- Improved support for Unicode strings that would be returned using
+  srange.  Added greetingInKorean.py example, for a Korean version of
+  "Hello, World!" using Unicode. (Thanks, June Kim!)
+
+- Added 'hexnums' string constant (nums+"ABCDEFabcdef") for defining 
+  hexadecimal value expressions.
+  
+- NOTE: ===THIS CHANGE MAY BREAK EXISTING CODE===
+  Modified tag and results definitions returned by makeHTMLTags(),
+  to better support the looseness of HTML parsing.  Tags to be 
+  parsed are now caseless, and keys generated for tag attributes are 
+  now converted to lower case.
+  
+  Formerly, makeXMLTags("XYZ") would return a tag with results 
+  name of "startXYZ", this has been changed to "startXyz".  If this
+  tag is matched against '<XYZ Abc="1" DEF="2" ghi="3">', the 
+  matched keys formerly would be "Abc", "DEF", and "ghi"; keys are
+  now converted to lower case, giving keys of "abc", "def", and 
+  "ghi".  These changes were made to try to address the lax
+  case sensitivity agreement between start and end tags in many 
+  HTML pages.
+  
+  No changes were made to makeXMLTags(), which assumes more rigorous 
+  parsing rules.
+  
+  Also, cleaned up case-sensitivity bugs in closing tags, and 
+  switched to using Keyword instead of Literal class for tags.
+  (Thanks, Steve Young, for getting me to look at these in more
+  detail!)
+
+- Added two helper parse actions, upcaseTokens and downcaseTokens,
+  which will convert matched text to all uppercase or lowercase,
+  respectively.
+
+- Deprecated Upcase class, to be replaced by upcaseTokens parse 
+  action.
+  
+- Converted messages sent to stderr to use warnings module, such as 
+  when constructing a Literal with an empty string, one should use 
+  the Empty() class or the empty helper instead.
+
+- Added ' ' (space) as an escapable character within a quoted
+  string.
+
+- Added helper expressions for common comment types, in addition
+  to the existing cStyleComment (/*...*/) and htmlStyleComment
+  (<!-- ... -->)
+  . dblSlashComment = // ... (to end of line)
+  . cppStyleComment = cStyleComment or dblSlashComment
+  . javaStyleComment = cppStyleComment
+  . pythonStyleComment = # ... (to end of line)
+
+
+  
+Version 1.3.2 - July 24, 2005
+-----------------------------
+- Added Each class as an enhanced version of And.  'Each' requires 
+  that all given expressions be present, but may occur in any order.  
+  Special handling is provided to group ZeroOrMore and OneOrMore 
+  elements that occur out-of-order in the input string.  You can also 
+  construct 'Each' objects by joining expressions with the '&' 
+  operator.  When using the Each class, results names are strongly 
+  recommended for accessing the matched tokens. (Suggested by Pradam 
+  Amini - thanks, Pradam!)
+  
+- Stricter interpretation of 'max' qualifier on Word elements.  If the 
+  'max' attribute is specified, matching will fail if an input field 
+  contains more than 'max' consecutive body characters.  For example, 
+  previously, Word(nums,max=3) would match the first three characters 
+  of '0123456', returning '012' and continuing parsing at '3'.  Now, 
+  when constructed using the max attribute, Word will raise an 
+  exception with this string.
+
+- Cleaner handling of nested dictionaries returned by Dict.  No
+  longer necessary to dereference sub-dictionaries as element [0] of
+  their parents. 
+  === NOTE: THIS CHANGE MAY BREAK SOME EXISTING CODE, BUT ONLY IF 
+  PARSING NESTED DICTIONARIES USING THE LITTLE-USED DICT CLASS ===
+  (Prompted by discussion thread on the Python Tutor list, with
+  contributions from Danny Yoo, Kent Johnson, and original post by
+  Liam Clarke - thanks all!)
+  
+
+
+Version 1.3.1 - June, 2005
+----------------------------------
+- Added markInputline() method to ParseException, to display the input
+  text line location of the parsing exception. (Thanks, Stefan Behnel!)
+  
+- Added setDefaultKeywordChars(), so that Keyword definitions using a 
+  custom keyword character set do not all need to add the keywordChars
+  constructor argument (similar to setDefaultWhitespaceChars()). 
+  (suggested by rzhanka on the SourceForge pyparsing forum.)
+  
+- Simplified passing debug actions to setDebugAction().  You can now
+  pass 'None' for a debug action if you want to take the default 
+  debug behavior.  To suppress a particular debug action, you can pass
+  the pyparsing method nullDebugAction.
+  
+- Refactored parse exception classes, moved all behavior to 
+  ParseBaseException, and the former ParseException is now a subclass of
+  ParseBaseException.  Added a second subclass, ParseFatalException, as
+  a subclass of ParseBaseException.  User-defined parse actions can raise
+  ParseFatalException if a data inconsistency is detected (such as a 
+  begin-tag/end-tag mismatch), and this will stop all parsing immediately.
+  (Inspired by e-mail thread with Michele Petrazzo - thanks, Michelle!)
+  
+- Added helper methods makeXMLTags and makeHTMLTags, that simplify the
+  definition of XML or HTML tag parse expressions for a given tagname.  
+  Both functions return a pair of parse expressions, one for the opening 
+  tag (that is, '<tagname>') and one for the closing tag ('</tagname>').
+  The opening tagame also recognizes any attribute definitions that have
+  been included in the opening tag, as well as an empty tag (one with a
+  trailing '/', as in '<BODY/>' which is equivalent to '<BODY></BODY>').
+  makeXMLTags uses stricter XML syntax for attributes, requiring that they
+  be enclosed in double quote characters - makeHTMLTags is more lenient, 
+  and accepts single-quoted strings or any contiguous string of characters
+  up to the next whitespace character or '>' character.  Attributes can
+  be retrieved as dictionary or attribute values of the returned results
+  from the opening tag.
+
+- Added example minimath2.py, a refinement on fourFn.py that adds
+  an interactive session and support for variables.  (Thanks, Steven Siew!)
+  
+- Added performance improvement, up to 20% reduction!  (Found while working
+  with Wolfgang Borgert on performance tuning of his TTCN3 parser.)
+  
+- And another performance improvement, up to 25%, when using scanString!
+  (Found while working with Henrik Westlund on his C header file scanner.)
+  
+- Updated UML diagrams to reflect latest class/method changes.
+
+
+Version 1.3 - March, 2005
+----------------------------------
+- Added new Keyword class, as a special form of Literal.  Keywords
+  must be followed by whitespace or other non-keyword characters, to
+  distinguish them from variables or other identifiers that just
+  happen to start with the same characters as a keyword.  For instance,
+  the input string containing "ifOnlyIfOnly" will match a Literal("if")
+  at the beginning and in the middle, but will fail to match a 
+  Keyword("if").  Keyword("if") will match only strings such as "if only" 
+  or "if(only)". (Proposed by Wolfgang Borgert, and Berteun Damman 
+  separately requested this on comp.lang.python - great idea!)
+
+- Added setWhitespaceChars() method to override the characters to be 
+  skipped as whitespace before matching a particular ParseElement.  Also
+  added the class-level method setDefaultWhitespaceChars(), to allow
+  users to override the default set of whitespace characters (space,
+  tab, newline, and return) for all subsequently defined ParseElements.
+  (Inspired by Klaas Hofstra's inquiry on the Sourceforge pyparsing
+  forum.)
+  
+- Added helper parse actions to support some very common parse 
+  action use cases:
+  . replaceWith(replStr) - replaces the matching tokens with the 
+    provided replStr replacement string; especially useful with 
+    transformString()
+  . removeQuotes - removes first and last character from string enclosed
+    in quotes (note - NOT the same as the string strip() method, as only
+    a single character is removed at each end)
+    
+- Added copy() method to ParseElement, to make it easier to define 
+  different parse actions for the same basic parse expression.  (Note, copy
+  is implicitly called when using setResultsName().)
+
+
+  (The following changes were posted to CVS as Version 1.2.3 - 
+  October-December, 2004)
+  
+- Added support for Unicode strings in creating grammar definitions.  
+  (Big thanks to Gavin Panella!)
+
+- Added constant alphas8bit to include the following 8-bit characters:
+    ¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷ÿŸ⁄€‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔÒÚÛÙıˆ¯˘˙˚¸˝˛
+  
+- Added srange() function to simplify definition of Word elements, using 
+  regexp-like '[A-Za-z0-9]' syntax.  This also simplifies referencing
+  common 8-bit characters.
+  
+- Fixed bug in Dict when a single element Dict was embedded within another
+  Dict. (Thanks Andy Yates for catching this one!)
+  
+- Added 'formatted' argument to ParseResults.asXML().  If set to False,
+  suppresses insertion of whitespace for pretty-print formatting.  Default
+  equals True for backward compatibility.
+  
+- Added setDebugActions() function to ParserElement, to allow user-defined
+  debugging actions.
+
+- Added support for escaped quotes (either in \', \", or doubled quote 
+  form) to the predefined expressions for quoted strings. (Thanks, Ero
+  Carrera!)
+  
+- Minor performance improvement (~5%) converting "char in string" tests
+  to "char in dict". (Suggested by Gavin Panella, cool idea!)
+  
+
 Version 1.2.2 - September 27, 2004
 ----------------------------------
 - Modified delimitedList to accept an expression as the delimiter, instead
   of only accepting strings.
   
-- Modified ParseResults, to convert integer field keys string (to avoid
-  confusion with list access).
+- Modified ParseResults, to convert integer field keys to strings (to 
+  avoid confusion with list access).
 
 - Modified Combine, to convert all embedded tokens to strings before
   combining.
