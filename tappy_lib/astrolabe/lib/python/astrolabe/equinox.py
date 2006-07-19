@@ -111,12 +111,15 @@ def equinox_approx(yr, season):
     W = d_to_r(35999.373 * T - 2.47)
     delta_lambda = 1 + 0.0334 * cos(W) + 0.0007 * cos(2 * W)
 
-    #S = 0.0
-    #for A, B, C in _terms: 
-    #    S = S + A * cos(B + C * T)
-    #jd = jd + 0.00001 * S / delta_lambda
 
-    jd += 0.00001 * sum(A * cos(B + C * T) for A, B, C in _terms) / delta_lambda
+    try:
+        jd += 0.00001 * sum(A * cos(B + C * T) for A, B, C in _terms) / delta_lambda
+    except SyntaxError:   # Python < 2.4
+        S = 0.0
+        for A, B, C in _terms: 
+            S = S + A * cos(B + C * T)
+        jd = jd + 0.00001 * S / delta_lambda
+
 
     return jd
 

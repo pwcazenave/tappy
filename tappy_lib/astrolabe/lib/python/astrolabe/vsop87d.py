@@ -98,18 +98,19 @@ class VSOP87d:
         tau = jd_to_jcent(jd) / 10.0
         c = _planets[(planet,dim)]
 
-        #for series in range(len(c)):
-        #    seriesSum = 0.0
-        #    s = c[series]
-        #    for t in range(len(s)):
-        #        A, B, C = s[t]
-        #        seriesSum = seriesSum + A * cos(B + C * tau)
-        #    X = X + seriesSum * tauN
-        #    tauN = tauN * tau  # last one is wasted
-        
-        for s in c:
-            X += sum(A * cos(B + C * tau) for A, B, C in s) * tauN
-            tauN *= tau  # last one is wasted
+        try:
+            for s in c:
+                X += sum(A * cos(B + C * tau) for A, B, C in s) * tauN
+                tauN = tauN * tau  # last one is wasted
+        except SyntaxError:  # Python < 2.4
+            for series in range(len(c)):
+                seriesSum = 0.0
+                s = c[series]
+                for t in range(len(s)):
+                    A, B, C = s[t]
+                    seriesSum = seriesSum + A * cos(B + C * tau)
+                X = X + seriesSum * tauN
+                tauN = tauN * tau  # last one is wasted
         
         if dim == "L": 
             X = modpi2(X)
