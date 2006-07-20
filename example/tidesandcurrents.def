@@ -9,9 +9,9 @@ decimal_sep = "."
 parse = [ 
           integer('state', exact=3),
           integer_as_string('station', exact=4),
-          positive_integer('year'),
-          positive_integer('month'),
-          positive_integer('day'),
+          positive_integer('year', exact=4),
+          positive_integer('month', exact=2),
+          positive_integer('day', exact=2),
           positive_integer('hour'),
           positive_integer('minute'),
           real('water_level'),

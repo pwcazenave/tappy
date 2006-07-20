@@ -1,4 +1,6 @@
- No Name                     Ampl  Epoch    Speed
+Constituents as published by NOAA/NOS for comparison.
+
+No Name                     Ampl  Epoch    Speed
   1 M2                       0.662  28.1  28.9841042
   2 S2                       0.111  51.5  30.0000000
   3 N2                       0.149  10.1  28.4397295
