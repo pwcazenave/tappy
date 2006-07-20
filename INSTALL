@@ -1,12 +1,16 @@
-#INSTALL
 
-This is a standard distutils install, e.g.:
+# This is a standard distutils install, e.g.:
 
-   mkdir workdir
-   mv xyz-0.1.tar.gz workdir
-   cd workdir
-   gzip -cd xyz-0.1.tar.gz | tar xvf -
-   cd xyz-0.1
-   python setup.py build
-   python setup.py install   (possibly as root)
+cp tappy-0.4.1.tar.gz myworkdir
+cd myworkdir
+gzip -cd tappy-0.4.1.tar.gz | tar xvf -
+cd tappy-0.4.1
 
+# At this point you can try TAPPY out without installing.
+cd example
+../tappy.py mayport_florida_8720220_data.txt
+cd ..
+
+# If you want to install...
+python setup.py build
+python setup.py install #possibly as root
