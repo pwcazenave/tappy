@@ -50,7 +50,7 @@ import getopt
 import re
 import gzip
 
-from pyparsing import *
+from tappy_lib.pyparsing.pyparsing import *
 import filelike
 
 
