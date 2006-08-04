@@ -43,15 +43,19 @@ version_text=string.strip(open("VERSION").readline())
 exec_prefix=sys.exec_prefix
 description = "Tidal Analysis Program in PYthon"
 long_description = "TAPPY is a tidal analysis package. It breaks down an hourly record of water levels into the component sine waves. It is written in Python and uses the least squares optimization and other functions in SciPy?. The focus is to make the most accurate analysis possible. TAPPY only determines the constituents that are calculatable according to the length of the time series."
-download_url = "http://prdownloads.sourceforge.net/tappy/tappy-0.4.0.tar.gz?download"
+download_url = "http://prdownloads.sourceforge.net/tappy/tappy-0.4.3.tar.gz?download"
 author = "Tim Cera"
 author_email = "timcera@earthlink.net"
 url="http://tappy.sourceforge.net"
 license = "GPL-2"
 
 scripts=['tappy.py']
-py_modules=['tappy_lib/pyparsing/pyparsing']
-packages=['tappy_lib', 'tappy_lib/astrolabe/lib/python/astrolabe', 'tappy_lib/filelike/filelike']
+packages=[
+    'tappy_lib', 
+    'tappy_lib/astrolabe/lib/python/astrolabe', 
+    'tappy_lib/filelike/filelike', 
+    'tappy_lib/pyparsing',
+    ]
 
 #===utilities==========================
 def debug(ftn,txt):
@@ -88,7 +92,6 @@ def main():
 
            #---scripts,modules and packages---
            scripts=scripts,
-           py_modules = py_modules,
            packages = packages,
 	   package_data = {'tappy_lib' : ['astrolabe/data/vsop87d.txt']},
            )
