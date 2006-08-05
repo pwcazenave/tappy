@@ -157,11 +157,12 @@ def real(name,
          maximum=None, 
          exact=None, 
          sign=Optional(oneOf("- +")), 
+         dec_sep=decimal_sep,
          parseAct=toFloat):
     """Appends a skip/real pair to the parse constructs."""
     lword = Combine(sign +
                     Word(nums) + 
-                    decimal_sep + 
+                    dec_sep + 
                     Optional(Word(nums)) + 
                     Optional(oneOf("E e") + Word(nums)))
     grammar.append(SkipTo(lword))
@@ -184,7 +185,7 @@ def negative_real(name,
                   minimum=None, 
                   maximum=None, 
                   exact=None):
-    """Will only parse a positive real."""
+    """Will only parse a negative real."""
     real(name, 
          minimum=minimum, 
          maximum=maximum, 
@@ -202,7 +203,7 @@ def real_as_string(name,
          minimum=minimum, 
          maximum=maximum, 
          exact=exact, 
-         sign=Optional("+"), 
+         sign=Optional("- +"), 
          parseAct=parseAct)
 
 def integer_as_string(name, 
@@ -225,6 +226,57 @@ def qstring(name):
     grammar.append(SkipTo(quoted_string))
     grammar.append(quoted_string.setResultsName(name))
 
+def delimited_as_string(name):
+    """Parses out any delimited group as a string."""
+    wrd = Word(alphanums)
+    grammar.append(SkipTo(wrd))
+    grammar.append(wrd.setResultsName(name))
+
+def number_as_real(name,
+                    minimum=None, 
+                    maximum=None, 
+                    exact=None, 
+                    sign=Optional(oneOf("- +")), 
+                    parseAct=toFloat):
+    """Parses any number as a real."""
+    real(name,
+         minimum=None, 
+         maximum=None, 
+         exact=None, 
+         sign=Optional(oneOf("- +")), 
+         dec_sep=Optional(decimal_sep),
+         parseAct=toFloat)
+    
+def number_as_integer(name,
+                    minimum=None, 
+                    maximum=None, 
+                    exact=None, 
+                    sign=Optional(oneOf("- +")), 
+                    parseAct=toInteger):
+    """Parses any number as a real."""
+    real(name,
+         minimum=None, 
+         maximum=None, 
+         exact=None, 
+         sign=Optional(oneOf("- +")), 
+         dec_sep=Optional(decimal_sep),
+         parseAct=toInteger)
+    
+def number_as_string(name,
+                    minimum=None, 
+                    maximum=None, 
+                    exact=None, 
+                    sign=Optional(oneOf("- +")), 
+                    parseAct=toString):
+    """Parses any number as a real."""
+    real(name,
+         minimum=None, 
+         maximum=None, 
+         exact=None, 
+         sign=Optional(oneOf("- +")), 
+         dec_sep=Optional(decimal_sep),
+         parseAct=toString)
+    
 class ParseFileLineByLine:
     """
     Bring data from text files into a program, optionally parsing each line
