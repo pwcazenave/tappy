@@ -61,7 +61,7 @@ import sparser
 
 #===globals======================
 modname="tappy"
-__version__="0.2"
+__version__="0.5.0"
 
 #--option args--
 debug_p=0
@@ -117,6 +117,18 @@ class tappy:
                                                 line['hour'],
                                                 line['minute']))
         self.elevation = N.array(self.elevation)
+        self.dates = N.array(self.dates)
+
+        # Don't think I need equally spaced values, but let's
+        # put a limit of 1 hour difference between values.
+        difference = self.dates[1:] - self.dates[:-1]
+        if N.any(difference > datetime.timedelta(seconds=3600)):
+            print "There is a difference of greater than one hour between values"
+            sys.exit()
+        if N.any(difference < datetime.timedelta(seconds=0)):
+            print "Let's do the time warp again!"
+            print "The date values reverse - they must be constantly increasing."
+            sys.exit()
 
         self.astronomic()
 
@@ -127,19 +139,21 @@ class tappy:
         #    speed is how fast the constiuent moves in degrees/hour
         #    VAU is V+u taken from Schureman
         #    FF is the node factor from Schureman
-        if len(self.elevation) < 13:
+
+        num_hours = (self.jd[-1] - self.jd[0]) * 24
+        if num_hours < 13:
             print "Cannot calculate any constituents from this record length"
             sys.exit()
         self.speed_dict["M2"] = {'speed': 28.984104252*deg2rad,
                                  'VAU': 2*(self.T - self.s + self.h + self.zeta - self.mu),
                                  'FF': N.cos(0.5*self.ii)**4 /0.9154  # eq 78
                                  }
-        if len(self.elevation) >= 24:
+        if num_hours >= 24:
             self.speed_dict["K1"] = {'speed': 15.041068632*deg2rad,
                                      'VAU': self.T + self.h + 90 - self.mupp,
                                      'FF': (0.8965*(N.sin(2.*self.ii)**2) + 0.6001*N.sin(2.*self.ii)*N.cos(self.mu*deg2rad) + 0.1006)**0.5  # eq 227
                                      }
-        if len(self.elevation) >= 25:
+        if num_hours >= 25:
             self.speed_dict["M3"] = {'speed': 43.476156360*deg2rad,
                                      'VAU': 3*self.T - 3*self.s + 3*self.h + 3*self.zeta - 3*self.mu,
                                      'FF': N.cos(0.5*self.ii)**6 /0.8758  # eq 149
@@ -148,12 +162,12 @@ class tappy:
                                      'VAU': 2.*self.speed_dict['M2']['VAU'],
                                      'FF': self.speed_dict['M2']['FF']**2
                                      }
-        if len(self.elevation) >= 26:
+        if num_hours >= 26:
             self.speed_dict["M6"] = {'speed': 86.952312720*deg2rad,
                                      'VAU': 3.*self.speed_dict['M2']['VAU'],
                                      'FF': self.speed_dict['M2']['FF']**2
                                      }
-        if len(self.elevation) >= 328:
+        if num_hours >= 328:
             self.speed_dict["O1"] = {'speed': 13.943035584*deg2rad,
                                      'VAU': self.T - 2*self.s + self.h - 90 + 2*self.zeta - self.mu,
                                      'FF': N.sin(self.ii)*N.cos(0.5*self.ii)**2 /0.3800
@@ -165,7 +179,7 @@ class tappy:
                                      # h + T - mu - 2*(one - nine) - 90
                                      # h + T - mu - 2*s + 2*zeta - 90
                                      # T - 2*s + h - 90 + 2*zeta - mu
-        if len(self.elevation) >= 355:
+        if num_hours >= 355:
             self.speed_dict["MSf"] = {'speed': 1.0158957720*deg2rad,
                                       'VAU': 2.0*(self.s - self.h),
                                       'FF': ((2./3.) - N.sin(self.ii)**2)/0.5021
@@ -190,12 +204,12 @@ class tappy:
                                       'VAU': 4*self.T,
                                       'FF': N.ones(len(self.T))
                                       }
-        if len(self.elevation) >= 651:
+        if num_hours >= 651:
             self.speed_dict["OO1"] = {'speed': 16.139101680*deg2rad,
                                       'VAU': self.T + 2*self.s + self.h - 90 - 2*self.zeta - self.mu,
                                       'FF': (N.sin(self.ii)*N.sin(0.5*self.ii)**2)/0.0164
                                       }
-        if len(self.elevation) >= 656:
+        if num_hours >= 656:
             self.speed_dict["MK3"] = {'speed': 44.025172884*deg2rad,
                                       'VAU': self.speed_dict['M2']['VAU']+self.speed_dict['K1']['VAU'],
                                       'FF': self.speed_dict['M2']['FF']*self.speed_dict['K1']['FF']
@@ -205,7 +219,7 @@ class tappy:
                                       'VAU': 3*self.T - 4*self.s + 3*self.h + 90 + 4*self.zeta - 4*self.mu - 4*self.mupp,
                                       'FF': self.speed_dict['M2']['FF']**2*self.speed_dict['K1']['FF']
                                       }
-        if len(self.elevation) >= 662:
+        if num_hours >= 662:
             self.speed_dict["2Q1"] = {'speed': 12.854286252*deg2rad,
                                       'VAU': self.T - 4*self.s + self.h + 2*self.p + 90 + 2*self.zeta - self.mu,
                                       'FF': self.speed_dict['O1']['FF']
@@ -249,7 +263,7 @@ class tappy:
                                       'VAU': self.speed_dict['M2']['VAU'] + self.speed_dict['N2']['VAU'],
                                       'FF': self.speed_dict['M2']['FF']**2
                                       }
-        if len(self.elevation) >= 764:
+        if num_hours >= 764:
             self.speed_dict["Mm"] =  {'speed': 0.5443747*deg2rad,
                                       'VAU': self.s - self.p,
                                       'FF': ((2./3.) - N.sin(self.ii)**2)/0.5021
@@ -268,7 +282,7 @@ class tappy:
                                       'VAU': 2*self.T - 5*self.s + 4*self.h + self.p + 4*self.zeta - 4*self.mu,
                                       'FF': self.speed_dict['M2']['FF']**2
                                       }
-        if len(self.elevation) >= 4383:
+        if num_hours >= 4383:
             self.speed_dict["Ssa"] = {'speed': 0.0821373*deg2rad,
                                       'VAU': 2.0*self.h,
                                       'FF': N.ones(len(self.T))
@@ -317,7 +331,7 @@ class tappy:
                                       'FF': self.speed_dict['M2']['FF'] * self.speed_dict['K2']['FF']
                                       }
 #            self.speed_dict["MSN2"] =
-        if len(self.elevation) >= 4942:
+        if num_hours >= 4942:
             self.speed_dict["2N2"] = {'speed': 27.8953548*deg2rad,
                                       'VAU': 2*(self.T - 2*self.s + self.h + self.p + self.zeta - self.mu),
                                       'FF': self.speed_dict['M2']['FF']
@@ -352,12 +366,12 @@ class tappy:
                                           'VAU': 2*self.T - self.s + self.p + 180,
                                           'FF': self.speed_dict['M2']['FF']
                                           }
-        if len(self.elevation) >= 8766:
+        if num_hours >= 8766:
             self.speed_dict["Sa"] = {'speed': 0.0410686*deg2rad,
                                      'VAU': self.h,
                                      'FF': N.ones(len(self.T))
                                      }
-        if len(self.elevation) >= 8767:
+        if num_hours >= 8767:
             self.speed_dict["S1"] = {'speed': 15.0000000*deg2rad,
                                      'VAU': self.T,
                                      'FF': N.ones(len(self.T))
@@ -380,7 +394,7 @@ class tappy:
                                        }
 #            self.speed_dict["H1"] =
 #            self.speed_dict["H2"] =
-        if len(self.elevation) >= 11326:
+        if num_hours >= 11326:
             # GAM2 from Foreman should go here, but couldn't find comparable
             # constituent from Schureman
             pass
@@ -464,6 +478,10 @@ class tappy:
         series at zero.
 
         """
+        difference = self.dates[1:] - self.dates[:-1]
+        if N.any(difference == datetime.timedelta(seconds=3600)):
+            print "To use the --filter option you must use hourly values."
+            sys.exit()
         kern = N.ones(25) * (1./25.)
         self.elevation = self.elevation - N.convolve(self.elevation, kern, mode=1)
 
@@ -490,9 +508,9 @@ class tappy:
                                                 
     def constituents(self):
         p0 = [1.0]*(len(self.speed_dict)*2 + 1)
-        nhours = (self.jd - self.jd[0]) * 24 
+        ntimes = (self.jd - self.jd[0]) * 24 
 
-        lsfit = leastsq(self.residuals, p0, args=(self.elevation, nhours))
+        lsfit = leastsq(self.residuals, p0, args=(self.elevation, ntimes))
 
         a = {}
         b = {}
