@@ -153,17 +153,17 @@ def negative_integer(name,
             sign="-")
 
 def real(name, 
-         minimum=None, 
-         maximum=None, 
-         exact=None, 
+         required_decimal=True,
          sign=Optional(oneOf("- +")), 
-         dec_sep=decimal_sep,
          parseAct=toFloat):
     """Appends a skip/real pair to the parse constructs."""
-    lword = Combine(sign +
-                    Word(nums) + 
-                    dec_sep + 
-                    Optional(Word(nums)) + 
+    if required_decimal:
+        lword = Combine(sign +
+                    Regex('[0-9]*\.[0-9]*') +
+                    Optional(oneOf("E e") + Word(nums)))
+    else: 
+        lword = Combine(sign +
+                    Word(nums + decimal_sep) + 
                     Optional(oneOf("E e") + Word(nums)))
     grammar.append(SkipTo(lword))
     grammar.append(lword
@@ -233,18 +233,12 @@ def delimited_as_string(name):
     grammar.append(wrd.setResultsName(name))
 
 def number_as_real(name,
-                    minimum=None, 
-                    maximum=None, 
-                    exact=None, 
                     sign=Optional(oneOf("- +")), 
                     parseAct=toFloat):
     """Parses any number as a real."""
     real(name,
-         minimum=None, 
-         maximum=None, 
-         exact=None, 
+         required_decimal=False,
          sign=Optional(oneOf("- +")), 
-         dec_sep=Optional(decimal_sep),
          parseAct=toFloat)
     
 def number_as_integer(name,
@@ -254,12 +248,11 @@ def number_as_integer(name,
                     sign=Optional(oneOf("- +")), 
                     parseAct=toInteger):
     """Parses any number as a real."""
-    real(name,
+    integer(name,
          minimum=None, 
          maximum=None, 
          exact=None, 
          sign=Optional(oneOf("- +")), 
-         dec_sep=Optional(decimal_sep),
          parseAct=toInteger)
     
 def number_as_string(name,
@@ -274,7 +267,6 @@ def number_as_string(name,
          maximum=None, 
          exact=None, 
          sign=Optional(oneOf("- +")), 
-         dec_sep=Optional(decimal_sep),
          parseAct=toString)
     
 class ParseFileLineByLine:
