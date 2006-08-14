@@ -61,7 +61,7 @@ import sparser
 
 #===globals======================
 modname="tappy"
-__version__="0.5.0"
+__version__="0.5.1"
 
 #--option args--
 debug_p=0
