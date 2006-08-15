@@ -119,16 +119,6 @@ class tappy:
         self.elevation = N.array(self.elevation)
         self.dates = N.array(self.dates)
 
-        # Don't think I need equally spaced values, but let's
-        # put a limit of 1 hour difference between values.
-        difference = self.dates[1:] - self.dates[:-1]
-        if N.any(difference > datetime.timedelta(seconds=3600)):
-            print "There is a difference of greater than one hour between values"
-            sys.exit()
-        if N.any(difference < datetime.timedelta(seconds=0)):
-            print "Let's do the time warp again!"
-            print "The date values reverse - they must be constantly increasing."
-            sys.exit()
 
         self.astronomic()
 
@@ -486,6 +476,30 @@ class tappy:
         self.elevation = self.elevation - N.convolve(self.elevation, kern, mode=1)
 
 
+    def missing(self, task):
+        """ Fills missing values with the mean of the values. """
+
+        if task not in ['fail', 'ignore', 'fill']:
+            print "missing-data must be one of 'fail' (the default), 'ignore', or 'fill'"
+            sys.exit()
+
+        if task == 'ignore':
+            return 1
+
+        difference = self.dates[1:] - self.dates[:-1]
+
+        if N.any(difference > datetime.timedelta(seconds=3600)):
+            if task == 'fail':
+                print "There is a difference of greater than one hour between values"
+                sys.exit()
+            if task == 'fill':
+                # Very difficult - I hate place-holders, but here is one
+                print "The 'missing-data=fill' function is not available yet."
+                sys.exit()
+
+
+
+
     def residuals(self, p, ht, t):
         """ Used for least squares fit.
     
@@ -507,6 +521,12 @@ class tappy:
 
                                                 
     def constituents(self):
+        difference = self.dates[1:] - self.dates[:-1]
+        if N.any(difference < datetime.timedelta(seconds=0)):
+            print "Let's do the time warp again!"
+            print "The date values reverse - they must be constantly increasing."
+            sys.exit()
+
         p0 = [1.0]*(len(self.speed_dict)*2 + 1)
         ntimes = (self.jd - self.jd[0]) * 24 
 
@@ -569,6 +589,9 @@ def main(option_dict):
     if option_dict['filter_p']:
         x.filter()
 
+    if option_dict['missing_data']:
+        x.missing(option_dict['missing_data'])
+
     x.constituents()
 
     if not option_dict['quiet']:
@@ -586,8 +609,9 @@ if __name__ == '__main__':
                    'output_p':0,
                    'quiet':0,
                    'ephemeris_table':0,
+                   'missing_data':'fail',
                    }
-    opts,pargs=getopt.getopt(sys.argv[1:],'hvdfoqe',
+    opts,pargs=getopt.getopt(sys.argv[1:],'hvdfoqem=',
                  [
                  'help',
                  'version',
@@ -596,6 +620,7 @@ if __name__ == '__main__':
                  'output',
                  'quiet',
                  'ephemeris',
+                 'missing-data=',
                  ])
     for opt in opts:
         if opt[0]=='-h' or opt[0]=='--help':
@@ -620,6 +645,10 @@ if __name__ == '__main__':
         elif opt[0]=='-e' or opt[0]=='--ephemeris':
             option_dict['ephemeris_table'] = 1
             sys.argv.remove(opt[0])
+        elif opt[0]=='-m' or opt[0]=='--missing-data':
+            option_dict['missing_data'] = opt[1]
+            sys.argv.remove(opt[0])
+            sys.argv.remove(opt[1])
 
     #---make the object and run it---
     main(option_dict)
