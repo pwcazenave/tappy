@@ -120,8 +120,8 @@ class tappy:
         self.dates = N.array(self.dates)
 
 
-        self.astronomic()
 
+    def which_constituents(self):
         # Set data into speed_dict depending on length of time series
         # Required length of time series depends on Raleigh criteria to 
         # differentiate beteen constituents of simmilar speed.
@@ -498,6 +498,17 @@ class tappy:
                 sys.exit()
 
 
+    def remove_extreme_values(self):
+        avg = N.average(self.elevation)
+        std = N.std(self.elevation)
+
+        good = self.elevation < (avg + 2.0*std)
+        self.elevation = N.compress(good, self.elevation)
+        self.dates = N.compress(good, self.dates)
+
+        good = self.elevation > (avg - 2.0*std)
+        self.elevation = N.compress(good, self.elevation)
+        self.dates = N.compress(good, self.dates)
 
 
     def residuals(self, p, ht, t):
@@ -551,11 +562,17 @@ class tappy:
 
 
     def write_components(self):
+        total = N.zeros(len(self.dates))
         for i in self.key_list:
             fpo = open("outts_%s.dat" % (i, ), "w")
             for index,d in enumerate(self.dates):
-                fpo.write("%s %f\n" % (d.isoformat(), self.r[i] * math.cos(index*self.speed_dict[i]['speed'] - self.phase[i]*deg2rad)))
+                component = self.r[i] * math.cos(index*self.speed_dict[i]['speed'] - self.phase[i]*deg2rad)
+                total[index] = total[index] + component
+                fpo.write("%s %f\n" % (d.isoformat(), component))
             fpo.close()
+        fpo = open("outts_total.dat", "w")
+        for d,v in zip(self.dates, total):
+            fpo.write("%s %f\n" % (d.isoformat(), v))
 
     def print_con(self):
         for i in self.key_list:
@@ -589,8 +606,15 @@ def main(option_dict):
     if option_dict['filter_p']:
         x.filter()
 
+    if option_dict['remove_extreme']:
+        x.remove_extreme_values()
+
     if option_dict['missing_data']:
         x.missing(option_dict['missing_data'])
+
+    x.astronomic()
+
+    x.which_constituents()
 
     x.constituents()
 
@@ -610,8 +634,9 @@ if __name__ == '__main__':
                    'quiet':0,
                    'ephemeris_table':0,
                    'missing_data':'fail',
+                   'remove_extreme':0,
                    }
-    opts,pargs=getopt.getopt(sys.argv[1:],'hvdfoqem=',
+    opts,pargs=getopt.getopt(sys.argv[1:],'hvdfoqem=r',
                  [
                  'help',
                  'version',
@@ -621,6 +646,7 @@ if __name__ == '__main__':
                  'quiet',
                  'ephemeris',
                  'missing-data=',
+                 'remove-extreme',
                  ])
     for opt in opts:
         if opt[0]=='-h' or opt[0]=='--help':
@@ -649,6 +675,9 @@ if __name__ == '__main__':
             option_dict['missing_data'] = opt[1]
             sys.argv.remove(opt[0])
             sys.argv.remove(opt[1])
+        elif opt[0]=='-r' or opt[0]=='--remove-extreme':
+            option_dict['remove_extreme'] = 1
+            sys.argv.remove(opt[0])
 
     #---make the object and run it---
     main(option_dict)
