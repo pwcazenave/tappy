@@ -176,7 +176,7 @@ class tappy:
                                       }
             self.speed_dict["S2"] = {'speed': 30.0000000 * deg2rad,
                                      'VAU': 2*self.T,
-                                     'FF': N.ones(len(self.T))
+                                     'FF': N.ones(len(self.dates))
                                      }
             self.speed_dict["SK3"] = {'speed': 45.041068656 * deg2rad,
                                       'VAU': 3*self.T + self.h - 90 - self.mupp,
@@ -192,7 +192,7 @@ class tappy:
                                       }
             self.speed_dict["S4"] = {'speed': 60.0*deg2rad,
                                       'VAU': 4*self.T,
-                                      'FF': N.ones(len(self.T))
+                                      'FF': N.ones(len(self.dates))
                                       }
         if num_hours >= 651:
             self.speed_dict["OO1"] = {'speed': 16.139101680*deg2rad,
@@ -418,16 +418,18 @@ class tappy:
             # whereas oceanographers measure the tide from zero at midnight.
             jd = (cal.cal_to_jd(dt.year, dt.month, dt.day) + uti.hms_to_fday(dt.hour, dt.minute, dt.second)) - 0.5
             self.jd[index] = jd
-            self.s[index] = lunar_eph.dimension(jd, 'L') * rad2deg
-            self.h[index] = solar_eph.dimension(jd, 'L') * rad2deg
             jdc = cal.jd_to_jcent(jd)
-            self.p[index] = N.mod(83.3532465 + 4069.0137287*jdc - 0.0103200*jdc**2
-                       - (jdc**3)/80053 + (jdc**4)/18999000, 360)
             self.N[index] = N.mod(125.0445479 - 1934.1362891*jdc + 0.0020754*jdc**2
                        + (jdc**3)/467441 - (jdc**4)/60616000, 360)
             self.p1[index] = N.mod((1012395 + 6189.03*(jdc + 1) + 1.63*(jdc + 1)**2 + 0.012*(jdc + 1)**3)/3600, 360)
+        jdc = cal.jd_to_jcent(self.jd[0])
+        self.p = N.mod(83.3532465 + 4069.0137287*jdc - 0.0103200*jdc**2
+                   - (jdc**3)/80053 + (jdc**4)/18999000, 360)
 
-        Nrad = self.N * deg2rad
+        self.s = lunar_eph.dimension(self.jd[0], 'L') * rad2deg
+        self.h = solar_eph.dimension(self.jd[0], 'L') * rad2deg
+
+        Nrad = self.N[0] * deg2rad
         # Calculate constants for V+u
         # I, inclination of Moon's orbit, pg 156, Schureman
         i = N.arccos(0.9136949 - 0.0356926 * N.cos(Nrad))
@@ -450,7 +452,8 @@ class tappy:
         self.mu=self.mu*rad2deg
         self.mupp=self.mupp*rad2deg
         self.two_mupp=self.two_mupp*rad2deg
-        hour=self.jd - self.jd.astype('i') 
+        #hour=self.jd - self.jd.astype('i') 
+        hour=self.jd[0] - int(self.jd[0])
 
         self.kap_p=(self.p-self.zeta)*deg2rad
         self.ii=i*deg2rad
@@ -539,40 +542,42 @@ class tappy:
             sys.exit()
 
         p0 = [1.0]*(len(self.speed_dict)*2 + 1)
-        ntimes = (self.jd - self.jd[0]) * 24 
+        self.ntimes = (self.jd - self.jd[0]) * 24 
 
-        lsfit = leastsq(self.residuals, p0, args=(self.elevation, ntimes))
-
-        a = {}
-        b = {}
-        for index,key in enumerate(self.key_list):
-            a[key] = lsfit[0][index]
-            b[key] = lsfit[0][index + len(self.key_list)]
+        lsfit = leastsq(self.residuals, p0, args=(self.elevation, self.ntimes))
 
         self.r = {}
         self.phase = {}
-        for i in self.key_list:
+        for index,key in enumerate(self.key_list):
+            self.r[key] = lsfit[0][index]
+            self.phase[key] = lsfit[0][index + len(self.key_list)]*rad2deg
 
-            self.r[i] = a[i]
-            self.phase[i] = b[i]*rad2deg
-            if self.r[i] < 0:
-                self.r[i] = abs(self.r[i])
-                self.phase[i] = self.phase[i] - 180
-            self.phase[i] = N.mod(self.phase[i] + self.speed_dict[i]['VAU'][0], 360)
+            if self.r[key] < 0:
+                self.r[key] = abs(self.r[key])
+                self.phase[key] = self.phase[key] - 180
+            self.phase[key] = N.mod(self.phase[key] + self.speed_dict[key]['VAU'], 360)
 
 
     def write_components(self):
         total = N.zeros(len(self.dates))
         for i in self.key_list:
             fpo = open("outts_%s.dat" % (i, ), "w")
-            for index,d in enumerate(self.dates):
-                component = self.r[i] * math.cos(index*self.speed_dict[i]['speed'] - self.phase[i]*deg2rad)
-                total[index] = total[index] + component
-                fpo.write("%s %f\n" % (d.isoformat(), component))
+            component = self.r[i]*self.speed_dict[i]['FF']*N.cos(self.speed_dict[i]['speed']*self.ntimes - (self.phase[i] - self.speed_dict[i]['VAU'])*deg2rad)
+#            sumterm = sumterm + H[i]*self.speed_dict[i]['FF']*N.cos(self.speed_dict[i]['speed']*t - phase[i])
+            total = total + component
+            for d,v in zip(self.dates, component):
+                fpo.write("%s %f\n" % (d.isoformat(), v))
             fpo.close()
         fpo = open("outts_total.dat", "w")
         for d,v in zip(self.dates, total):
             fpo.write("%s %f\n" % (d.isoformat(), v))
+        fpo = open("outts_filtered.dat", "w")
+        for d,v in zip(self.dates, self.elevation - total):
+            fpo.write("%s %f\n" % (d.isoformat(), v))
+        fpo = open("outts_original.dat", "w")
+        for d,v in zip(self.dates, self.elevation):
+            fpo.write("%s %f\n" % (d.isoformat(), v))
+
 
     def print_con(self):
         for i in self.key_list:
