@@ -99,6 +99,9 @@ grammar = []
 # Set a default value for decimal_separator.
 decimal_sep = "."
 
+# Extra dictionary
+extra_dict = {}
+
 #====================================
 
 def toInteger(instring, loc, tokenlist):
@@ -268,6 +271,9 @@ def number_as_string(name,
          exact=None, 
          sign=Optional(oneOf("- +")), 
          parseAct=toString)
+
+def insert(name, value):
+    extra_dict[name] = value
     
 class ParseFileLineByLine:
     """
@@ -334,7 +340,7 @@ class ParseFileLineByLine:
         #         ]
 
         
-        definition_file_one = filen + "_def" + file_extension
+        definition_file_one = filen + ".def"
         if os.path.dirname(filen):
             definition_file_two = os.path.dirname(filen) + os.sep + "sparse.def"
         else:
@@ -347,7 +353,7 @@ class ParseFileLineByLine:
         if def_filename:
             if os.path.exists(def_filename):
                 self.parsedef = def_filename
-
+        print self.parsedef
         if self.parsedef:
             execfile(self.parsedef)
             self.grammar = And(grammar[1:] + [restOfLine])
@@ -368,7 +374,10 @@ class ParseFileLineByLine:
         line = self.file.readline()
         if self.grammar and line:
             try:
-                return self.grammar.parseString(line).asDict()
+                tmp = self.grammar.parseString(line).asDict()
+                for key in extra_dict.keys():
+                    tmp[key] = extra_dict[key]
+                return tmp
             except ParseException:
                 pass
         return line

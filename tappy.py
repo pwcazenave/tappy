@@ -58,6 +58,8 @@ import datetime
 
 import tappy_lib
 import sparser
+import astrolabe.calendar as cal
+import astrolabe.util as uti
 
 #===globals======================
 modname="tappy"
@@ -92,6 +94,34 @@ def fatal(ftn,txt):
 def usage():
     print __doc__
 
+def interpolate(data, start, stop, iavg):
+    if start < 1 or stop > len(data) - 1:
+        print 'can not interpolate without at least 1 valid point on each side'
+    if start < iavg:
+        ssl = slice(0, start)
+    else:
+        ssl = slice(start - iavg, start)
+
+    deltay = N.average(data[stop + 1:stop + iavg]) - N.average(data[ssl])
+    numx = stop - start + 2.0
+    m = deltay/numx
+    b = N.average(data[ssl]) - m*(start - 1)
+    for i in range(start, stop + 1):
+        data[i] = m*i + b
+
+def zone_calculations(ftn, data, mask):
+    start = None
+    stop = None
+    for index,val in enumerate(mask):
+        if val and not start:
+            start = index
+        if not val and start:
+            stop = index - 1
+        if start and stop:
+            ftn(data, start, stop, 25)
+            start = None
+            stop = None
+
 
 #====================================
 class tappy:
@@ -120,47 +150,50 @@ class tappy:
         self.dates = N.array(self.dates)
 
 
+    def which_constituents(self, length, package):
+        (zeta, mu, mupp, two_mupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1) = package
 
-    def which_constituents(self):
+        speed_dict = {}
+
         # Set data into speed_dict depending on length of time series
         # Required length of time series depends on Raleigh criteria to 
         # differentiate beteen constituents of simmilar speed.
         #  Key is tidal constituent name from Schureman
-        #    speed is how fast the constiuent moves in degrees/hour
+        #    speed is how fast the constiuent moves in radians/hour
         #    VAU is V+u taken from Schureman
         #    FF is the node factor from Schureman
 
-        num_hours = (self.jd[-1] - self.jd[0]) * 24
+        num_hours = (jd[-1] - jd[0]) * 24
         if num_hours < 13:
             print "Cannot calculate any constituents from this record length"
             sys.exit()
-        self.speed_dict["M2"] = {'speed': 28.984104252*deg2rad,
-                                 'VAU': 2*(self.T - self.s + self.h + self.zeta - self.mu),
-                                 'FF': N.cos(0.5*self.ii)**4 /0.9154  # eq 78
+        speed_dict["M2"] = {'speed': 28.984104252*deg2rad,
+                                 'VAU': 2*(T - s + h + zeta - mu),
+                                 'FF': N.cos(0.5*ii)**4 /0.9154  # eq 78
                                  }
         if num_hours >= 24:
-            self.speed_dict["K1"] = {'speed': 15.041068632*deg2rad,
-                                     'VAU': self.T + self.h + 90 - self.mupp,
-                                     'FF': (0.8965*(N.sin(2.*self.ii)**2) + 0.6001*N.sin(2.*self.ii)*N.cos(self.mu*deg2rad) + 0.1006)**0.5  # eq 227
+            speed_dict["K1"] = {'speed': 15.041068632*deg2rad,
+                                     'VAU': T + h + 90 - mupp,
+                                     'FF': (0.8965*(N.sin(2.*ii)**2) + 0.6001*N.sin(2.*ii)*N.cos(mu*deg2rad) + 0.1006)**0.5  # eq 227
                                      }
         if num_hours >= 25:
-            self.speed_dict["M3"] = {'speed': 43.476156360*deg2rad,
-                                     'VAU': 3*self.T - 3*self.s + 3*self.h + 3*self.zeta - 3*self.mu,
-                                     'FF': N.cos(0.5*self.ii)**6 /0.8758  # eq 149
+            speed_dict["M3"] = {'speed': 43.476156360*deg2rad,
+                                     'VAU': 3*T - 3*s + 3*h + 3*zeta - 3*mu,
+                                     'FF': N.cos(0.5*ii)**6 /0.8758  # eq 149
                                      }
-            self.speed_dict["M4"] = {'speed': 57.968208468*deg2rad,
-                                     'VAU': 2.*self.speed_dict['M2']['VAU'],
-                                     'FF': self.speed_dict['M2']['FF']**2
+            speed_dict["M4"] = {'speed': 57.968208468*deg2rad,
+                                     'VAU': 2.*speed_dict['M2']['VAU'],
+                                     'FF': speed_dict['M2']['FF']**2
                                      }
         if num_hours >= 26:
-            self.speed_dict["M6"] = {'speed': 86.952312720*deg2rad,
-                                     'VAU': 3.*self.speed_dict['M2']['VAU'],
-                                     'FF': self.speed_dict['M2']['FF']**2
+            speed_dict["M6"] = {'speed': 86.952312720*deg2rad,
+                                     'VAU': 3.*speed_dict['M2']['VAU'],
+                                     'FF': speed_dict['M2']['FF']**2
                                      }
         if num_hours >= 328:
-            self.speed_dict["O1"] = {'speed': 13.943035584*deg2rad,
-                                     'VAU': self.T - 2*self.s + self.h - 90 + 2*self.zeta - self.mu,
-                                     'FF': N.sin(self.ii)*N.cos(0.5*self.ii)**2 /0.3800
+            speed_dict["O1"] = {'speed': 13.943035584*deg2rad,
+                                     'VAU': T - 2*s + h - 90 + 2*zeta - mu,
+                                     'FF': N.sin(ii)*N.cos(0.5*ii)**2 /0.3800
                                      }
                                      # thirty_one - thirty
                                      # (sixteen - eight) - (twenty_nine + 90)
@@ -170,266 +203,277 @@ class tappy:
                                      # h + T - mu - 2*s + 2*zeta - 90
                                      # T - 2*s + h - 90 + 2*zeta - mu
         if num_hours >= 355:
-            self.speed_dict["MSf"] = {'speed': 1.0158957720*deg2rad,
-                                      'VAU': 2.0*(self.s - self.h),
-                                      'FF': ((2./3.) - N.sin(self.ii)**2)/0.5021
+            speed_dict["MSf"] = {'speed': 1.0158957720*deg2rad,
+                                      'VAU': 2.0*(s - h),
+                                      'FF': ((2./3.) - N.sin(ii)**2)/0.5021
                                       }
-            self.speed_dict["S2"] = {'speed': 30.0000000 * deg2rad,
-                                     'VAU': 2*self.T,
-                                     'FF': N.ones(len(self.dates))
+            speed_dict["S2"] = {'speed': 30.0000000 * deg2rad,
+                                     'VAU': 2*T,
+                                     'FF': N.ones(length)
                                      }
-            self.speed_dict["SK3"] = {'speed': 45.041068656 * deg2rad,
-                                      'VAU': 3*self.T + self.h - 90 - self.mupp,
-                                      'FF': self.speed_dict['K1']['FF']
+            speed_dict["SK3"] = {'speed': 45.041068656 * deg2rad,
+                                      'VAU': 3*T + h - 90 - mupp,
+                                      'FF': speed_dict['K1']['FF']
                                       }
-            self.speed_dict["2SM2"] = {'speed': 31.015884960*deg2rad,
-                                      'VAU': 2*self.T + 2*self.s - 2*self.h - 2*self.zeta + 2*self.mu,
-                                      'FF': self.speed_dict['M2']['FF']
+            speed_dict["2SM2"] = {'speed': 31.015884960*deg2rad,
+                                      'VAU': 2*T + 2*s - 2*h - 2*zeta + 2*mu,
+                                      'FF': speed_dict['M2']['FF']
                                       }
-            self.speed_dict["MS4"] = {'speed': 58.984104240*deg2rad,
-                                      'VAU': self.speed_dict['M2']['VAU'] + self.speed_dict['S2']['VAU'],
-                                      'FF': self.speed_dict['M2']['FF']
+            speed_dict["MS4"] = {'speed': 58.984104240*deg2rad,
+                                      'VAU': speed_dict['M2']['VAU'] + speed_dict['S2']['VAU'],
+                                      'FF': speed_dict['M2']['FF']
                                       }
-            self.speed_dict["S4"] = {'speed': 60.0*deg2rad,
-                                      'VAU': 4*self.T,
-                                      'FF': N.ones(len(self.dates))
+            speed_dict["S4"] = {'speed': 60.0*deg2rad,
+                                      'VAU': 4*T,
+                                      'FF': N.ones(length)
                                       }
         if num_hours >= 651:
-            self.speed_dict["OO1"] = {'speed': 16.139101680*deg2rad,
-                                      'VAU': self.T + 2*self.s + self.h - 90 - 2*self.zeta - self.mu,
-                                      'FF': (N.sin(self.ii)*N.sin(0.5*self.ii)**2)/0.0164
+            speed_dict["OO1"] = {'speed': 16.139101680*deg2rad,
+                                      'VAU': T + 2*s + h - 90 - 2*zeta - mu,
+                                      'FF': (N.sin(ii)*N.sin(0.5*ii)**2)/0.0164
                                       }
         if num_hours >= 656:
-            self.speed_dict["MK3"] = {'speed': 44.025172884*deg2rad,
-                                      'VAU': self.speed_dict['M2']['VAU']+self.speed_dict['K1']['VAU'],
-                                      'FF': self.speed_dict['M2']['FF']*self.speed_dict['K1']['FF']
+            speed_dict["MK3"] = {'speed': 44.025172884*deg2rad,
+                                      'VAU': speed_dict['M2']['VAU']+speed_dict['K1']['VAU'],
+                                      'FF': speed_dict['M2']['FF']*speed_dict['K1']['FF']
                                       }
             # Seems like 2MK3 in Schureman is equivalent to MO3 in Foreman
-            self.speed_dict["2MK3"] = {'speed': 42.927139836*deg2rad,
-                                      'VAU': 3*self.T - 4*self.s + 3*self.h + 90 + 4*self.zeta - 4*self.mu - 4*self.mupp,
-                                      'FF': self.speed_dict['M2']['FF']**2*self.speed_dict['K1']['FF']
+            speed_dict["2MK3"] = {'speed': 42.927139836*deg2rad,
+                                      'VAU': 3*T - 4*s + 3*h + 90 + 4*zeta - 4*mu - 4*mupp,
+                                      'FF': speed_dict['M2']['FF']**2*speed_dict['K1']['FF']
                                       }
         if num_hours >= 662:
-            self.speed_dict["2Q1"] = {'speed': 12.854286252*deg2rad,
-                                      'VAU': self.T - 4*self.s + self.h + 2*self.p + 90 + 2*self.zeta - self.mu,
-                                      'FF': self.speed_dict['O1']['FF']
+            speed_dict["2Q1"] = {'speed': 12.854286252*deg2rad,
+                                      'VAU': T - 4*s + h + 2*p + 90 + 2*zeta - mu,
+                                      'FF': speed_dict['O1']['FF']
                                       }
-            self.speed_dict["Q1"] =  {'speed': 13.3986609*deg2rad,
-                                      #'VAU': self.T - 3*self.s + self.h + self.p + 90 + 2*self.zeta - self.mu,
-                                      'VAU': self.T - 3*self.s + self.h + self.p - 90 + 2*self.zeta - self.mu,
-                       #       h + T - mu - 3*s - 2*self.zeta - 90 + p    ????
+            speed_dict["Q1"] =  {'speed': 13.3986609*deg2rad,
+                                      #'VAU': T - 3*s + h + p + 90 + 2*zeta - mu,
+                                      'VAU': T - 3*s + h + p - 90 + 2*zeta - mu,
+                       #       h + T - mu - 3*s - 2*zeta - 90 + p    ????
                                       # VAU(3) - eighteen
                                       # O1 - (one - two)
                                       # O1 - (s - p)
                                       # O1 - s + p
                                       # T - 2*s + h - 90 + 2*zeta - mu - s + p
                                       # T - 3*s + h - 90 + 2*zeta - mu + p
-                                      'FF': self.speed_dict['O1']['FF']
+                                      'FF': speed_dict['O1']['FF']
                                       }
-            self.speed_dict["J1"] =  {'speed': 15.5854433*deg2rad,
-                                      'VAU': self.T + self.s + self.h - self.p - 90 - self.mu,
-                                      'FF': N.sin(2.0*self.ii)/0.7214
+            speed_dict["J1"] =  {'speed': 15.5854433*deg2rad,
+                                      'VAU': T + s + h - p - 90 - mu,
+                                      'FF': N.sin(2.0*ii)/0.7214
                                       }
-            self.speed_dict["N2"] =  {'speed': 28.439729568*deg2rad,
-                                      'VAU': 2*self.T - 3*self.s + 2*self.h + self.p + 2*self.zeta - 2*self.mu,
-                                      'FF': self.speed_dict['M2']['FF']
+            speed_dict["N2"] =  {'speed': 28.439729568*deg2rad,
+                                      'VAU': 2*T - 3*s + 2*h + p + 2*zeta - 2*mu,
+                                      'FF': speed_dict['M2']['FF']
                                       }
             # Seems like KJ2 in Schureman is equivalent to ETA2 in Foreman
-            self.speed_dict["KJ2"] = {'speed': 30.626511948*deg2rad,
-                                      'VAU': 2*self.T + self.s + 2*self.h - self.p - 2*self.mu,
-                                      'FF': N.sin(self.ii)**2/0.1565
+            speed_dict["KJ2"] = {'speed': 30.626511948*deg2rad,
+                                      'VAU': 2*T + s + 2*h - p - 2*mu,
+                                      'FF': N.sin(ii)**2/0.1565
                                       }
             # Seems like KQ1 in Schureman is equivalent to UPS1 in Foreman
-            self.speed_dict["KQ1"] = {'speed': 16.683476328*deg2rad,
-                                      'VAU': self.T + 3*self.s + self.h - self.p - 90 - 2*self.zeta - self.mu,
-                                      'FF': N.sin(self.ii)**2/0.1565
+            speed_dict["KQ1"] = {'speed': 16.683476328*deg2rad,
+                                      'VAU': T + 3*s + h - p - 90 - 2*zeta - mu,
+                                      'FF': N.sin(ii)**2/0.1565
                                       }
             # Seems like M1 in Schureman is equivalent to NO1 in Foreman
-            self.speed_dict["M1"] =  {'speed': 14.496693984*deg2rad,
-                                      'VAU': self.T - self.s + self.h + self.p - 90 - self.mu - self.Q,
-                                      'FF': self.speed_dict['O1']['FF'] *(2.31+1.435*N.cos(2.0*self.kap_p))**0.5
+            speed_dict["M1"] =  {'speed': 14.496693984*deg2rad,
+                                      'VAU': T - s + h + p - 90 - mu - Q,
+                                      'FF': speed_dict['O1']['FF'] *(2.31+1.435*N.cos(2.0*kap_p))**0.5
                                       }
-            self.speed_dict["MN4"] = {'speed': 57.423833820*deg2rad,
-                                      'VAU': self.speed_dict['M2']['VAU'] + self.speed_dict['N2']['VAU'],
-                                      'FF': self.speed_dict['M2']['FF']**2
+            speed_dict["MN4"] = {'speed': 57.423833820*deg2rad,
+                                      'VAU': speed_dict['M2']['VAU'] + speed_dict['N2']['VAU'],
+                                      'FF': speed_dict['M2']['FF']**2
                                       }
         if num_hours >= 764:
-            self.speed_dict["Mm"] =  {'speed': 0.5443747*deg2rad,
-                                      'VAU': self.s - self.p,
-                                      'FF': ((2./3.) - N.sin(self.ii)**2)/0.5021
+            speed_dict["Mm"] =  {'speed': 0.5443747*deg2rad,
+                                      'VAU': s - p,
+                                      'FF': ((2./3.) - N.sin(ii)**2)/0.5021
                                       }
-            self.speed_dict["L2"] =  {'speed': 29.5284789*deg2rad,
-                                      'VAU': 2*self.T - self.s + 2*self.h - self.p + 180 + 2*self.zeta - 2*self.mu - self.R,
-                                      'FF': self.speed_dict['M2']['FF'] * (1.0 - 12.0*N.tan(0.5*self.ii)**2 * N.cos(2.0*self.kap_p) + 36.0*N.tan(0.5*self.ii)**4)**0.5
+            speed_dict["L2"] =  {'speed': 29.5284789*deg2rad,
+                                      'VAU': 2*T - s + 2*h - p + 180 + 2*zeta - 2*mu - R,
+                                      'FF': speed_dict['M2']['FF'] * (1.0 - 12.0*N.tan(0.5*ii)**2 * N.cos(2.0*kap_p) + 36.0*N.tan(0.5*ii)**4)**0.5
                                       }
-            self.speed_dict["MU2"] = {'speed': 27.9682084*deg2rad,
-                                      'VAU': 2*self.T - 4*self.s + 4*self.h + 2*self.zeta - 2*self.mu,
-                                      'FF': self.speed_dict['M2']['FF']
+            speed_dict["MU2"] = {'speed': 27.9682084*deg2rad,
+                                      'VAU': 2*T - 4*s + 4*h + 2*zeta - 2*mu,
+                                      'FF': speed_dict['M2']['FF']
                                       }
-#            self.speed_dict["ALP1"] = 
+#            speed_dict["ALP1"] = 
             # Seems like MNS2 in Schureman is equivalent to EPS2 in Foreman
-            self.speed_dict["MNS2"] = {'speed': 27.423833796*deg2rad,
-                                      'VAU': 2*self.T - 5*self.s + 4*self.h + self.p + 4*self.zeta - 4*self.mu,
-                                      'FF': self.speed_dict['M2']['FF']**2
+            speed_dict["MNS2"] = {'speed': 27.423833796*deg2rad,
+                                      'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*mu,
+                                      'FF': speed_dict['M2']['FF']**2
                                       }
         if num_hours >= 4383:
-            self.speed_dict["Ssa"] = {'speed': 0.0821373*deg2rad,
-                                      'VAU': 2.0*self.h,
-                                      'FF': N.ones(len(self.T))
+            speed_dict["Ssa"] = {'speed': 0.0821373*deg2rad,
+                                      'VAU': 2.0*h,
+                                      'FF': N.ones(length)
                                       }
-            self.speed_dict["Mf"] =  {'speed': 1.0980331*deg2rad,
-                                      'VAU': 2.0*(self.s - self.zeta),
-                                      'FF': N.sin(self.ii)**2 /0.1578
+            speed_dict["Mf"] =  {'speed': 1.0980331*deg2rad,
+                                      'VAU': 2.0*(s - zeta),
+                                      'FF': N.sin(ii)**2 /0.1578
                                       }
-            self.speed_dict["P1"] = {'speed': 14.9589314*deg2rad,
-                                     'VAU': self.T - self.h + 90,
-                                     'FF': N.ones(len(self.T))
+            speed_dict["P1"] = {'speed': 14.9589314*deg2rad,
+                                     'VAU': T - h + 90,
+                                     'FF': N.ones(length)
                                      }
-            self.speed_dict["K2"] = {'speed': 30.0821373*deg2rad,
-                                     'VAU': 2*(self.T + self.h - self.two_mupp),
-                                     'FF': (19.0444*(N.sin(self.ii)**4) + 2.7702*(N.sin(self.ii)**2) * N.cos(2.*self.mu*deg2rad) + 0.0981)**0.5
+            speed_dict["K2"] = {'speed': 30.0821373*deg2rad,
+                                     'VAU': 2*(T + h - two_mupp),
+                                     'FF': (19.0444*(N.sin(ii)**4) + 2.7702*(N.sin(ii)**2) * N.cos(2.*mu*deg2rad) + 0.0981)**0.5
                                      }
-            self.speed_dict["SO3"] = {'speed': 43.9430356*deg2rad,
-                                      'VAU': 3*self.T - 2*self.s + self.h + 90 + 2*self.zeta - self.mu,
-                                      'FF': self.speed_dict["O1"]["FF"]
+            speed_dict["SO3"] = {'speed': 43.9430356*deg2rad,
+                                      'VAU': 3*T - 2*s + h + 90 + 2*zeta - mu,
+                                      'FF': speed_dict["O1"]["FF"]
                                       }
-            self.speed_dict["PHI1"] = {'speed': 15.1232059*deg2rad,
-                                       'VAU': self.T + 3*self.h - 90,
-                                       'FF': N.ones(len(self.T))
+            speed_dict["PHI1"] = {'speed': 15.1232059*deg2rad,
+                                       'VAU': T + 3*h - 90,
+                                       'FF': N.ones(length)
                                        }
-            self.speed_dict["SO1"] = {'speed': 16.0569644*deg2rad,
-                                      'VAU': self.T + 2*self.s - self.h - 90 - self.mu,
-                                      'FF': self.speed_dict['J1']['FF']
+            speed_dict["SO1"] = {'speed': 16.0569644*deg2rad,
+                                      'VAU': T + 2*s - h - 90 - mu,
+                                      'FF': speed_dict['J1']['FF']
                                       }
             # Seems like A54 in Schureman is equivalent to MKS2 in Foreman
-            self.speed_dict["A54"] = {'speed': 29.066241528*deg2rad,
-                                      'VAU': 2*self.T - 2*self.s + 4*self.h - 2*self.mu,
-                                      'FF': self.speed_dict['KJ2']['FF']
+            speed_dict["A54"] = {'speed': 29.066241528*deg2rad,
+                                      'VAU': 2*T - 2*s + 4*h - 2*mu,
+                                      'FF': speed_dict['KJ2']['FF']
                                       }
             # Seems like MP1 in Schureman is equivalent to TAU1 in Foreman
-            self.speed_dict["MP1"] = {'speed': 14.025172896*deg2rad,
-                                      'VAU': self.T - 2*self.s + 3*self.h - 90 - self.mu,
-                                      'FF': self.speed_dict['J1']['FF']
+            speed_dict["MP1"] = {'speed': 14.025172896*deg2rad,
+                                      'VAU': T - 2*s + 3*h - 90 - mu,
+                                      'FF': speed_dict['J1']['FF']
                                       }
             # Seems like A19 in Schureman is equivalent to BET1 in Foreman
-            self.speed_dict["A19"] = {'speed': 14.414556708*deg2rad,
-                                      'VAU': self.T - self.s - self.h + self.p - 90 - 2*self.zeta - self.mu,
-                                      'FF': self.speed_dict['O1']['FF']
+            speed_dict["A19"] = {'speed': 14.414556708*deg2rad,
+                                      'VAU': T - s - h + p - 90 - 2*zeta - mu,
+                                      'FF': speed_dict['O1']['FF']
                                       }
-            self.speed_dict["MK4"] = {'speed': 59.066241516*deg2rad,
-                                      'VAU': self.speed_dict['M2']['VAU'] + self.speed_dict['K2']['VAU'],
-                                      'FF': self.speed_dict['M2']['FF'] * self.speed_dict['K2']['FF']
+            speed_dict["MK4"] = {'speed': 59.066241516*deg2rad,
+                                      'VAU': speed_dict['M2']['VAU'] + speed_dict['K2']['VAU'],
+                                      'FF': speed_dict['M2']['FF'] * speed_dict['K2']['FF']
                                       }
-#            self.speed_dict["MSN2"] =
+#            speed_dict["MSN2"] =
         if num_hours >= 4942:
-            self.speed_dict["2N2"] = {'speed': 27.8953548*deg2rad,
-                                      'VAU': 2*(self.T - 2*self.s + self.h + self.p + self.zeta - self.mu),
-                                      'FF': self.speed_dict['M2']['FF']
+            speed_dict["2N2"] = {'speed': 27.8953548*deg2rad,
+                                      'VAU': 2*(T - 2*s + h + p + zeta - mu),
+                                      'FF': speed_dict['M2']['FF']
                                       }
-            self.speed_dict["NU2"] = {'speed': 28.5125831*deg2rad,
-                                      'VAU': 2*self.T - 3*self.s + 4*self.h - self.p + 2*self.zeta - 2*self.mu,
-                                      'FF': self.speed_dict['M2']['FF']
+            speed_dict["NU2"] = {'speed': 28.5125831*deg2rad,
+                                      'VAU': 2*T - 3*s + 4*h - p + 2*zeta - 2*mu,
+                                      'FF': speed_dict['M2']['FF']
                                       }
             # Seems like A4 in Schureman is equivalent to MSM in Foreman
-            self.speed_dict["A4"] = {'speed': 0.4715210880*deg2rad,
-                                     'VAU': self.s - 2*self.h + self.p,
-                                     'FF': self.speed_dict['Mm']['FF']
+            speed_dict["A4"] = {'speed': 0.4715210880*deg2rad,
+                                     'VAU': s - 2*h + p,
+                                     'FF': speed_dict['Mm']['FF']
                                      }
-            self.speed_dict["SIGMA1"] = {'speed': 12.9271398*deg2rad,
-                                         'VAU': self.T - 4*self.s + 3*self.h + 90 + 2*self.zeta - self.mu,
-                                         'FF': self.speed_dict['O1']['FF']
+            speed_dict["SIGMA1"] = {'speed': 12.9271398*deg2rad,
+                                         'VAU': T - 4*s + 3*h + 90 + 2*zeta - mu,
+                                         'FF': speed_dict['O1']['FF']
                                          }
-            self.speed_dict["RHO1"] = {'speed': 13.4715145*deg2rad,
-                                       'VAU': self.T - 3*self.s + 3*self.h - self.p + 90 + 2*self.zeta - self.mu,
-                                       'FF': self.speed_dict['O1']['FF']
+            speed_dict["RHO1"] = {'speed': 13.4715145*deg2rad,
+                                       'VAU': T - 3*s + 3*h - p + 90 + 2*zeta - mu,
+                                       'FF': speed_dict['O1']['FF']
                                        }
-            self.speed_dict["CHI1"] = {'speed': 14.5695476*deg2rad,
-                                       'VAU': self.T - self.s + 3*self.h - self.p - 90 - self.mu,
-                                       'FF': self.speed_dict['J1']['FF']
+            speed_dict["CHI1"] = {'speed': 14.5695476*deg2rad,
+                                       'VAU': T - s + 3*h - p - 90 - mu,
+                                       'FF': speed_dict['J1']['FF']
                                        }
-            self.speed_dict["THETA1"] = {'speed': 15.5125897*deg2rad,
-                                         'VAU': self.T + self.s - self.h + self.p - 90 - self.mu,
-                                         'FF': self.speed_dict['J1']['FF']
+            speed_dict["THETA1"] = {'speed': 15.5125897*deg2rad,
+                                         'VAU': T + s - h + p - 90 - mu,
+                                         'FF': speed_dict['J1']['FF']
                                          }
-#            self.speed_dict["OQ2"] =
-            self.speed_dict["LAMBDA2"] = {'speed': 29.4556253*deg2rad,
-                                          'VAU': 2*self.T - self.s + self.p + 180,
-                                          'FF': self.speed_dict['M2']['FF']
+#            speed_dict["OQ2"] =
+            speed_dict["LAMBDA2"] = {'speed': 29.4556253*deg2rad,
+                                          'VAU': 2*T - s + p + 180,
+                                          'FF': speed_dict['M2']['FF']
                                           }
         if num_hours >= 8766:
-            self.speed_dict["Sa"] = {'speed': 0.0410686*deg2rad,
-                                     'VAU': self.h,
-                                     'FF': N.ones(len(self.T))
+            speed_dict["Sa"] = {'speed': 0.0410686*deg2rad,
+                                     'VAU': h,
+                                     'FF': N.ones(length)
                                      }
         if num_hours >= 8767:
-            self.speed_dict["S1"] = {'speed': 15.0000000*deg2rad,
-                                     'VAU': self.T,
-                                     'FF': N.ones(len(self.T))
+            speed_dict["S1"] = {'speed': 15.0000000*deg2rad,
+                                     'VAU': T,
+                                     'FF': N.ones(length)
                                      }
-            self.speed_dict["T2"] = {'speed': 29.9589333*deg2rad,
-                                     'VAU': 2*self.T - self.h + self.p1,
-                                     'FF': N.ones(len(self.T))
+            speed_dict["T2"] = {'speed': 29.9589333*deg2rad,
+                                     'VAU': 2*T - h + p1,
+                                     'FF': N.ones(length)
                                      }
-            self.speed_dict["R2"] = {'speed': 30.0410667*deg2rad,
-                                     'VAU': 2*self.T + self.h - self.p1 + 180,
-                                     'FF': N.ones(len(self.T))
+            speed_dict["R2"] = {'speed': 30.0410667*deg2rad,
+                                     'VAU': 2*T + h - p1 + 180,
+                                     'FF': N.ones(length)
                                      }
-            self.speed_dict["PI1"] = {'speed': 14.9178647*deg2rad,
-                                      'VAU': self.T - 2*self.h + self.p1 + 90,
-                                      'FF': N.ones(len(self.T))
+            speed_dict["PI1"] = {'speed': 14.9178647*deg2rad,
+                                      'VAU': T - 2*h + p1 + 90,
+                                      'FF': N.ones(length)
                                       }
-            self.speed_dict["PSI1"] = {'speed': 15.0821352*deg2rad,
-                                       'VAU': self.T + 2*self.h - self.p1 - 90,
-                                       'FF': N.ones(len(self.T))
+            speed_dict["PSI1"] = {'speed': 15.0821352*deg2rad,
+                                       'VAU': T + 2*h - p1 - 90,
+                                       'FF': N.ones(length)
                                        }
-#            self.speed_dict["H1"] =
-#            self.speed_dict["H2"] =
+#            speed_dict["H1"] =
+#            speed_dict["H2"] =
         if num_hours >= 11326:
             # GAM2 from Foreman should go here, but couldn't find comparable
             # constituent from Schureman
             pass
 
-        self.key_list = self.speed_dict.keys()
-        self.key_list.sort()
+        key_list = speed_dict.keys()
+        key_list.sort()
 
         # Fix VAU to be between 0 and 360
-        for key in self.key_list:
-            self.speed_dict[key]['VAU'] = N.mod(self.speed_dict[key]['VAU'], 360)
+        for key in key_list:
+            speed_dict[key]['VAU'] = N.mod(speed_dict[key]['VAU'], 360)
+            try:
+                speed_dict[key]['VAU'] = speed_dict[key]['VAU'][0]
+            except TypeError:
+                pass
+        return (speed_dict, key_list)
 
 
-    def astronomic(self):
+    def dates2jd(self, dates):
+        jd = N.zeros(len(dates), "d")
+        if isinstance(dates[0], datetime.datetime):
+            for index,dt in enumerate(dates):
+                # The -0.5 is needed because astronomers measure their zero from GMT noon,
+                # whereas oceanographers measure the tide from zero at midnight.
+                jd[index] = (cal.cal_to_jd(dt.year, dt.month, dt.day) + uti.hms_to_fday(dt.hour, dt.minute, dt.second)) - 0.5
+        else:
+            jd = dates
+        return jd
+
+
+    def astronomic(self, dates):
         # Work from astrolabe and Jean Meeuss
-        import astrolabe.calendar as cal
-        import astrolabe.util as uti
         import astrolabe.elp2000 as elp
         import astrolabe.sun as sun
 
         lunar_eph = elp.ELP2000()
         solar_eph = sun.Sun()
 
-        self.jd = N.zeros(len(self.dates), "d")
-        self.s  = N.zeros(len(self.dates), "d")
-        self.h  = N.zeros(len(self.dates), "d")
-        self.N  = N.zeros(len(self.dates), "d")
-        self.p  = N.zeros(len(self.dates), "d")
-        self.p1 = N.zeros(len(self.dates), "d")
-        for index,dt in enumerate(self.dates):
-            # The -0.5 is needed because astronomers measure their zero from GMT noon,
-            # whereas oceanographers measure the tide from zero at midnight.
-            jd = (cal.cal_to_jd(dt.year, dt.month, dt.day) + uti.hms_to_fday(dt.hour, dt.minute, dt.second)) - 0.5
-            self.jd[index] = jd
-            jdc = cal.jd_to_jcent(jd)
-            self.N[index] = N.mod(125.0445479 - 1934.1362891*jdc + 0.0020754*jdc**2
+        s  = N.zeros(len(dates), "d")
+        h  = N.zeros(len(dates), "d")
+        Nv = N.zeros(len(dates), "d")
+        p  = N.zeros(len(dates), "d")
+        p1 = N.zeros(len(dates), "d")
+        jd = self.dates2jd(dates)
+        for index,dt in enumerate(dates):
+            jdc = cal.jd_to_jcent(jd[index])
+            Nv[index] = N.mod(125.0445479 - 1934.1362891*jdc + 0.0020754*jdc**2
                        + (jdc**3)/467441 - (jdc**4)/60616000, 360)
-            self.p1[index] = N.mod((1012395 + 6189.03*(jdc + 1) + 1.63*(jdc + 1)**2 + 0.012*(jdc + 1)**3)/3600, 360)
-        jdc = cal.jd_to_jcent(self.jd[0])
-        self.p = N.mod(83.3532465 + 4069.0137287*jdc - 0.0103200*jdc**2
+            p1[index] = N.mod((1012395 + 6189.03*(jdc + 1) + 1.63*(jdc + 1)**2 + 0.012*(jdc + 1)**3)/3600, 360)
+        jdc = cal.jd_to_jcent(jd[0])
+        p = N.mod(83.3532465 + 4069.0137287*jdc - 0.0103200*jdc**2
                    - (jdc**3)/80053 + (jdc**4)/18999000, 360)
 
-        self.s = lunar_eph.dimension(self.jd[0], 'L') * rad2deg
-        self.h = solar_eph.dimension(self.jd[0], 'L') * rad2deg
+        s = lunar_eph.dimension(jd[0], 'L') * rad2deg
+        h = solar_eph.dimension(jd[0], 'L') * rad2deg
 
-        Nrad = self.N[0] * deg2rad
+        Nrad = Nv * deg2rad
         # Calculate constants for V+u
         # I, inclination of Moon's orbit, pg 156, Schureman
         i = N.arccos(0.9136949 - 0.0356926 * N.cos(Nrad))
@@ -437,68 +481,123 @@ class tappy:
         const_2=0.64412*N.tan(0.5*Nrad)
         const_3=2.*N.arctan(const_1)-Nrad
         const_4=2.*N.arctan(const_2)-Nrad
-        self.zeta=-0.5*(const_3+const_4)
-        self.mu=0.5*(const_3-const_4)
+        zeta=-0.5*(const_3+const_4)
+        mu=0.5*(const_3-const_4)
 
-        const_1=N.sin(2.0*i)*N.sin(self.mu)
-        const_2=N.sin(2.0*i)*N.cos(self.mu)+0.3347
-        self.mupp=N.arctan(const_1/const_2)
-        const_1=N.sin(i)**2 * N.sin(2.0*self.mu)
-        const_2=N.sin(i)**2 * N.cos(2.0*self.mu)+0.0727
-        self.two_mupp=N.arctan(const_1/const_2)
+        const_1=N.sin(2.0*i)*N.sin(mu)
+        const_2=N.sin(2.0*i)*N.cos(mu)+0.3347
+        mupp=N.arctan(const_1/const_2)
+        const_1=N.sin(i)**2 * N.sin(2.0*mu)
+        const_2=N.sin(i)**2 * N.cos(2.0*mu)+0.0727
+        two_mupp=N.arctan(const_1/const_2)
 
         i=i*rad2deg
-        self.zeta=self.zeta*rad2deg
-        self.mu=self.mu*rad2deg
-        self.mupp=self.mupp*rad2deg
-        self.two_mupp=self.two_mupp*rad2deg
-        #hour=self.jd - self.jd.astype('i') 
-        hour=self.jd[0] - int(self.jd[0])
+        zeta=zeta*rad2deg
+        mu=mu*rad2deg
+        mupp=mupp*rad2deg
+        two_mupp=two_mupp*rad2deg
+        #hour=jd - jd.astype('i') 
+        hour=jd[0] - int(jd[0])
 
-        self.kap_p=(self.p-self.zeta)*deg2rad
-        self.ii=i*deg2rad
+        kap_p=(p-zeta)*deg2rad
+        ii=i*deg2rad
         # pg 44, Schureman
-        term1=N.sin(2.*self.kap_p)
-        term2=(1./6.)*(1./N.tan(self.ii*0.5))**2
-        term3=N.cos(2.*self.kap_p)
-        self.R=N.arctan(term1/(term2-term3))*rad2deg
-        self.Q=N.arctan(0.483*N.tan(self.kap_p))*rad2deg
-        self.T=360.*hour
+        term1=N.sin(2.*kap_p)
+        term2=(1./6.)*(1./N.tan(ii*0.5))**2
+        term3=N.cos(2.*kap_p)
+        R=N.arctan(term1/(term2-term3))*rad2deg
+        Q=N.arctan(0.483*N.tan(kap_p))*rad2deg
+        T=360.*hour
+
+        # This should be stream lined... needed to support 
+        # the larger sized vector when filling missing values.
+        return (zeta, mu, mupp, two_mupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1)
 
 
-    def filter(self):
+    def filter(self, dates, elev):
         """ Filters out periods of 25 hours and less from self.elevation and centers
         series at zero.
 
         """
-        difference = self.dates[1:] - self.dates[:-1]
-        if N.any(difference == datetime.timedelta(seconds=3600)):
-            print "To use the --filter option you must use hourly values."
-            sys.exit()
-        kern = N.ones(25) * (1./25.)
-        self.elevation = self.elevation - N.convolve(self.elevation, kern, mode=1)
+
+        (dates,elev) = self.missing('fill', dates, elev)
+
+        kern = [  
+              -0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
+              -0.00537,-0.00641,-0.00735,-0.00811,-0.00864,
+              -0.00887,-0.00872,-0.00816,-0.00714,-0.00560,
+              -0.00355,-0.00097, 0.00213, 0.00574, 0.00980,
+               0.01425, 0.01902, 0.02400, 0.02911, 0.03423,
+               0.03923, 0.04399, 0.04842, 0.05237, 0.05576,
+               0.05850, 0.06051, 0.06174, 0.06215, ]
+
+        kern = N.concatenate((kern[:-1],kern[::-1]))
+
+        usgs_filtered = N.convolve(elev, kern, mode=1)
+
+        return usgs_filtered
 
 
-    def missing(self, task):
-        """ Fills missing values with the mean of the values. """
+    def wavelet(self, dates, elev):
+        import pywavelets
+        (dates,elev) = self.missing('fill', dates, elev)
+
+
+    def missing(self, task, dates, elev):
+        """ What to do with the missing values """
 
         if task not in ['fail', 'ignore', 'fill']:
             print "missing-data must be one of 'fail' (the default), 'ignore', or 'fill'"
             sys.exit()
 
         if task == 'ignore':
-            return 1
+            return (dates, elev)
 
-        difference = self.dates[1:] - self.dates[:-1]
+        interval = dates[1:] - dates[:-1]
 
-        if N.any(difference > datetime.timedelta(seconds=3600)):
+        if N.any(interval > datetime.timedelta(seconds=3600)):
             if task == 'fail':
                 print "There is a difference of greater than one hour between values"
                 sys.exit()
-            if task == 'fill':
-                # Very difficult - I hate place-holders, but here is one
-                print "The 'missing-data=fill' function is not available yet."
-                sys.exit()
+        if task == 'fill':
+            # Create real dates
+            start = dates[0]
+            # Dominant interval
+            interval.sort()
+            interval = interval[len(interval)/2]
+    
+            dt = dates[0]
+            dates_filled = []
+            while dt <= dates[-1]:
+                dates_filled.append(dt)
+                dt = dt + interval
+    
+            dates_filled = N.array(dates_filled)
+    
+            where_good = N.zeros(len(dates_filled), dtype='bool') 
+    
+            # Had to make this 'f8' in order to match 'total' and 'self.elevation'
+            # Don't know why this was different.
+            residuals = N.ones(len(dates_filled), dtype='f8') * -99999.0
+    
+            package = self.astronomic(dates_filled)
+            (speed_dict, key_list) = self.which_constituents(len(dates_filled), package)
+            (zeta, mu, mupp, two_mupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
+    
+            ntimes_filled = (jd_filled - jd_filled[0])*24
+            total = self.sum_signals(self.key_list, ntimes_filled, speed_dict)
+    
+            for dt in dates:
+                where_good[dates_filled == dt] = True
+    
+            residuals[where_good] = elev - total[where_good]
+    
+            # Might be able to use N.piecewise, but have to rethink
+            # N.piecewise gives the piece of the array to the function
+            #  but I want to use the border values of the array zone
+            zone_calculations(interpolate, residuals, residuals == -99999)
+   
+            return (dates_filled, residuals + total)
 
 
     def remove_extreme_values(self):
@@ -514,22 +613,33 @@ class tappy:
         self.dates = N.compress(good, self.dates)
 
 
-    def residuals(self, p, ht, t):
+    def residuals(self, p, ht, t, key_list):
         """ Used for least squares fit.
     
         """
         H = {}
         phase = {}
-        for index,key in enumerate(self.key_list):
+        slope = {}
+        for index,key in enumerate(key_list):
             H[key] = p[index]
-            phase[key] = p[index + len(self.key_list)]
+            phase[key] = p[index + len(key_list)]
+
+        if len(self.speed_dict[key_list[0]]['FF']) == len(t):
+            ff = self.speed_dict
+        else:
+            ff = {}
+            for key in key_list:
+                ff[key] = {'FF': N.ones(len(t))}
 
         sumterm = N.zeros((len(t)))
-        for i in self.key_list:
-            sumterm = sumterm + H[i]*self.speed_dict[i]['FF']*N.cos(self.speed_dict[i]['speed']*t - phase[i])
+        for i in key_list:
+            sumterm = sumterm + H[i]*ff[i]['FF']*N.cos(self.speed_dict[i]['speed']*t - phase[i])
 
-        err = ht - (p[-1] + sumterm)
-        return err
+        self.err = ht - (p[-2]*t + p[-1] + sumterm)
+#        self.err = ht - (p[-1] + sumterm)
+#        self.err[N.absolute(self.err) > (N.average(self.err) + 3.0*N.std(self.err))] = 0.0
+        return self.err
+
 
     #--------------------------
 
@@ -541,10 +651,11 @@ class tappy:
             print "The date values reverse - they must be constantly increasing."
             sys.exit()
 
-        p0 = [1.0]*(len(self.speed_dict)*2 + 1)
+        p0 = [1.0]*(len(self.speed_dict)*2 + 2)
+        p0[-2] = 0.0
         self.ntimes = (self.jd - self.jd[0]) * 24 
 
-        lsfit = leastsq(self.residuals, p0, args=(self.elevation, self.ntimes))
+        lsfit = leastsq(self.residuals, p0, args=(self.elevation, self.ntimes, self.key_list))
 
         self.r = {}
         self.phase = {}
@@ -556,28 +667,129 @@ class tappy:
                 self.r[key] = abs(self.r[key])
                 self.phase[key] = self.phase[key] - 180
             self.phase[key] = N.mod(self.phase[key] + self.speed_dict[key]['VAU'], 360)
+        self.fitted_average = p0[-1]
+        self.slope = p0[-2]
 
 
-    def write_components(self):
-        total = N.zeros(len(self.dates))
-        for i in self.key_list:
-            fpo = open("outts_%s.dat" % (i, ), "w")
-            component = self.r[i]*self.speed_dict[i]['FF']*N.cos(self.speed_dict[i]['speed']*self.ntimes - (self.phase[i] - self.speed_dict[i]['VAU'])*deg2rad)
-#            sumterm = sumterm + H[i]*self.speed_dict[i]['FF']*N.cos(self.speed_dict[i]['speed']*t - phase[i])
+    def sum_signals(self, skey_list, hours, speed_dict, amp=None, phase=None):
+        total = N.zeros(len(hours), dtype='f')
+        if isinstance(hours[0], datetime.datetime):
+            hours = self.dates2jd(hours)
+            hours = (hours - hours[0]) * 24
+        for i in skey_list:
+            if amp != None:
+                R = (amp - N.average(amp)) + self.r[i]
+            else:
+                R = self.r[i]
+            if phase != None:
+                p = (phase - N.average(phase)) + self.phase[i]
+            else:
+                p = self.phase[i]
+            component = R*speed_dict[i]['FF']*N.cos(speed_dict[i]['speed']*hours - (p - speed_dict[i]['VAU'])*deg2rad)
             total = total + component
-            for d,v in zip(self.dates, component):
-                fpo.write("%s %f\n" % (d.isoformat(), v))
-            fpo.close()
-        fpo = open("outts_total.dat", "w")
-        for d,v in zip(self.dates, total):
-            fpo.write("%s %f\n" % (d.isoformat(), v))
-        fpo = open("outts_filtered.dat", "w")
-        for d,v in zip(self.dates, self.elevation - total):
-            fpo.write("%s %f\n" % (d.isoformat(), v))
-        fpo = open("outts_original.dat", "w")
-        for d,v in zip(self.dates, self.elevation):
-            fpo.write("%s %f\n" % (d.isoformat(), v))
+        return total
 
+
+    def non_stationary_constituents(self, nstype, dates, elevation, flow=False):
+
+        if nstype == 'mstha':
+            blen = 24
+            blen = 12
+            s_list = ['M2','K1','M3','M4']
+            s_list = ['M2']
+
+            p0 = [1.0]*(len(s_list)*2 + 2)
+            p0[-2] = 0.0
+            ndates = N.concatenate(([dates[0] - datetime.timedelta(hours=blen/2)],
+                                    dates,
+                                    [dates[-1] + datetime.timedelta(hours=blen/2)]))
+            nelevation = N.concatenate(([elevation[0]],
+                                        elevation,
+                                        [elevation[-1]]))
+            (new_dates, new_elev) = self.missing('fill', ndates, nelevation)
+            slope = []
+            new_dates = self.dates2jd(new_dates)
+            ntimes = N.arange(2*blen + 1)
+            for d in range(len(new_dates))[blen:-blen]:
+          #      ntimes = (new_dates[d-12:d+12] - new_dates[d]) * 24 
+                nelev = new_elev[d-blen:d+blen+1]
+                lsfit = leastsq(self.residuals, p0, args=(nelev, ntimes, s_list))
+                slope.append(lsfit[0][-2])
+    
+            return slope
+
+        if nstype == 'wavelet':
+            import pywt
+            import pylab
+    
+            for wl in pywt.wavelist():
+    
+                w = pywt.Wavelet(wl)
+    
+                max_level = pywt.dwt_max_level(len(elevation), w.dec_len)
+    
+                a = pywt.wavedec(elevation, w, max_level, mode='sym')
+    
+    #            if flow:
+    #                for i in range(len(a))[1:-1]:
+    #                    a[i][a[i] < 0] = 0.0
+    #                a[-1][:] = 0.0
+    #            else:
+                for i in range(len(a))[1:]:
+                    avg = N.average(a[i][:])
+                    std = 4.0*N.std(a[i][:])
+                    a[i][(a[i][:] < (avg + std)) & (a[i][:] > (avg - std))] = 0.0
+    
+                for index,items in enumerate(a):
+                    self.write_file("%s_%i.dat" % (wl, index), dates, items)
+    
+                y = pywt.waverec(a, w, mode='sym')
+                self.write_file("%s.dat" % wl, dates, y)
+    
+            return y
+
+        if nstype == 'cd':
+    
+            (new_dates, new_elev) = self.missing('fill', dates, elevation)
+            package = self.astronomic(new_dates)
+            (zeta, mu, mupp, two_mupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
+            (speed_dict, key_list) = self.which_constituents(len(new_dates), package)
+            kern = N.ones(25) * (1./25.)
+
+            ns_amplitude = {}
+            ns_phase = {}
+            constituent_residual = {}
+            tot_amplitude = N.zeros(len(jd_filled))
+            for key in key_list:
+                # Since speed that I have been using is radians/hour
+                # you have to divide by 2*N.pi so I just removed 2*N.pi
+                # from the multiplication.
+                ntimes_filled = (jd_filled - jd_filled[0])*24
+                yt = new_elev*N.exp(-1j*speed_dict[key]['speed']*ntimes_filled)
+
+                ns_amplitude[key] = N.absolute(yt)
+                ns_amplitude[key] = yt.real
+                ns_amplitude[key] = N.convolve(ns_amplitude[key], kern, mode=1)
+
+                ns_phase[key] = N.arctan2(yt.imag, yt.real) * rad2deg
+                ns_phase[key] = N.convolve(ns_phase[key], kern, mode=1)
+
+                new_list = [i for i in self.key_list if i != key]
+                everything_but = self.sum_signals(new_list, ntimes_filled, speed_dict)
+                constituent_residual[key] = new_elev - everything_but
+            return ns_amplitude
+
+
+    def write_file(self, fname, x, y):
+        if isinstance(y, dict):
+            print y.keys()
+            for key in y.keys():
+                nfname = "%s_%s.dat" % (os.path.splitext(fname)[-2], key)
+                self.write_file(nfname, x, y[key])
+        else:
+            fpo = open(fname, "w")
+            for d,v in zip(x, y):
+                fpo.write("%s %f\n" % (d.isoformat(), v))
 
     def print_con(self):
         for i in self.key_list:
@@ -604,30 +816,48 @@ def main(option_dict):
 
     x=tappy(sys.argv[1], def_filename=def_filename)
 
+    print_list = []
     if option_dict['ephemeris_table']:
         x.print_ephemeris_table()
         sys.exit()
 
-    if option_dict['filter_p']:
-        x.filter()
+    if option_dict['zero_ts']:
+        x.elevation = x.elevation - x.filter(x.dates, x.elevation)
 
     if option_dict['remove_extreme']:
         x.remove_extreme_values()
 
-    if option_dict['missing_data']:
-        x.missing(option_dict['missing_data'])
+    package = x.astronomic(x.dates)
+    (x.zeta, x.mu, x.mupp, x.two_mupp, x.kap_p, x.ii, x.R, x.Q, x.T, x.jd, x.s, x.h, x.N, x.p, x.p1) = package
 
-    x.astronomic()
-
-    x.which_constituents()
+    (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates), package)
 
     x.constituents()
+
+    if option_dict['missing_data']:
+        x.dates_filled,x.elevation_filled = x.missing(option_dict['missing_data'], x.dates, x.elevation)
+        x.write_file('outts_filled.dat', x.dates_filled, x.elevation_filled)
+
+    if option_dict['filter_p'] == 'output':
+        x.usgs_filter = x.filter(x.dates_filled, x.elevation_filled)
+        x.write_file('outts_filtered.dat', x.dates_filled, x.usgs_filter)
+
+    if option_dict['non_stationary'] != None:
+        if not option_dict['missing_data']:
+            x.dates_filled,x.elevation_filled = x.missing(option_dict['missing_data'], x.dates, x.elevation)
+        for item in option_dict['non_stationary']:
+            if item in ['mstha', 'wavelet', 'cd', 'sfa', 'boxcar']:
+                result = x.non_stationary_constituents(item, x.dates_filled, x.elevation_filled)
+                x.write_file('outts_%s.dat' % (item,), x.dates_filled, result)
 
     if not option_dict['quiet']:
         x.print_con()
 
     if option_dict['output_p']:
-        x.write_components()
+        for key in x.key_list:
+            x.write_file("outts_%s.dat" % (key,), x.dates, x.sum_signals([key], x.dates, x.speed_dict))
+        x.write_file("outts_total_prediction.dat", x.dates, x.sum_signals(x.key_list, x.dates, x.speed_dict))
+        x.write_file("outts_original.dat", x.dates, x.elevation)
     
 #-------------------------
 if __name__ == '__main__':
@@ -638,20 +868,24 @@ if __name__ == '__main__':
                    'output_p':0,
                    'quiet':0,
                    'ephemeris_table':0,
-                   'missing_data':'fail',
+                   'missing_data':'ignore',
+                   'non_stationary':None,
                    'remove_extreme':0,
+                   'zero_ts':0,
                    }
-    opts,pargs=getopt.getopt(sys.argv[1:],'hvdfoqem=r',
+    opts,pargs=getopt.getopt(sys.argv[1:],'lhvdf=on=qem=rz',
                  [
                  'help',
                  'version',
                  'debug',
-                 'filter',
+                 'filter=',
                  'output',
+                 'non-stationary=',
                  'quiet',
                  'ephemeris',
                  'missing-data=',
                  'remove-extreme',
+                 'zero-ts',
                  ])
     for opt in opts:
         if opt[0]=='-h' or opt[0]=='--help':
@@ -665,8 +899,9 @@ if __name__ == '__main__':
             option_dict['debug_p'] = 1
             sys.argv.remove(opt[0])
         elif opt[0]=='-f' or opt[0]=='--filter':
-            option_dict['filter_p'] = 1
+            option_dict['filter_p'] = opt[1]
             sys.argv.remove(opt[0])
+            sys.argv.remove(opt[1])
         elif opt[0]=='-o' or opt[0]=='--output':
             option_dict['output_p'] = 1
             sys.argv.remove(opt[0])
@@ -682,6 +917,13 @@ if __name__ == '__main__':
             sys.argv.remove(opt[1])
         elif opt[0]=='-r' or opt[0]=='--remove-extreme':
             option_dict['remove_extreme'] = 1
+            sys.argv.remove(opt[0])
+        elif opt[0]=='-n' or opt[0]=='--non-stationary':
+            option_dict['non_stationary'] = opt[1].split(',')
+            sys.argv.remove(opt[0])
+            sys.argv.remove(opt[1])
+        elif opt[0]=='-z' or opt[0]=='--zero-ts':
+            option_dict['zero_ts'] = True
             sys.argv.remove(opt[0])
 
     #---make the object and run it---
