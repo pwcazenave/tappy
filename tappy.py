@@ -150,7 +150,7 @@ class tappy:
         self.dates = N.array(self.dates)
 
 
-    def which_constituents(self, length, package):
+    def which_constituents(self, length, package, aggressivefit=False):
         (zeta, mu, mupp, two_mupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1) = package
 
         speed_dict = {}
@@ -171,12 +171,12 @@ class tappy:
                                  'VAU': 2*(T - s + h + zeta - mu),
                                  'FF': N.cos(0.5*ii)**4 /0.9154  # eq 78
                                  }
-        if num_hours >= 24:
+        if num_hours >= 24 or aggressivefit:
             speed_dict["K1"] = {'speed': 15.041068632*deg2rad,
                                      'VAU': T + h + 90 - mupp,
                                      'FF': (0.8965*(N.sin(2.*ii)**2) + 0.6001*N.sin(2.*ii)*N.cos(mu*deg2rad) + 0.1006)**0.5  # eq 227
                                      }
-        if num_hours >= 25:
+        if num_hours >= 25 or aggressivefit:
             speed_dict["M3"] = {'speed': 43.476156360*deg2rad,
                                      'VAU': 3*T - 3*s + 3*h + 3*zeta - 3*mu,
                                      'FF': N.cos(0.5*ii)**6 /0.8758  # eq 149
@@ -185,12 +185,12 @@ class tappy:
                                      'VAU': 2.*speed_dict['M2']['VAU'],
                                      'FF': speed_dict['M2']['FF']**2
                                      }
-        if num_hours >= 26:
+        if num_hours >= 26 or aggressivefit:
             speed_dict["M6"] = {'speed': 86.952312720*deg2rad,
                                      'VAU': 3.*speed_dict['M2']['VAU'],
                                      'FF': speed_dict['M2']['FF']**2
                                      }
-        if num_hours >= 328:
+        if num_hours >= 328 or aggressivefit:
             speed_dict["O1"] = {'speed': 13.943035584*deg2rad,
                                      'VAU': T - 2*s + h - 90 + 2*zeta - mu,
                                      'FF': N.sin(ii)*N.cos(0.5*ii)**2 /0.3800
@@ -202,7 +202,7 @@ class tappy:
                                      # h + T - mu - 2*(one - nine) - 90
                                      # h + T - mu - 2*s + 2*zeta - 90
                                      # T - 2*s + h - 90 + 2*zeta - mu
-        if num_hours >= 355:
+        if num_hours >= 355 or aggressivefit:
             speed_dict["MSf"] = {'speed': 1.0158957720*deg2rad,
                                       'VAU': 2.0*(s - h),
                                       'FF': ((2./3.) - N.sin(ii)**2)/0.5021
@@ -227,12 +227,12 @@ class tappy:
                                       'VAU': 4*T,
                                       'FF': N.ones(length)
                                       }
-        if num_hours >= 651:
+        if num_hours >= 651 or aggressivefit:
             speed_dict["OO1"] = {'speed': 16.139101680*deg2rad,
                                       'VAU': T + 2*s + h - 90 - 2*zeta - mu,
                                       'FF': (N.sin(ii)*N.sin(0.5*ii)**2)/0.0164
                                       }
-        if num_hours >= 656:
+        if num_hours >= 656 or aggressivefit:
             speed_dict["MK3"] = {'speed': 44.025172884*deg2rad,
                                       'VAU': speed_dict['M2']['VAU']+speed_dict['K1']['VAU'],
                                       'FF': speed_dict['M2']['FF']*speed_dict['K1']['FF']
@@ -242,7 +242,7 @@ class tappy:
                                       'VAU': 3*T - 4*s + 3*h + 90 + 4*zeta - 4*mu - 4*mupp,
                                       'FF': speed_dict['M2']['FF']**2*speed_dict['K1']['FF']
                                       }
-        if num_hours >= 662:
+        if num_hours >= 662 or aggressivefit:
             speed_dict["2Q1"] = {'speed': 12.854286252*deg2rad,
                                       'VAU': T - 4*s + h + 2*p + 90 + 2*zeta - mu,
                                       'FF': speed_dict['O1']['FF']
@@ -286,7 +286,7 @@ class tappy:
                                       'VAU': speed_dict['M2']['VAU'] + speed_dict['N2']['VAU'],
                                       'FF': speed_dict['M2']['FF']**2
                                       }
-        if num_hours >= 764:
+        if num_hours >= 764 or aggressivefit:
             speed_dict["Mm"] =  {'speed': 0.5443747*deg2rad,
                                       'VAU': s - p,
                                       'FF': ((2./3.) - N.sin(ii)**2)/0.5021
@@ -305,7 +305,7 @@ class tappy:
                                       'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*mu,
                                       'FF': speed_dict['M2']['FF']**2
                                       }
-        if num_hours >= 4383:
+        if num_hours >= 4383 or aggressivefit:
             speed_dict["Ssa"] = {'speed': 0.0821373*deg2rad,
                                       'VAU': 2.0*h,
                                       'FF': N.ones(length)
@@ -353,8 +353,9 @@ class tappy:
                                       'VAU': speed_dict['M2']['VAU'] + speed_dict['K2']['VAU'],
                                       'FF': speed_dict['M2']['FF'] * speed_dict['K2']['FF']
                                       }
-#            speed_dict["MSN2"] =
-        if num_hours >= 4942:
+            # Mentioned, but no speed available...
+            # speed_dict["MSN2"] =
+        if num_hours >= 4942 or aggressivefit:
             speed_dict["2N2"] = {'speed': 27.8953548*deg2rad,
                                       'VAU': 2*(T - 2*s + h + p + zeta - mu),
                                       'FF': speed_dict['M2']['FF']
@@ -389,12 +390,12 @@ class tappy:
                                           'VAU': 2*T - s + p + 180,
                                           'FF': speed_dict['M2']['FF']
                                           }
-        if num_hours >= 8766:
+        if num_hours >= 8766 or aggressivefit:
             speed_dict["Sa"] = {'speed': 0.0410686*deg2rad,
                                      'VAU': h,
                                      'FF': N.ones(length)
                                      }
-        if num_hours >= 8767:
+        if num_hours >= 8767 or aggressivefit:
             speed_dict["S1"] = {'speed': 15.0000000*deg2rad,
                                      'VAU': T,
                                      'FF': N.ones(length)
@@ -417,9 +418,9 @@ class tappy:
                                        }
 #            speed_dict["H1"] =
 #            speed_dict["H2"] =
-        if num_hours >= 11326:
+        if num_hours >= 11326 or aggressivefit:
             # GAM2 from Foreman should go here, but couldn't find comparable
-            # constituent from Schureman
+            # constituent information from Schureman
             pass
 
         key_list = speed_dict.keys()
@@ -613,7 +614,7 @@ class tappy:
         self.dates = N.compress(good, self.dates)
 
 
-    def residuals(self, p, ht, t, key_list):
+    def residuals(self, p, ht, t, key_list, calc_linear_trend=False):
         """ Used for least squares fit.
     
         """
@@ -635,9 +636,14 @@ class tappy:
         for i in key_list:
             sumterm = sumterm + H[i]*ff[i]['FF']*N.cos(self.speed_dict[i]['speed']*t - phase[i])
 
-        self.err = ht - (p[-2]*t + p[-1] + sumterm)
-#        self.err = ht - (p[-1] + sumterm)
+        if calc_linear_trend:
+            self.err = ht - (p[-2]*t + p[-1] + sumterm)
+        else:    
+            self.err = ht - (p[-1] + sumterm)
+
+# What was this from?
 #        self.err[N.absolute(self.err) > (N.average(self.err) + 3.0*N.std(self.err))] = 0.0
+
         return self.err
 
 
@@ -806,25 +812,25 @@ class tappy:
         pass
 
 #=============================
-def main(option_dict):
-    if len(sys.argv) == 2:
+def main(options, args):
+    if len(args) == 1:
         def_filename = None
-    elif len(sys.argv) == 3:
-        def_filename = sys.argv[2]
+    elif len(args) == 2:
+        def_filename = args[1]
     else:
         fatal('main', 'Need to pass input file name and optional defition file name')
 
-    x=tappy(sys.argv[1], def_filename=def_filename)
+    x=tappy(args[0], def_filename=def_filename)
 
     print_list = []
-    if option_dict['ephemeris_table']:
+    if options.ephemeris:
         x.print_ephemeris_table()
         sys.exit()
 
-    if option_dict['zero_ts']:
+    if options.zero_ts:
         x.elevation = x.elevation - x.filter(x.dates, x.elevation)
 
-    if option_dict['remove_extreme']:
+    if options.remove_extreme:
         x.remove_extreme_values()
 
     package = x.astronomic(x.dates)
@@ -834,26 +840,26 @@ def main(option_dict):
 
     x.constituents()
 
-    if option_dict['missing_data']:
+    if options.missing_data:
         x.dates_filled,x.elevation_filled = x.missing(option_dict['missing_data'], x.dates, x.elevation)
         x.write_file('outts_filled.dat', x.dates_filled, x.elevation_filled)
 
-    if option_dict['filter_p'] == 'output':
+    if options.filter == 'output':
         x.usgs_filter = x.filter(x.dates_filled, x.elevation_filled)
         x.write_file('outts_filtered.dat', x.dates_filled, x.usgs_filter)
 
-    if option_dict['non_stationary'] != None:
-        if not option_dict['missing_data']:
+    if options.non_stationary:
+        if not options.missing_data:
             x.dates_filled,x.elevation_filled = x.missing(option_dict['missing_data'], x.dates, x.elevation)
-        for item in option_dict['non_stationary']:
+        for item in options.non_stationary:
             if item in ['mstha', 'wavelet', 'cd', 'sfa', 'boxcar']:
                 result = x.non_stationary_constituents(item, x.dates_filled, x.elevation_filled)
                 x.write_file('outts_%s.dat' % (item,), x.dates_filled, result)
 
-    if not option_dict['quiet']:
+    if not options.quiet:
         x.print_con()
 
-    if option_dict['output_p']:
+    if options.output:
         for key in x.key_list:
             x.write_file("outts_%s.dat" % (key,), x.dates, x.sum_signals([key], x.dates, x.speed_dict))
         x.write_file("outts_total_prediction.dat", x.dates, x.sum_signals(x.key_list, x.dates, x.speed_dict))
@@ -862,72 +868,67 @@ def main(option_dict):
 #-------------------------
 if __name__ == '__main__':
     ftn = "main"
-    option_dict = {
-                   'debug_p':0,
-                   'filter_p':0,
-                   'output_p':0,
-                   'quiet':0,
-                   'ephemeris_table':0,
-                   'missing_data':'ignore',
-                   'non_stationary':None,
-                   'remove_extreme':0,
-                   'zero_ts':0,
-                   }
-    opts,pargs=getopt.getopt(sys.argv[1:],'lhvdf=on=qem=rz',
-                 [
-                 'help',
-                 'version',
-                 'debug',
-                 'filter=',
-                 'output',
-                 'non-stationary=',
-                 'quiet',
-                 'ephemeris',
-                 'missing-data=',
-                 'remove-extreme',
-                 'zero-ts',
-                 ])
-    for opt in opts:
-        if opt[0]=='-h' or opt[0]=='--help':
-            print modname+": version="+__version__
-            usage()
-            sys.exit(0)
-        elif opt[0]=='-v' or opt[0]=='--version':
-            print modname+": version="+__version__
-            sys.exit(0)
-        elif opt[0]=='-d' or opt[0]=='--debug':
-            option_dict['debug_p'] = 1
-            sys.argv.remove(opt[0])
-        elif opt[0]=='-f' or opt[0]=='--filter':
-            option_dict['filter_p'] = opt[1]
-            sys.argv.remove(opt[0])
-            sys.argv.remove(opt[1])
-        elif opt[0]=='-o' or opt[0]=='--output':
-            option_dict['output_p'] = 1
-            sys.argv.remove(opt[0])
-        elif opt[0]=='-q' or opt[0]=='--quiet':
-            option_dict['quiet_p'] = 1
-            sys.argv.remove(opt[0])
-        elif opt[0]=='-e' or opt[0]=='--ephemeris':
-            option_dict['ephemeris_table'] = 1
-            sys.argv.remove(opt[0])
-        elif opt[0]=='-m' or opt[0]=='--missing-data':
-            option_dict['missing_data'] = opt[1]
-            sys.argv.remove(opt[0])
-            sys.argv.remove(opt[1])
-        elif opt[0]=='-r' or opt[0]=='--remove-extreme':
-            option_dict['remove_extreme'] = 1
-            sys.argv.remove(opt[0])
-        elif opt[0]=='-n' or opt[0]=='--non-stationary':
-            option_dict['non_stationary'] = opt[1].split(',')
-            sys.argv.remove(opt[0])
-            sys.argv.remove(opt[1])
-        elif opt[0]=='-z' or opt[0]=='--zero-ts':
-            option_dict['zero_ts'] = True
-            sys.argv.remove(opt[0])
+
+    from optparse import OptionParser
+
+    parser = OptionParser(version=__version__)
+    parser.add_option(
+                   '-q', 
+                   '--quiet', 
+                   help='Print nothing to the screen.', 
+                   action='store_true',
+                     )
+    parser.add_option(
+                   '-d',
+                   '--debug',
+                   help='Print debug messages.',
+                   action='store_true',
+                     )
+    parser.add_option(
+                   '-f',
+                   '--filter',
+                   help='Output filter options:',
+                     )
+    parser.add_option(
+                   '-o',
+                   '--output',
+                   help='Write output time-series',
+                   action='store_true',
+                     )
+    parser.add_option(
+                   '-n',
+                   '--non-stationary',
+                   help='Non-stationary analysis options:',
+                     )
+    parser.add_option(
+                   '-e',
+                   '--ephemeris',
+                   help='Print out ephemeris tables.',
+                   action='store_true',
+                     )
+    parser.add_option(
+                   '-m',
+                   '--missing-data',
+                   help='Attempt to replace missing data with tidal prediction',
+                     )
+    parser.add_option(
+                   '-r',
+                   '--remove-extreme',
+                   help='Remove values outside of 2 standard deviations before analysis.',
+                   action='store_true',
+                     )
+    parser.add_option(
+                   '-z',
+                   '--zero-ts',
+                   help='Zero the output time series by subtracting the average.',
+                   action='store_true',
+                     )
+    
+    (options, args) = parser.parse_args()
+
 
     #---make the object and run it---
-    main(option_dict)
+    main(options, args)
 
 #===Revision Log===
 #Created by mkpythonproj:
