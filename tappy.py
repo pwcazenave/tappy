@@ -841,7 +841,7 @@ def main(options, args):
     x.constituents()
 
     if options.missing_data:
-        x.dates_filled,x.elevation_filled = x.missing(option_dict['missing_data'], x.dates, x.elevation)
+        x.dates_filled,x.elevation_filled = x.missing(options.missing_data, x.dates, x.elevation)
         x.write_file('outts_filled.dat', x.dates_filled, x.elevation_filled)
 
     if options.filter == 'output':
@@ -850,7 +850,7 @@ def main(options, args):
 
     if options.non_stationary:
         if not options.missing_data:
-            x.dates_filled,x.elevation_filled = x.missing(option_dict['missing_data'], x.dates, x.elevation)
+            x.dates_filled,x.elevation_filled = x.missing(options.missing_data, x.dates, x.elevation)
         for item in options.non_stationary:
             if item in ['mstha', 'wavelet', 'cd', 'sfa', 'boxcar']:
                 result = x.non_stationary_constituents(item, x.dates_filled, x.elevation_filled)
