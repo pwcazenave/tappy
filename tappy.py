@@ -150,9 +150,8 @@ class tappy:
         self.dates = N.array(self.dates)
 
 
-    def which_constituents(self, length, package, aggressivefit=False):
+    def which_constituents(self, length, package):
         (zeta, mu, mupp, two_mupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1) = package
-
         speed_dict = {}
 
         # Set data into speed_dict depending on length of time series
@@ -171,12 +170,12 @@ class tappy:
                                  'VAU': 2*(T - s + h + zeta - mu),
                                  'FF': N.cos(0.5*ii)**4 /0.9154  # eq 78
                                  }
-        if num_hours >= 24 or aggressivefit:
+        if num_hours >= 24:
             speed_dict["K1"] = {'speed': 15.041068632*deg2rad,
                                      'VAU': T + h + 90 - mupp,
                                      'FF': (0.8965*(N.sin(2.*ii)**2) + 0.6001*N.sin(2.*ii)*N.cos(mu*deg2rad) + 0.1006)**0.5  # eq 227
                                      }
-        if num_hours >= 25 or aggressivefit:
+        if num_hours >= 25:
             speed_dict["M3"] = {'speed': 43.476156360*deg2rad,
                                      'VAU': 3*T - 3*s + 3*h + 3*zeta - 3*mu,
                                      'FF': N.cos(0.5*ii)**6 /0.8758  # eq 149
@@ -185,12 +184,12 @@ class tappy:
                                      'VAU': 2.*speed_dict['M2']['VAU'],
                                      'FF': speed_dict['M2']['FF']**2
                                      }
-        if num_hours >= 26 or aggressivefit:
+        if num_hours >= 26:
             speed_dict["M6"] = {'speed': 86.952312720*deg2rad,
                                      'VAU': 3.*speed_dict['M2']['VAU'],
                                      'FF': speed_dict['M2']['FF']**2
                                      }
-        if num_hours >= 328 or aggressivefit:
+        if num_hours >= 328:
             speed_dict["O1"] = {'speed': 13.943035584*deg2rad,
                                      'VAU': T - 2*s + h - 90 + 2*zeta - mu,
                                      'FF': N.sin(ii)*N.cos(0.5*ii)**2 /0.3800
@@ -202,7 +201,7 @@ class tappy:
                                      # h + T - mu - 2*(one - nine) - 90
                                      # h + T - mu - 2*s + 2*zeta - 90
                                      # T - 2*s + h - 90 + 2*zeta - mu
-        if num_hours >= 355 or aggressivefit:
+        if num_hours >= 355:
             speed_dict["MSf"] = {'speed': 1.0158957720*deg2rad,
                                       'VAU': 2.0*(s - h),
                                       'FF': ((2./3.) - N.sin(ii)**2)/0.5021
@@ -227,12 +226,12 @@ class tappy:
                                       'VAU': 4*T,
                                       'FF': N.ones(length)
                                       }
-        if num_hours >= 651 or aggressivefit:
+        if num_hours >= 651:
             speed_dict["OO1"] = {'speed': 16.139101680*deg2rad,
                                       'VAU': T + 2*s + h - 90 - 2*zeta - mu,
                                       'FF': (N.sin(ii)*N.sin(0.5*ii)**2)/0.0164
                                       }
-        if num_hours >= 656 or aggressivefit:
+        if num_hours >= 656:
             speed_dict["MK3"] = {'speed': 44.025172884*deg2rad,
                                       'VAU': speed_dict['M2']['VAU']+speed_dict['K1']['VAU'],
                                       'FF': speed_dict['M2']['FF']*speed_dict['K1']['FF']
@@ -242,7 +241,7 @@ class tappy:
                                       'VAU': 3*T - 4*s + 3*h + 90 + 4*zeta - 4*mu - 4*mupp,
                                       'FF': speed_dict['M2']['FF']**2*speed_dict['K1']['FF']
                                       }
-        if num_hours >= 662 or aggressivefit:
+        if num_hours >= 662:
             speed_dict["2Q1"] = {'speed': 12.854286252*deg2rad,
                                       'VAU': T - 4*s + h + 2*p + 90 + 2*zeta - mu,
                                       'FF': speed_dict['O1']['FF']
@@ -286,7 +285,7 @@ class tappy:
                                       'VAU': speed_dict['M2']['VAU'] + speed_dict['N2']['VAU'],
                                       'FF': speed_dict['M2']['FF']**2
                                       }
-        if num_hours >= 764 or aggressivefit:
+        if num_hours >= 764:
             speed_dict["Mm"] =  {'speed': 0.5443747*deg2rad,
                                       'VAU': s - p,
                                       'FF': ((2./3.) - N.sin(ii)**2)/0.5021
@@ -305,7 +304,7 @@ class tappy:
                                       'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*mu,
                                       'FF': speed_dict['M2']['FF']**2
                                       }
-        if num_hours >= 4383 or aggressivefit:
+        if num_hours >= 4383:
             speed_dict["Ssa"] = {'speed': 0.0821373*deg2rad,
                                       'VAU': 2.0*h,
                                       'FF': N.ones(length)
@@ -355,7 +354,7 @@ class tappy:
                                       }
             # Mentioned, but no speed available...
             # speed_dict["MSN2"] =
-        if num_hours >= 4942 or aggressivefit:
+        if num_hours >= 4942:
             speed_dict["2N2"] = {'speed': 27.8953548*deg2rad,
                                       'VAU': 2*(T - 2*s + h + p + zeta - mu),
                                       'FF': speed_dict['M2']['FF']
@@ -390,12 +389,12 @@ class tappy:
                                           'VAU': 2*T - s + p + 180,
                                           'FF': speed_dict['M2']['FF']
                                           }
-        if num_hours >= 8766 or aggressivefit:
+        if num_hours >= 8766:
             speed_dict["Sa"] = {'speed': 0.0410686*deg2rad,
                                      'VAU': h,
                                      'FF': N.ones(length)
                                      }
-        if num_hours >= 8767 or aggressivefit:
+        if num_hours >= 8767:
             speed_dict["S1"] = {'speed': 15.0000000*deg2rad,
                                      'VAU': T,
                                      'FF': N.ones(length)
@@ -418,7 +417,7 @@ class tappy:
                                        }
 #            speed_dict["H1"] =
 #            speed_dict["H2"] =
-        if num_hours >= 11326 or aggressivefit:
+        if num_hours >= 11326:
             # GAM2 from Foreman should go here, but couldn't find comparable
             # constituent information from Schureman
             pass
@@ -515,9 +514,8 @@ class tappy:
         return (zeta, mu, mupp, two_mupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1)
 
 
-    def filter(self, dates, elev):
-        """ Filters out periods of 25 hours and less from self.elevation and centers
-        series at zero.
+    def usgs_filter(self, dates, elev):
+        """ Filters out periods of 25 hours and less from self.elevation.
 
         """
 
@@ -537,11 +535,6 @@ class tappy:
         usgs_filtered = N.convolve(elev, kern, mode=1)
 
         return usgs_filtered
-
-
-    def wavelet(self, dates, elev):
-        import pywavelets
-        (dates,elev) = self.missing('fill', dates, elev)
 
 
     def missing(self, task, dates, elev):
@@ -614,7 +607,7 @@ class tappy:
         self.dates = N.compress(good, self.dates)
 
 
-    def residuals(self, p, ht, t, key_list, calc_linear_trend=False):
+    def residuals(self, p, ht, t, key_list):
         """ Used for least squares fit.
     
         """
@@ -636,7 +629,7 @@ class tappy:
         for i in key_list:
             sumterm = sumterm + H[i]*ff[i]['FF']*N.cos(self.speed_dict[i]['speed']*t - phase[i])
 
-        if calc_linear_trend:
+        if self.options.linear_trend:
             self.err = ht - (p[-2]*t + p[-1] + sumterm)
         else:    
             self.err = ht - (p[-1] + sumterm)
@@ -659,6 +652,7 @@ class tappy:
 
         p0 = [1.0]*(len(self.speed_dict)*2 + 2)
         p0[-2] = 0.0
+        p0[-1] = N.average(self.elevation)
         self.ntimes = (self.jd - self.jd[0]) * 24 
 
         lsfit = leastsq(self.residuals, p0, args=(self.elevation, self.ntimes, self.key_list))
@@ -696,13 +690,19 @@ class tappy:
         return total
 
 
-    def non_stationary_constituents(self, nstype, dates, elevation, flow=False):
+    def filters(self, nstype, dates, elevation):
+
+        if nstype == 'usgs':
+            return self.usgs_filter(dates, elevation)
+
+        if nstype == 'boxcar':
+            kern = N.ones(25) * (1./25.)
+            return N.convolve(elevation, kern, mode=1)
 
         if nstype == 'mstha':
             blen = 24
             blen = 12
             s_list = ['M2','K1','M3','M4']
-            s_list = ['M2']
 
             p0 = [1.0]*(len(s_list)*2 + 2)
             p0[-2] = 0.0
@@ -727,27 +727,24 @@ class tappy:
         if nstype == 'wavelet':
             import pywt
             import pylab
-    
+
             for wl in pywt.wavelist():
-    
+
                 w = pywt.Wavelet(wl)
-    
+
                 max_level = pywt.dwt_max_level(len(elevation), w.dec_len)
-    
-                a = pywt.wavedec(elevation, w, max_level, mode='sym')
-    
-    #            if flow:
-    #                for i in range(len(a))[1:-1]:
-    #                    a[i][a[i] < 0] = 0.0
-    #                a[-1][:] = 0.0
-    #            else:
+                print elevation
+                print w
+                print max_level
+                a = pywt.wavedec(elevation, w, level=max_level, mode='sym')
+
                 for i in range(len(a))[1:]:
                     avg = N.average(a[i][:])
-                    std = 4.0*N.std(a[i][:])
+                    std = 2.0*N.std(a[i][:])
                     a[i][(a[i][:] < (avg + std)) & (a[i][:] > (avg - std))] = 0.0
     
                 for index,items in enumerate(a):
-                    self.write_file("%s_%i.dat" % (wl, index), dates, items)
+                    self.write_file("outts_wavelet_%s_%i.dat" % (wl, index), dates, items)
     
                 y = pywt.waverec(a, w, mode='sym')
                 self.write_file("%s.dat" % wl, dates, y)
@@ -813,24 +810,28 @@ class tappy:
 
 #=============================
 def main(options, args):
+
     if len(args) == 1:
         def_filename = None
     elif len(args) == 2:
         def_filename = args[1]
     else:
-        fatal('main', 'Need to pass input file name and optional defition file name')
+        fatal('main', 'Need to pass input file name and optional definition file name')
 
     x=tappy(args[0], def_filename=def_filename)
 
-    print_list = []
-    if options.ephemeris:
+    x.options = options
+
+    if x.options.ephemeris:
         x.print_ephemeris_table()
-        sys.exit()
 
-    if options.zero_ts:
-        x.elevation = x.elevation - x.filter(x.dates, x.elevation)
+    if x.options.zero_ts:
+        x.elevation = x.elevation - x.filters(item, x.dates, x.elevation)
 
-    if options.remove_extreme:
+    if x.options.missing_data == 'fail':
+        x.dates_filled,x.elevation_filled = x.missing(x.options.missing_data, x.dates, x.elevation)
+
+    if x.options.remove_extreme:
         x.remove_extreme_values()
 
     package = x.astronomic(x.dates)
@@ -840,76 +841,73 @@ def main(options, args):
 
     x.constituents()
 
-    if options.missing_data:
-        x.dates_filled,x.elevation_filled = x.missing(options.missing_data, x.dates, x.elevation)
+    if x.options.missing_data == 'fill':
+        x.dates_filled,x.elevation_filled = x.missing(x.options.missing_data, x.dates, x.elevation)
         x.write_file('outts_filled.dat', x.dates_filled, x.elevation_filled)
 
-    if options.filter == 'output':
-        x.usgs_filter = x.filter(x.dates_filled, x.elevation_filled)
-        x.write_file('outts_filtered.dat', x.dates_filled, x.usgs_filter)
+    if x.options.filter:
+        if x.options.missing_data != 'fill':
+            x.dates_filled,x.elevation_filled = x.missing(x.options.missing_data, x.dates, x.elevation)
+        for item in x.options.filter.split(','):
+            if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs',]:# 'lecolazet', 'godin', 'sfa']:
+                result = x.filters(item, x.dates_filled, x.elevation_filled)
+                x.write_file('outts_filtered_%s.dat' % (item,), x.dates_filled, result)
 
-    if options.non_stationary:
-        if not options.missing_data:
-            x.dates_filled,x.elevation_filled = x.missing(options.missing_data, x.dates, x.elevation)
-        for item in options.non_stationary:
-            if item in ['mstha', 'wavelet', 'cd', 'sfa', 'boxcar']:
-                result = x.non_stationary_constituents(item, x.dates_filled, x.elevation_filled)
-                x.write_file('outts_%s.dat' % (item,), x.dates_filled, result)
-
-    if not options.quiet:
+    if not x.options.quiet:
         x.print_con()
 
-    if options.output:
+    if x.options.output:
         for key in x.key_list:
             x.write_file("outts_%s.dat" % (key,), x.dates, x.sum_signals([key], x.dates, x.speed_dict))
         x.write_file("outts_total_prediction.dat", x.dates, x.sum_signals(x.key_list, x.dates, x.speed_dict))
         x.write_file("outts_original.dat", x.dates, x.elevation)
-    
+
 #-------------------------
 if __name__ == '__main__':
     ftn = "main"
 
     from optparse import OptionParser
 
-    parser = OptionParser(version=__version__)
+    parser = OptionParser(usage='%prog [options] input_file [optional_definition_file]', version=__version__)
     parser.add_option(
                    '-q', 
                    '--quiet', 
                    help='Print nothing to the screen.', 
                    action='store_true',
+                   default=False,
                      )
     parser.add_option(
                    '-d',
                    '--debug',
                    help='Print debug messages.',
                    action='store_true',
-                     )
-    parser.add_option(
-                   '-f',
-                   '--filter',
-                   help='Output filter options:',
+                   default=False,
                      )
     parser.add_option(
                    '-o',
                    '--output',
-                   help='Write output time-series',
+                   help='Write output time-series.',
                    action='store_true',
-                     )
-    parser.add_option(
-                   '-n',
-                   '--non-stationary',
-                   help='Non-stationary analysis options:',
+                   default=False,
                      )
     parser.add_option(
                    '-e',
                    '--ephemeris',
                    help='Print out ephemeris tables.',
                    action='store_true',
+                   default=False,
                      )
     parser.add_option(
                    '-m',
                    '--missing-data',
-                   help='Attempt to replace missing data with tidal prediction',
+                   help='What should be done if there is missing data.  One of: fail, ignore, or fill. [default: %default]',
+                   default='ignore',
+                     )
+    parser.add_option(
+                   '-l',
+                   '--linear-trend',
+                   help='Include a linear trend in the least squares fit.',
+                   action='store_true',
                      )
     parser.add_option(
                    '-r',
@@ -920,9 +918,21 @@ if __name__ == '__main__':
     parser.add_option(
                    '-z',
                    '--zero-ts',
-                   help='Zero the output time series by subtracting the average.',
-                   action='store_true',
+                   help='Zero the input time series before constituent analysis by subtracting filtered data. One of: boxcar,usgs,mstha,cd.',#lecolazet,godin,sfa
+                   metavar='FILTER',
                      )
+    parser.add_option(
+                   '-f',
+                   '--filter',
+                   help='Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: boxcar,usgs,mstha,wavelet,cd.',#,lecolazet,godin,sfa
+                   metavar='FILTER',
+                     )
+#    parser.add_option(
+#                   '-p',
+#                   '--pad-filters',
+#                   help='Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of [reflect, mean, median]',
+#                   action='store_true',
+#                     )
     
     (options, args) = parser.parse_args()
 
