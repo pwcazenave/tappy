@@ -781,7 +781,7 @@ class tappy:
         interval = interval[len(interval)/2]
 
         rep_dict = {
-                    0 : 1,
+                    60: 1,
                     6 : 10,
                     10: 6,
                     12: 5,
