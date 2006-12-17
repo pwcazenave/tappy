@@ -159,326 +159,431 @@ class tappy:
         #    FF is the node factor from Schureman
 
         # TASK has the following constituents
-        #  2MN6       86.4079380 # done
         #  MSN6       87.4238337
-        #  2MS6       87.9682084 # done
-        #  2SM6       88.9841042 # done
+
+        self.tidal_dict = {}
+
+        self.tidal_dict["M2"] = {'speed': 28.984104252*deg2rad,
+                                 'VAU': 2*(T - s + h + zeta - nu),
+                                 'FF': N.cos(0.5*ii)**4 /0.9154  # eq 78
+                                 }
+        self.tidal_dict["K1"] = {'speed': 15.041068632*deg2rad,
+                                 'VAU': T + h - 90 - nupp,
+                                 'FF': (0.8965*(N.sin(2.*ii)**2) + 0.6001*N.sin(2.*ii)*N.cos(nu*deg2rad) + 0.1006)**0.5  # eq 227
+                                 }
+        self.tidal_dict["M3"] = {'speed': 43.476156360*deg2rad,
+                                 'VAU': 3*(T - s + h + zeta - nu),
+                                 'FF': N.cos(0.5*ii)**6 /0.8758  # eq 149
+                                 }
+        self.tidal_dict["M4"] = {'speed': 57.968208468*deg2rad,
+                                 'VAU': 2.*self.tidal_dict['M2']['VAU'],
+                                 'FF': self.tidal_dict['M2']['FF']**2
+                                 }
+        self.tidal_dict["M6"] = {'speed': 86.952312720*deg2rad,
+                                 'VAU': 3.*self.tidal_dict['M2']['VAU'],
+                                 'FF': self.tidal_dict['M2']['FF']**2
+                                 }
+        self.tidal_dict["M8"] = {'speed': 115.936416972*deg2rad,
+                                 'VAU': 4.*self.tidal_dict['M2']['VAU'],
+                                 'FF': self.tidal_dict['M2']['FF']**4
+                                 }
+        self.tidal_dict["S6"] = {'speed': 90.0*deg2rad,
+                                 'VAU': 6*T,
+                                 'FF': N.ones(length)
+                                 }
+        self.tidal_dict["O1"] = {'speed': 13.943035584*deg2rad,
+                                 'VAU': T - 2*s + h + 90 + 2*zeta - nu,
+                                 'FF': N.sin(ii)*N.cos(0.5*ii)**2 /0.3800
+                                 }
+        self.tidal_dict["S2"] = {'speed': 30.0000000 * deg2rad,
+                                 'VAU': 2*T,
+                                 'FF': N.ones(length)
+                                 }
+        self.tidal_dict["2MS6"] = {'speed': 87.968208492*deg2rad, #?
+                                  'VAU': 2.0*self.tidal_dict['M2']['VAU'] + self.tidal_dict['S2']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF']**2
+                                  }
+        self.tidal_dict["2SM6"] = {'speed': 88.984104228*deg2rad, #?
+                                  'VAU': 2.0*self.tidal_dict['S2']['VAU'] + self.tidal_dict['M2']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF']
+                                  }
+        self.tidal_dict["MSf"] = {'speed': 1.0158957720*deg2rad,
+                                  'VAU': 2.0*(s - h),
+                                  'FF': ((2./3.) - N.sin(ii)**2)/0.5021
+                                  }
+        self.tidal_dict["SK3"] = {'speed': 45.041068656 * deg2rad,
+                                  'VAU': self.tidal_dict['S2']['VAU'] + self.tidal_dict['K1']['VAU'],
+                                  'FF': self.tidal_dict['K1']['FF']
+                                  }
+        # Might need to move this to another time span - couldn't find this
+        # in Foreman for Rayleigh comparison pair.
+        self.tidal_dict["2SM2"] = {
+                              'speed': 31.01589576*deg2rad,   
+                                  'VAU': 2.0*self.tidal_dict['S2']['VAU'] - self.tidal_dict['M2']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF']
+                                  }
+        self.tidal_dict["MS4"] = {'speed': 58.984104240*deg2rad,
+                                  'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['S2']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF']
+                                  }
+        self.tidal_dict["S4"] = {'speed': 60.0*deg2rad,
+                                  'VAU': 4*T,
+                                  'FF': N.ones(length)
+                                  }
+        self.tidal_dict["OO1"] = {'speed': 16.139101680*deg2rad,
+                                  'VAU': T + 2*s + h - 90 - 2*zeta - nu,
+                                  'FF': (N.sin(ii)*N.sin(0.5*ii)**2)/0.0164
+                                  }
+        self.tidal_dict["MK3"] = {'speed': 44.025172884*deg2rad,
+                                  'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K1']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF']*self.tidal_dict['K1']['FF']
+                                  }
+        # Seems like 2MK3 in Schureman is equivalent to MO3 in Foreman
+        self.tidal_dict["MO3"] = {'speed': 42.927139836*deg2rad,
+                                  'VAU': 2*self.tidal_dict['M2']['VAU'] - self.tidal_dict['K1']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF']**2*self.tidal_dict['K1']['FF']
+                                  }
+        self.tidal_dict["N2"] =  {'speed': 28.439729568*deg2rad,
+                                  'VAU': 2*T - 3*s + 2*h + p + 2*zeta - 2*nu,
+                                  'FF': self.tidal_dict['M2']['FF']
+                                  }
+        self.tidal_dict["2MN6"] = {'speed': 86.407938036*deg2rad,
+                                  'VAU': 2*self.tidal_dict['M2']['VAU'] + self.tidal_dict['N2']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF']**2
+                                  }
+        self.tidal_dict["2Q1"] = {'speed': 12.854286252*deg2rad,
+                                  'VAU': T - 4*s + h + 2*p + 90 + 2*zeta - nu,
+                                  'FF': self.tidal_dict['O1']['FF']
+                                  }
+        self.tidal_dict["Q1"] =  {'speed': 13.3986609*deg2rad,
+                                  'VAU': T - 3*s + h + p + 90 + 2*zeta - nu,
+                                  'FF': self.tidal_dict['O1']['FF']
+                                  }
+        self.tidal_dict["J1"] =  {'speed': 15.5854433*deg2rad,
+                                  'VAU': T + s + h - p - 90 - nu,
+                                  'FF': N.sin(2.0*ii)/0.7214
+                                  }
+        # Seems like KJ2 in Schureman is equivalent to ETA2 in Foreman
+        self.tidal_dict["ETA2"] = {'speed': 30.626511948*deg2rad,
+                                  'VAU': 2*T + s + 2*h - p - 2*nu,
+                                  'FF': N.sin(ii)**2/0.1565
+                                  }
+        # Seems like KQ1 in Schureman is equivalent to UPS1 in Foreman
+        self.tidal_dict["UPS1"] = {'speed': 16.683476328*deg2rad,
+                                  'VAU': T + 3*s + h - p - 90 - 2*zeta - nu,
+                                  'FF': N.sin(ii)**2/0.1565
+                                  }
+        #
+        #        Foreman         Schureman           TASK
+        #        =======         =========           ====
+        # NO1   14.496693984        NA            UNKNOWN
+        # M1        NA           14.4966939      14.4920521
+        # (M1)      NA           14.4920521         NA
+        # 
+        # Foreman mentions that M1 is a satellite of NO1 but does not have a
+        # speed for M1.
+
+        # By comparing the speeds from the different sources, I now think that
+        # the component of M1 in Schureman is actually NO1 (speed=14.496693984)
+        # and M1 in TASK is equal to (M1) in Schureman.
+
+        # Flater writes:
+
+            # In summary, M1 is a minor constituent that doesn't deserve to be
+            # such an inconvenience.  Until someone complains, I am just going
+            # to use the NOS M1 for all data containing a constituent named M1
+            # and hope for the best.  Future producers of harmonic constants
+            # are advised to abolish M1 and just use NO1.
+
+        # If M1 is 1/2 the speed of M2 that would mean TASK's M1 speed is
+        # correct.  How do I get V, u, and f?
+
+        # TAPPY
+        # Constituent     Speed        V, u, and f
+        # M1            14.492052126  From Schureman A71
+        # NO1           14.496693984  From Schureman M1
+
+        self.tidal_dict["M1"] =  {'speed': 14.4920521*deg2rad,
+                                  'VAU': T - s + h + zeta + nu, # term A71 in Schureman
+                                  'FF': (1.0 - 10.0*N.sin(0.5*ii)**2 + 15.0*N.sin(0.5*ii)**4)*N.cos(0.5*ii)**2/0.5873
+                                  }
+        self.tidal_dict["NO1"] = {'speed': 14.496693984*deg2rad,
+                                  'VAU': T - s + h - 90 + zeta - nu + Q,
+                                  # 2.307**0.5 factor was missed in Darwin's analysis
+                                  'FF': 2.307**0.5*self.tidal_dict['O1']['FF']*(2.31+1.435*N.cos(2.0*kap_p))**0.5
+                                  }
+        self.tidal_dict["MN4"] = {'speed': 57.423833820*deg2rad,   # From TASK
+                                  'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['N2']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF']**2
+                                  }
+        self.tidal_dict["Mm"] =  {'speed': 0.5443747*deg2rad,
+                                  'VAU': s - p,
+                                  'FF': ((2./3.) - N.sin(ii)**2)/0.5021
+                                  }
+        self.tidal_dict["L2"] =  {'speed': 29.5284789*deg2rad,
+                                  'VAU': 2*T - s + 2*h - p + 180 + 2*zeta - 2*nu - R,
+                                  'FF': self.tidal_dict['M2']['FF'] * (1.0 - 12.0*N.tan(0.5*ii)**2 * N.cos(2.0*kap_p) + 36.0*N.tan(0.5*ii)**4)**0.5
+                                  }
+        self.tidal_dict["MU2"] = {'speed': 27.9682084*deg2rad,
+                                  'VAU': 2*T - 4*s + 4*h + 2*zeta - 2*nu,
+                                  'FF': self.tidal_dict['M2']['FF']
+                                  }
+#        self.tidal_dict["ALPHA1"] = 
+        self.tidal_dict["EPS2"] = {'speed': 27.423833796*deg2rad,
+                                  'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*nu, # verify
+                                  'FF': self.tidal_dict['M2']['FF']**2
+                                  }
+        self.tidal_dict["SN4"] = {'speed': 58.4397295560*deg2rad,
+                                  'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*nu,
+                                  'FF': self.tidal_dict['M2']['FF']**2
+                                  }
+        self.tidal_dict["Ssa"] = {'speed': 0.0821373*deg2rad,
+                                  'VAU': 2.0*h,
+                                  'FF': N.ones(length)
+                                  }
+        self.tidal_dict["Mf"] =  {'speed': 1.0980331*deg2rad,
+                                  'VAU': 2.0*(s - zeta),
+                                  'FF': N.sin(ii)**2 /0.1578
+                                  }
+        self.tidal_dict["P1"] = {'speed': 14.9589314*deg2rad,
+                                 'VAU': T - h + 90,
+                                 'FF': N.ones(length)
+                                 }
+        self.tidal_dict["K2"] = {'speed': 30.0821373*deg2rad,
+                                 'VAU': 2*(T + h - two_nupp),
+                                 'FF': (19.0444*(N.sin(ii)**4) + 2.7702*(N.sin(ii)**2) * N.cos(2.*nu*deg2rad) + 0.0981)**0.5
+                                 }
+        self.tidal_dict["SO3"] = {'speed': 43.9430356*deg2rad,
+                                  'VAU': 3*T - 2*s + h + 90 + 2*zeta - nu,
+                                  'FF': self.tidal_dict["O1"]["FF"]
+                                  }
+        self.tidal_dict["PHI1"] = {'speed': 15.1232059*deg2rad,
+                                   'VAU': T + 3*h - 90,
+                                   'FF': N.ones(length)
+                                   }
+        self.tidal_dict["SO1"] = {'speed': 16.0569644*deg2rad,
+                                  'VAU': T + 2*s - h - 90 - nu,
+                                  'FF': self.tidal_dict['J1']['FF']
+                                  }
+        # Seems like A54 in Schureman is equivalent to MKS2 in Foreman
+        self.tidal_dict["MKS2"] = {'speed': 29.066241528*deg2rad,
+                                  'VAU': 2*T - 2*s + 4*h - 2*nu,
+                                  'FF': self.tidal_dict['ETA2']['FF']
+                                  }
+        # Seems like MP1 in Schureman is equivalent to TAU1 in Foreman
+        self.tidal_dict["TAU1"] = {'speed': 14.025172896*deg2rad,
+                                  'VAU': T - 2*s + 3*h - 90 - nu,
+                                  'FF': self.tidal_dict['J1']['FF']
+                                  }
+        # Seems like A19 in Schureman is equivalent to BET1 in Foreman
+        self.tidal_dict["BETA1"] = {'speed': 14.414556708*deg2rad,
+                                  'VAU': T - s - h + p - 90 - 2*zeta - nu,
+                                  'FF': self.tidal_dict['O1']['FF']
+                                  }
+        self.tidal_dict["MK4"] = {'speed': 59.066241516*deg2rad,
+                                  'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K2']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF'] * self.tidal_dict['K2']['FF']
+                                  }
+        self.tidal_dict["MSN2"] = {'speed': 59.066241516*deg2rad,
+                                  'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K2']['VAU'],
+                                  'FF': self.tidal_dict['M2']['FF'] * self.tidal_dict['K2']['FF']
+                                  }
+        self.tidal_dict["2N2"] = {'speed': 27.8953548*deg2rad,
+                                  'VAU': 2*(T - 2*s + h + p + zeta - nu),
+                                  'FF': self.tidal_dict['M2']['FF']
+                                  }
+        self.tidal_dict["NU2"] = {'speed': 28.5125831*deg2rad,
+                                  'VAU': 2*T - 3*s + 4*h - p + 2*zeta - 2*nu,
+                                  'FF': self.tidal_dict['M2']['FF']
+                                  }
+        # Seems like A4 in Schureman is equivalent to MSM in Foreman
+        self.tidal_dict["A4"] = {'speed': 0.4715210880*deg2rad,
+                                 'VAU': s - 2*h + p,
+                                 'FF': self.tidal_dict['Mm']['FF']
+                                 }
+        self.tidal_dict["SIGMA1"] = {'speed': 12.9271398*deg2rad,
+                                     'VAU': T - 4*s + 3*h + 90 + 2*zeta - nu,
+                                     'FF': self.tidal_dict['O1']['FF']
+                                     }
+        self.tidal_dict["RHO1"] = {'speed': 13.4715145*deg2rad,
+                                   'VAU': T - 3*s + 3*h - p + 90 + 2*zeta - nu,
+                                   'FF': self.tidal_dict['O1']['FF']
+                                   }
+        self.tidal_dict["CHI1"] = {'speed': 14.5695476*deg2rad,
+                                   'VAU': T - s + 3*h - p - 90 - nu,
+                                   'FF': self.tidal_dict['J1']['FF']
+                                   }
+        self.tidal_dict["THETA1"] = {'speed': 15.5125897*deg2rad,
+                                     'VAU': T + s - h + p - 90 - nu,
+                                     'FF': self.tidal_dict['J1']['FF']
+                                     }
+#        self.tidal_dict["OQ2"] =
+        self.tidal_dict["LAMBDA2"] = {'speed': 29.4556253*deg2rad,
+                                      'VAU': 2*T - s + p + 180,
+                                      'FF': self.tidal_dict['M2']['FF']
+                                      }
+        self.tidal_dict["Sa"] = {'speed': 0.0410686*deg2rad,
+                                 'VAU': h,
+                                 'FF': N.ones(length)
+                                 }
+        self.tidal_dict["S1"] = {'speed': 15.0000000*deg2rad,
+                                 'VAU': T,
+                                 'FF': N.ones(length)
+                                 }
+        self.tidal_dict["T2"] = {'speed': 29.9589333*deg2rad,
+                                 'VAU': 2*T - h + p1,
+                                 'FF': N.ones(length)
+                                 }
+        self.tidal_dict["R2"] = {'speed': 30.0410667*deg2rad,
+                                 'VAU': 2*T + h - p1 + 180,
+                                 'FF': N.ones(length)
+                                 }
+        self.tidal_dict["PI1"] = {'speed': 14.9178647*deg2rad,
+                                  'VAU': T - 2*h + p1 + 90,
+                                  'FF': N.ones(length)
+                                  }
+        self.tidal_dict["PSI1"] = {'speed': 15.0821352*deg2rad,
+                                   'VAU': T + 2*h - p1 - 90,
+                                   'FF': N.ones(length)
+                                   }
 
         num_hours = (jd[-1] - jd[0]) * 24
         if num_hours < 13:
             print "Cannot calculate any constituents from this record length"
             sys.exit()
-        speed_dict["M2"] = {'speed': 28.984104252*deg2rad,
-                                 'VAU': 2*(T - s + h + zeta - nu),
-                                 'FF': N.cos(0.5*ii)**4 /0.9154  # eq 78
-                                 }
+        speed_dict["M2"] = self.tidal_dict["M2"]
         if num_hours >= (24 * rayleigh_comp):
-            speed_dict["K1"] = {'speed': 15.041068632*deg2rad,
-                                     'VAU': T + h - 90 - nupp,
-                                     'FF': (0.8965*(N.sin(2.*ii)**2) + 0.6001*N.sin(2.*ii)*N.cos(nu*deg2rad) + 0.1006)**0.5  # eq 227
-                                     }
+            speed_dict["K1"] = self.tidal_dict["K1"]
         if num_hours >= 25 * rayleigh_comp:
-            speed_dict["M3"] = {'speed': 43.476156360*deg2rad,
-                                     'VAU': 3*(T - s + h + zeta - nu),
-                                     'FF': N.cos(0.5*ii)**6 /0.8758  # eq 149
-                                     }
-            speed_dict["M4"] = {'speed': 57.968208468*deg2rad,
-                                     'VAU': 2.*speed_dict['M2']['VAU'],
-                                     'FF': speed_dict['M2']['FF']**2
-                                     }
+            speed_dict["M3"] = self.tidal_dict["M3"]
+            speed_dict["M4"] = self.tidal_dict["M4"]
         if num_hours >= 26 * rayleigh_comp:
-            speed_dict["M6"] = {'speed': 86.952312720*deg2rad,
-                                     'VAU': 3.*speed_dict['M2']['VAU'],
-                                     'FF': speed_dict['M2']['FF']**2
-                                     }
-            speed_dict["M8"] = {'speed': 115.936416972*deg2rad,
-                                     'VAU': 4.*speed_dict['M2']['VAU'],
-                                     'FF': speed_dict['M2']['FF']**4
-                                     }
+            speed_dict["M6"] = self.tidal_dict["M6"]
+            speed_dict["M8"] = self.tidal_dict["M8"]
         if num_hours >= 235 * rayleigh_comp:
             # Slower than diurnal: S6
             # Diurnal: 
             # Semidiurnal: 
             # Shallow water:
             # Need: 
-            speed_dict["S6"] = {'speed': 90.0*deg2rad,
-                                     'VAU': 6*T,
-                                     'FF': N.ones(length)
-                                     }
+            speed_dict["S6"] = self.tidal_dict["S6"]
         if num_hours >= 328 * rayleigh_comp:
             # Slower than diurnal: 
             # Diurnal: O1 
             # Semidiurnal: 
             # Shallow water: 
             # Need: 
-            speed_dict["O1"] = {'speed': 13.943035584*deg2rad,
-                                     'VAU': T - 2*s + h + 90 + 2*zeta - nu,
-                                     'FF': N.sin(ii)*N.cos(0.5*ii)**2 /0.3800
-                                     }
+            speed_dict["O1"] = self.tidal_dict["O1"]
         if num_hours >= 355 * rayleigh_comp:
             # Slower than diurnal: MSf
             # Diurnal: 
             # Semidiurnal: S2
             # Shallow water: SK3, MS4, S4, 2MS6, 2SM6
             # Need: 
-            speed_dict["S2"] = {'speed': 30.0000000 * deg2rad,
-                                     'VAU': 2*T,
-                                     'FF': N.ones(length)
-                                     }
-            speed_dict["2MS6"] = {'speed': 87.968208492*deg2rad, #?
-                                      'VAU': 2.0*speed_dict['M2']['VAU'] + speed_dict['S2']['VAU'],
-                                      'FF': speed_dict['M2']['FF']**2
-                                      }
-            speed_dict["2SM6"] = {'speed': 88.984104228*deg2rad, #?
-                                      'VAU': 2.0*speed_dict['S2']['VAU'] + speed_dict['M2']['VAU'],
-                                      'FF': speed_dict['M2']['FF']
-                                      }
-            speed_dict["MSf"] = {'speed': 1.0158957720*deg2rad,
-                                      'VAU': 2.0*(s - h),
-                                      'FF': ((2./3.) - N.sin(ii)**2)/0.5021
-                                      }
-            speed_dict["SK3"] = {'speed': 45.041068656 * deg2rad,
-                                      'VAU': speed_dict['S2']['VAU'] + speed_dict['K1']['VAU'],
-                                      'FF': speed_dict['K1']['FF']
-                                      }
+            speed_dict["S2"] = self.tidal_dict["S2"]
+            speed_dict["2MS6"] = self.tidal_dict["2MS6"]
+            speed_dict["2SM6"] = self.tidal_dict["2SM6"]
+            speed_dict["MSf"] = self.tidal_dict["MSf"]
+            speed_dict["SK3"] = self.tidal_dict["SK3"]
             # Might need to move this to another time span - couldn't find this
             # in Foreman for Rayleigh comparison pair.
-            speed_dict["2SM2"] = {
-                                  'speed': 31.01589576*deg2rad,   
-                                      'VAU': 2.0*speed_dict['S2']['VAU'] - speed_dict['M2']['VAU'],
-                                      'FF': speed_dict['M2']['FF']
-                                      }
-            speed_dict["MS4"] = {'speed': 58.984104240*deg2rad,
-                                      'VAU': speed_dict['M2']['VAU'] + speed_dict['S2']['VAU'],
-                                      'FF': speed_dict['M2']['FF']
-                                      }
-            speed_dict["S4"] = {'speed': 60.0*deg2rad,
-                                      'VAU': 4*T,
-                                      'FF': N.ones(length)
-                                      }
+            speed_dict["2SM2"] = self.tidal_dict["2SM2"]
+            speed_dict["MS4"] = self.tidal_dict["MS4"]
+            speed_dict["S4"] = self.tidal_dict["S4"]
         if num_hours >= 651 * rayleigh_comp:
             # Slower than diurnal: 
             # Diurnal: OO1
             # Semidiurnal: 
             # Shallow water: 
             # Need: 
-            speed_dict["OO1"] = {'speed': 16.139101680*deg2rad,
-                                      'VAU': T + 2*s + h - 90 - 2*zeta - nu,
-                                      'FF': (N.sin(ii)*N.sin(0.5*ii)**2)/0.0164
-                                      }
+            speed_dict["OO1"] = self.tidal_dict["OO1"]
         if num_hours >= 656 * rayleigh_comp:
             # Slower than diurnal: 
             # Diurnal: 
             # Semidiurnal: 
             # Shallow water: MK3, MO3
             # Need: 
-            speed_dict["MK3"] = {'speed': 44.025172884*deg2rad,
-                                      'VAU': speed_dict['M2']['VAU'] + speed_dict['K1']['VAU'],
-                                      'FF': speed_dict['M2']['FF']*speed_dict['K1']['FF']
-                                      }
+            speed_dict["MK3"] = self.tidal_dict["MK3"]
             # Seems like 2MK3 in Schureman is equivalent to MO3 in Foreman
-            speed_dict["MO3"] = {'speed': 42.927139836*deg2rad,
-                                      'VAU': 2*speed_dict['M2']['VAU'] - speed_dict['K1']['VAU'],
-                                      'FF': speed_dict['M2']['FF']**2*speed_dict['K1']['FF']
-                                      }
+            speed_dict["MO3"] = self.tidal_dict["MO3"]
         if num_hours >= 662 * rayleigh_comp:
             # Slower than diurnal: 
             # Diurnal: 2Q1, Q1, NO1, J1, UPS1
             # Semidiurnal: N2, ETA2
             # Shallow water: MN4, 2MN6
             # Need: 
-            speed_dict["N2"] =  {'speed': 28.439729568*deg2rad,
-                                      'VAU': 2*T - 3*s + 2*h + p + 2*zeta - 2*nu,
-                                      'FF': speed_dict['M2']['FF']
-                                      }
-            speed_dict["2MN6"] = {'speed': 86.407938036*deg2rad,
-                                      'VAU': 2*speed_dict['M2']['VAU'] + speed_dict['N2']['VAU'],
-                                      'FF': speed_dict['M2']['FF']**2
-                                      }
-            speed_dict["2Q1"] = {'speed': 12.854286252*deg2rad,
-                                      'VAU': T - 4*s + h + 2*p + 90 + 2*zeta - nu,
-                                      'FF': speed_dict['O1']['FF']
-                                      }
-            speed_dict["Q1"] =  {'speed': 13.3986609*deg2rad,
-                                      'VAU': T - 3*s + h + p + 90 + 2*zeta - nu,
-                                      'FF': speed_dict['O1']['FF']
-                                      }
-            speed_dict["J1"] =  {'speed': 15.5854433*deg2rad,
-                                      'VAU': T + s + h - p - 90 - nu,
-                                      'FF': N.sin(2.0*ii)/0.7214
-                                      }
+            speed_dict["N2"] =  self.tidal_dict["N2"]
+            speed_dict["2MN6"] = self.tidal_dict["2MN6"]
+            speed_dict["2Q1"] = self.tidal_dict["2Q1"]
+            speed_dict["Q1"] =  self.tidal_dict["Q1"]
+            speed_dict["J1"] =  self.tidal_dict["J1"]
             # Seems like KJ2 in Schureman is equivalent to ETA2 in Foreman
-            speed_dict["ETA2"] = {'speed': 30.626511948*deg2rad,
-                                      'VAU': 2*T + s + 2*h - p - 2*nu,
-                                      'FF': N.sin(ii)**2/0.1565
-                                      }
+            speed_dict["ETA2"] = self.tidal_dict["ETA2"]
             # Seems like KQ1 in Schureman is equivalent to UPS1 in Foreman
-            speed_dict["UPS1"] = {'speed': 16.683476328*deg2rad,
-                                      'VAU': T + 3*s + h - p - 90 - 2*zeta - nu,
-                                      'FF': N.sin(ii)**2/0.1565
-                                      }
-            # Seems like M1 in Schureman is equivalent to NO1 in Foreman
-            speed_dict["NO1"] =  {
-                                 #'speed': 14.496693984*deg2rad,
-                                 'speed': 14.4920521*deg2rad, # Fomr TASK
-                                      'VAU': T - s + h + p - 90 - nu - Q,
-                                      'FF': speed_dict['O1']['FF'] *(2.31+1.435*N.cos(2.0*kap_p))**0.5
-                                      }
-            speed_dict["MN4"] = {'speed': 57.423833820*deg2rad,   # From TASK
-                                      'VAU': speed_dict['M2']['VAU'] + speed_dict['N2']['VAU'],
-                                      'FF': speed_dict['M2']['FF']**2
-                                      }
+            speed_dict["UPS1"] = self.tidal_dict["UPS1"]
+            speed_dict["NO1"] =  self.tidal_dict["NO1"]
+            speed_dict["MN4"] = self.tidal_dict["MN4"]
         if num_hours >= 764 * rayleigh_comp:
             # Slower than diurnal: Mm
             # Diurnal: ALPHA1
             # Semidiurnal: EPS2, MU2, L2
             # Shallow water: SN4
             # Need: ALPHA1
-            speed_dict["Mm"] =  {'speed': 0.5443747*deg2rad,
-                                      'VAU': s - p,
-                                      'FF': ((2./3.) - N.sin(ii)**2)/0.5021
-                                      }
-            speed_dict["L2"] =  {'speed': 29.5284789*deg2rad,
-                                      'VAU': 2*T - s + 2*h - p + 180 + 2*zeta - 2*nu - R,
-                                      'FF': speed_dict['M2']['FF'] * (1.0 - 12.0*N.tan(0.5*ii)**2 * N.cos(2.0*kap_p) + 36.0*N.tan(0.5*ii)**4)**0.5
-                                      }
-            speed_dict["MU2"] = {'speed': 27.9682084*deg2rad,
-                                      'VAU': 2*T - 4*s + 4*h + 2*zeta - 2*nu,
-                                      'FF': speed_dict['M2']['FF']
-                                      }
-#            speed_dict["ALPHA1"] = 
-            speed_dict["EPS2"] = {'speed': 27.423833796*deg2rad,
-                                      'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*nu, # verify
-                                      'FF': speed_dict['M2']['FF']**2
-                                      }
-            speed_dict["SN4"] = {'speed': 58.4397295560*deg2rad,
-                                      'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*nu,
-                                      'FF': speed_dict['M2']['FF']**2
-                                      }
+            speed_dict["Mm"] =  self.tidal_dict["Mm"]
+            speed_dict["L2"] =  self.tidal_dict["L2"]
+            speed_dict["MU2"] = self.tidal_dict["MU2"]
+#            speed_dict["ALPHA1"] = self.tidal_dict["ALPHA1"]
+            speed_dict["EPS2"] = self.tidal_dict["EPS2"]
+            speed_dict["SN4"] = self.tidal_dict["SN4"]
         if num_hours >= 4383 * rayleigh_comp:
             # Slower than diurnal: Ssa, Mf
             # Diurnal: PHI1, P1, BETA1, TAU1
             # Semidiurnal: K2, MSN2
             # Shallow water: SO1, MKS2, MSN3, SO3, MK4, SK4, 2MK6, MSK6
             # Need MSN3, SK4, 2MK6, MSK6
-            speed_dict["Ssa"] = {'speed': 0.0821373*deg2rad,
-                                      'VAU': 2.0*h,
-                                      'FF': N.ones(length)
-                                      }
-            speed_dict["Mf"] =  {'speed': 1.0980331*deg2rad,
-                                      'VAU': 2.0*(s - zeta),
-                                      'FF': N.sin(ii)**2 /0.1578
-                                      }
-            speed_dict["P1"] = {'speed': 14.9589314*deg2rad,
-                                     'VAU': T - h + 90,
-                                     'FF': N.ones(length)
-                                     }
-            speed_dict["K2"] = {'speed': 30.0821373*deg2rad,
-                                     'VAU': 2*(T + h - two_nupp),
-                                     'FF': (19.0444*(N.sin(ii)**4) + 2.7702*(N.sin(ii)**2) * N.cos(2.*nu*deg2rad) + 0.0981)**0.5
-                                     }
-            speed_dict["SO3"] = {'speed': 43.9430356*deg2rad,
-                                      'VAU': 3*T - 2*s + h + 90 + 2*zeta - nu,
-                                      'FF': speed_dict["O1"]["FF"]
-                                      }
-            speed_dict["PHI1"] = {'speed': 15.1232059*deg2rad,
-                                       'VAU': T + 3*h - 90,
-                                       'FF': N.ones(length)
-                                       }
-            speed_dict["SO1"] = {'speed': 16.0569644*deg2rad,
-                                      'VAU': T + 2*s - h - 90 - nu,
-                                      'FF': speed_dict['J1']['FF']
-                                      }
+            speed_dict["Ssa"] = self.tidal_dict["Ssa"]
+            speed_dict["Mf"] =  self.tidal_dict["Mf"]
+            speed_dict["P1"] = self.tidal_dict["P1"]
+            speed_dict["K2"] = self.tidal_dict["K2"]
+            speed_dict["SO3"] = self.tidal_dict["SO3"]
+            speed_dict["PHI1"] = self.tidal_dict["PHI1"]
+            speed_dict["SO1"] = self.tidal_dict["SO1"]
             # Seems like A54 in Schureman is equivalent to MKS2 in Foreman
-            speed_dict["MKS2"] = {'speed': 29.066241528*deg2rad,
-                                      'VAU': 2*T - 2*s + 4*h - 2*nu,
-                                      'FF': speed_dict['ETA2']['FF']
-                                      }
+            speed_dict["MKS2"] = self.tidal_dict["MKS2"]
             # Seems like MP1 in Schureman is equivalent to TAU1 in Foreman
-            speed_dict["TAU1"] = {'speed': 14.025172896*deg2rad,
-                                      'VAU': T - 2*s + 3*h - 90 - nu,
-                                      'FF': speed_dict['J1']['FF']
-                                      }
+            speed_dict["TAU1"] = self.tidal_dict["TAU1"]
             # Seems like A19 in Schureman is equivalent to BET1 in Foreman
-            speed_dict["BETA1"] = {'speed': 14.414556708*deg2rad,
-                                      'VAU': T - s - h + p - 90 - 2*zeta - nu,
-                                      'FF': speed_dict['O1']['FF']
-                                      }
-            speed_dict["MK4"] = {'speed': 59.066241516*deg2rad,
-                                      'VAU': speed_dict['M2']['VAU'] + speed_dict['K2']['VAU'],
-                                      'FF': speed_dict['M2']['FF'] * speed_dict['K2']['FF']
-                                      }
-            speed_dict["MSN2"] = {'speed': 59.066241516*deg2rad,
-                                      'VAU': speed_dict['M2']['VAU'] + speed_dict['K2']['VAU'],
-                                      'FF': speed_dict['M2']['FF'] * speed_dict['K2']['FF']
-                                      }
+            speed_dict["BETA1"] = self.tidal_dict["BETA1"]
+            speed_dict["MK4"] = self.tidal_dict["MK4"]
+            speed_dict["MSN2"] = self.tidal_dict["MSN2"]
         if num_hours >= 4942 * rayleigh_comp:
-            speed_dict["2N2"] = {'speed': 27.8953548*deg2rad,
-                                      'VAU': 2*(T - 2*s + h + p + zeta - nu),
-                                      'FF': speed_dict['M2']['FF']
-                                      }
-            speed_dict["NU2"] = {'speed': 28.5125831*deg2rad,
-                                      'VAU': 2*T - 3*s + 4*h - p + 2*zeta - 2*nu,
-                                      'FF': speed_dict['M2']['FF']
-                                      }
+            speed_dict["2N2"] = self.tidal_dict["2N2"]
+            speed_dict["NU2"] = self.tidal_dict["NU2"]
             # Seems like A4 in Schureman is equivalent to MSM in Foreman
-            speed_dict["A4"] = {'speed': 0.4715210880*deg2rad,
-                                     'VAU': s - 2*h + p,
-                                     'FF': speed_dict['Mm']['FF']
-                                     }
-            speed_dict["SIGMA1"] = {'speed': 12.9271398*deg2rad,
-                                         'VAU': T - 4*s + 3*h + 90 + 2*zeta - nu,
-                                         'FF': speed_dict['O1']['FF']
-                                         }
-            speed_dict["RHO1"] = {'speed': 13.4715145*deg2rad,
-                                       'VAU': T - 3*s + 3*h - p + 90 + 2*zeta - nu,
-                                       'FF': speed_dict['O1']['FF']
-                                       }
-            speed_dict["CHI1"] = {'speed': 14.5695476*deg2rad,
-                                       'VAU': T - s + 3*h - p - 90 - nu,
-                                       'FF': speed_dict['J1']['FF']
-                                       }
-            speed_dict["THETA1"] = {'speed': 15.5125897*deg2rad,
-                                         'VAU': T + s - h + p - 90 - nu,
-                                         'FF': speed_dict['J1']['FF']
-                                         }
-#            speed_dict["OQ2"] =
-            speed_dict["LAMBDA2"] = {'speed': 29.4556253*deg2rad,
-                                          'VAU': 2*T - s + p + 180,
-                                          'FF': speed_dict['M2']['FF']
-                                          }
+            speed_dict["A4"] = self.tidal_dict["A4"]
+            speed_dict["SIGMA1"] = self.tidal_dict["SIGMA1"]
+            speed_dict["RHO1"] = self.tidal_dict["RHO1"]
+            speed_dict["CHI1"] = self.tidal_dict["CHI1"]
+            speed_dict["THETA1"] = self.tidal_dict["THETA1"]
+#            speed_dict["OQ2"] =self.tidal_dict["OQ2"]
+            speed_dict["LAMBDA2"] = self.tidal_dict["LAMBDA2"]
         if num_hours >= 8766 * rayleigh_comp:
-            speed_dict["Sa"] = {'speed': 0.0410686*deg2rad,
-                                     'VAU': h,
-                                     'FF': N.ones(length)
-                                     }
+            speed_dict["Sa"] = self.tidal_dict["Sa"]
         if num_hours >= 8767 * rayleigh_comp:
-            speed_dict["S1"] = {'speed': 15.0000000*deg2rad,
-                                     'VAU': T,
-                                     'FF': N.ones(length)
-                                     }
-            speed_dict["T2"] = {'speed': 29.9589333*deg2rad,
-                                     'VAU': 2*T - h + p1,
-                                     'FF': N.ones(length)
-                                     }
-            speed_dict["R2"] = {'speed': 30.0410667*deg2rad,
-                                     'VAU': 2*T + h - p1 + 180,
-                                     'FF': N.ones(length)
-                                     }
-            speed_dict["PI1"] = {'speed': 14.9178647*deg2rad,
-                                      'VAU': T - 2*h + p1 + 90,
-                                      'FF': N.ones(length)
-                                      }
-            speed_dict["PSI1"] = {'speed': 15.0821352*deg2rad,
-                                       'VAU': T + 2*h - p1 - 90,
-                                       'FF': N.ones(length)
-                                       }
-#            speed_dict["H1"] =
-#            speed_dict["H2"] =
+            speed_dict["S1"] = self.tidal_dict["S1"]
+            speed_dict["T2"] = self.tidal_dict["T2"]
+            speed_dict["R2"] = self.tidal_dict["R2"]
+            speed_dict["PI1"] = self.tidal_dict["PI1"]
+            speed_dict["PSI1"] = self.tidal_dict["PSI1"]
+#            speed_dict["H1"] =self.tidal_dict["H1"]
+#            speed_dict["H2"] =self.tidal_dict["H2"]
         if num_hours >= 11326 * rayleigh_comp:
             # GAM2 from Foreman should go here, but couldn't find comparable
             # constituent information from Schureman
             pass
+        # This is what is required to separate NO1 and M1
+        if num_hours >= 77554 * rayleigh_comp:
+            speed_dict["M1"] = self.tidal_dict["M1"]
 
         key_list = speed_dict.keys()
         key_list.sort()
@@ -691,15 +796,30 @@ class tappy:
             phase[key] = p[index + len(key_list)]
 
         if len(self.speed_dict[key_list[0]]['FF']) == len(t):
-            ff = self.speed_dict
+            ff = self.tidal_dict
         else:
+            # This is for the short term harmonic analysis.
             ff = {}
             for key in key_list:
                 ff[key] = {'FF': N.ones(len(t))}
 
+        self.inferred_key_list = []
+        self.inferred_r = {}
+        self.inferred_phase = {}
+        if 'O1' in key_list and 'K1' in key_list:
+            if 'J1' not in key_list:
+                self.inferred_key_list.append('J1')
+                self.inferred_r['J1'] = H['J1'] = 0.079 * H['O1']
+                self.inferred_phase['J1'] = phase['J1'] = phase['K1'] + 0.496*(phase['K1'] - phase['O1']) 
+            if 'P1' not in key_list:
+                self.inferred_key_list.append('P1')
+                self.inferred_r['P1'] = H['P1'] = 0.331 * H['K1']
+                self.inferred_phase['P1'] = phase['P1'] = phase['K1'] - 0.075*(phase['K1'] - phase['O1']) 
+
+
         sumterm = N.zeros((len(t)))
-        for i in key_list:
-            sumterm = sumterm + H[i]*ff[i]['FF']*N.cos(self.speed_dict[i]['speed']*t - phase[i])
+        for i in key_list + self.inferred_key_list:
+            sumterm = sumterm + H[i]*ff[i]['FF']*N.cos(self.tidal_dict[i]['speed']*t - phase[i])
 
         if self.options.linear_trend:
             self.err = ht - (p[-2]*t + p[-1] + sumterm)
@@ -774,7 +894,10 @@ class tappy:
         # If the initial values are at a higher frequency than hourly, they are
         # first averaged to give hourly values. 
 
-        # For the time being the filters can only work on hourly data...
+        # For the time being the filters can only work on hourly data.  If the
+        # data is less than hourly, I filter each data point separately.  For
+        # example: if the data is every 15 minutes I run the filter 4 times -
+        # on the hour, quarter past, half past, quarter till.
 
         interval = dates[1:] - dates[:-1]
         interval.sort()
@@ -838,9 +961,6 @@ class tappy:
                     w = pywt.Wavelet(wl)
     
                     max_level = pywt.dwt_max_level(len(elevation), w.dec_len)
-                    print elevation
-                    print w
-                    print max_level
                     a = pywt.wavedec(elevation, w, level = max_level, mode='sym')
     
                     for i in range(len(a))[1:]:
@@ -914,17 +1034,37 @@ class tappy:
         mdict = map(_swap2, mdict)
         return mdict
 
+
     def print_con(self):
         ndict = {}
         for k in self.key_list:
             ndict[k] = self.speed_dict[k]['speed']
 
+        print "\n%6s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
+        print   "%6s %12s %12s %12s" % ("====", "=====", "=", "=====")
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
             print "%6s %12.8f %12.4f %12.4f" % (i, 
                                                 self.speed_dict[i]['speed']*rad2deg, 
                                                 self.r[i], 
                                                 self.phase[i])
+        print "\nINFERRED CONSTITUENTS"
+        ndict = {}
+        for k in self.inferred_key_list:
+            ndict[k] = self.tidal_dict[k]['speed']
+        print "%6s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
+        print "%6s %12s %12s %12s" % ("====", "=====", "=", "=====")
+        klist = [i[0] for i in self.sortbyvalue(ndict)]
+        for i in klist:
+            print "%6s %12.8f %12.4f %12.4f" % (i, 
+                                                self.tidal_dict[i]['speed']*rad2deg, 
+                                                self.inferred_r[i], 
+                                                self.inferred_phase[i])
+
+        print "\nAVERAGE (Z0) = ", self.fitted_average
+        if self.options.linear_trend:
+            print "SLOPE OF REMOVED LINEAR TREND = ", self.slope
+
 
     def print_ephemeris_table(self):
         for d in range(1600, 2001, 100):
@@ -933,6 +1073,7 @@ class tappy:
             package = self.astronomic(dates)
             (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
             print dates[0].isoformat(), h, p1[0], s, p, Nv[0]
+
 
     def print_v_u_table(self):
 

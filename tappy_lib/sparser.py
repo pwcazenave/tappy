@@ -353,7 +353,6 @@ class ParseFileLineByLine:
         if def_filename:
             if os.path.exists(def_filename):
                 self.parsedef = def_filename
-        print self.parsedef
         if self.parsedef:
             execfile(self.parsedef)
             self.grammar = And(grammar[1:] + [restOfLine])
