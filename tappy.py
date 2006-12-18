@@ -811,10 +811,77 @@ class tappy:
                 self.inferred_key_list.append('J1')
                 self.inferred_r['J1'] = H['J1'] = 0.079 * H['O1']
                 self.inferred_phase['J1'] = phase['J1'] = phase['K1'] + 0.496*(phase['K1'] - phase['O1']) 
+            # How should I handle this?  Shureman seems to confuse M1 and NO1
+            #if 'M1' not in key_list:
+            #    self.inferred_key_list.append('M1')
+            #    self.inferred_r['M1'] = H['M1'] = 0.071 * H['O1']
+            #    self.inferred_phase['M1'] = phase['M1'] = phase['K1'] - 0.5*(phase['K1'] - phase['O1']) 
+            if 'OO1' not in key_list:
+                self.inferred_key_list.append('OO1')
+                self.inferred_r['OO1'] = H['OO1'] = 0.043 * H['O1']
+                self.inferred_phase['OO1'] = phase['OO1'] = phase['K1'] + 1.0*(phase['K1'] - phase['O1']) 
             if 'P1' not in key_list:
                 self.inferred_key_list.append('P1')
                 self.inferred_r['P1'] = H['P1'] = 0.331 * H['K1']
                 self.inferred_phase['P1'] = phase['P1'] = phase['K1'] - 0.075*(phase['K1'] - phase['O1']) 
+            if 'Q1' not in key_list:
+                self.inferred_key_list.append('Q1')
+                self.inferred_r['Q1'] = H['Q1'] = 0.194 * H['O1']
+                self.inferred_phase['Q1'] = phase['Q1'] = phase['K1'] - 1.496*(phase['K1'] - phase['O1']) 
+            if '2Q1' not in key_list:
+                self.inferred_key_list.append('2Q1')
+                self.inferred_r['2Q1'] = H['2Q1'] = 0.026 * H['O1']
+                self.inferred_phase['2Q1'] = phase['2Q1'] = phase['K1'] - 1.992*(phase['K1'] - phase['O1']) 
+            if 'RHO1' not in key_list:
+                self.inferred_key_list.append('RHO1')
+                self.inferred_r['RHO1'] = H['RHO1'] = 0.038 * H['O1']
+                self.inferred_phase['RHO1'] = phase['RHO1'] = phase['K1'] - 1.429*(phase['K1'] - phase['O1']) 
+        if 'S2' in key_list and 'M2' in key_list:
+            if 'K2' not in key_list:
+                self.inferred_key_list.append('K2')
+                self.inferred_r['K2'] = H['K2'] = 0.272 * H['S2']
+                self.inferred_phase['K2'] = phase['K2'] = phase['S2'] + 0.081*(phase['S2'] - phase['M2']) 
+            if 'L2' not in key_list:
+                self.inferred_key_list.append('L2')
+                self.inferred_r['L2'] = H['L2'] = 0.028 * H['M2']
+                self.inferred_phase['L2'] = phase['L2'] = phase['S2'] - 0.464*(phase['S2'] - phase['M2']) 
+            if 'N2' not in key_list:
+                self.inferred_key_list.append('N2')
+                self.inferred_r['N2'] = H['N2'] = 0.194 * H['M2']
+                self.inferred_phase['N2'] = phase['N2'] = phase['S2'] - 1.536*(phase['S2'] - phase['M2']) 
+            if '2N2' not in key_list:
+                self.inferred_key_list.append('2N2')
+                self.inferred_r['2N2'] = H['2N2'] = 0.026 * H['M2']
+                self.inferred_phase['2N2'] = phase['2N2'] = phase['S2'] - 2.072*(phase['S2'] - phase['M2']) 
+            if 'R2' not in key_list:
+                self.inferred_key_list.append('R2')
+                self.inferred_r['R2'] = H['R2'] = 0.008 * H['S2']
+                self.inferred_phase['R2'] = phase['R2'] = phase['S2'] + 0.040*(phase['S2'] - phase['M2']) 
+            if 'T2' not in key_list:
+                self.inferred_key_list.append('T2')
+                self.inferred_r['T2'] = H['T2'] = 0.059 * H['S2']
+                self.inferred_phase['T2'] = phase['T2'] = phase['S2'] - 0.040*(phase['S2'] - phase['M2']) 
+            if 'LAMBDA2' not in key_list:
+                self.inferred_key_list.append('LAMBDA2')
+                self.inferred_r['LAMBDA2'] = H['LAMBDA2'] = 0.007 * H['M2']
+                self.inferred_phase['LAMBDA2'] = phase['LAMBDA2'] = phase['S2'] - 0.536*(phase['S2'] - phase['M2']) 
+            if 'MU2' not in key_list:
+                self.inferred_key_list.append('MU2')
+                self.inferred_r['MU2'] = H['MU2'] = 0.024 * H['M2']
+                self.inferred_phase['MU2'] = phase['MU2'] = phase['S2'] - 2.0*(phase['S2'] - phase['M2']) 
+            if 'NU2' not in key_list:
+                self.inferred_key_list.append('NU2')
+                self.inferred_r['NU2'] = H['NU2'] = 0.038 * H['M2']
+                self.inferred_phase['NU2'] = phase['NU2'] = phase['S2'] - 1.464*(phase['S2'] - phase['M2']) 
+        for key in self.inferred_key_list:
+            if self.inferred_r[key] < 0:
+                self.inferred_r[key] = abs(self.inferred_r[key])
+                self.inferred_phase[key] = self.inferred_phase[key] + 180.0
+            try:
+                self.inferred_phase[key] = N.mod(self.inferred_phase[key] + self.tidal_dict[key]['VAU'][0], 360)
+            except TypeError:
+                self.inferred_phase[key] = N.mod(self.inferred_phase[key] + self.tidal_dict[key]['VAU'], 360)
+
 
 
         sumterm = N.zeros((len(t)))
@@ -1040,11 +1107,11 @@ class tappy:
         for k in self.key_list:
             ndict[k] = self.speed_dict[k]['speed']
 
-        print "\n%6s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
-        print   "%6s %12s %12s %12s" % ("====", "=====", "=", "=====")
+        print "\n%12s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
+        print   "%12s %12s %12s %12s" % ("====", "=====", "=", "=====")
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
-            print "%6s %12.8f %12.4f %12.4f" % (i, 
+            print "%12s %12.8f %12.4f %12.4f" % (i, 
                                                 self.speed_dict[i]['speed']*rad2deg, 
                                                 self.r[i], 
                                                 self.phase[i])
@@ -1052,11 +1119,11 @@ class tappy:
         ndict = {}
         for k in self.inferred_key_list:
             ndict[k] = self.tidal_dict[k]['speed']
-        print "%6s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
-        print "%6s %12s %12s %12s" % ("====", "=====", "=", "=====")
+        print "%12s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
+        print "%12s %12s %12s %12s" % ("====", "=====", "=", "=====")
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
-            print "%6s %12.8f %12.4f %12.4f" % (i, 
+            print "%12s %12.8f %12.4f %12.4f" % (i, 
                                                 self.tidal_dict[i]['speed']*rad2deg, 
                                                 self.inferred_r[i], 
                                                 self.inferred_phase[i])
