@@ -60,7 +60,7 @@ import astrolabe.util as uti
 
 #===globals======================
 modname = "tappy"
-__version__ = "0.5.3"
+__version__ = "0.6.0"
 
 #--option args--
 debug_p = 0
