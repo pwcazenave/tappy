@@ -57,6 +57,7 @@ import tappy_lib
 import sparser
 import astrolabe.calendar as cal
 import astrolabe.util as uti
+import pad.pad as pad
 
 #===globals======================
 modname = "tappy"
@@ -685,8 +686,6 @@ class tappy:
 
         """
 
-        (dates, elev) = self.missing('fill', dates, elev)
-
         kern = [  
               -0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
               -0.00537,-0.00641,-0.00735,-0.00811,-0.00864,
@@ -949,17 +948,7 @@ class tappy:
         return total
 
 
-    def filters(self, nstype, dates, elevation):
-        # Doodson filter
-        # The Doodson X0 filter is a simple filter designed to damp out the
-        # main tidal frequencies. It takes hourly values, 19 values either side
-        # of the central one. A weighted average is taken with the following
-        # weights
-
-        #(1010010110201102112 0 2112011020110100101)/30.
-
-        # If the initial values are at a higher frequency than hourly, they are
-        # first averaged to give hourly values. 
+    def filters(self, nstype, dates, elevation, pad_type=None):
 
         # For the time being the filters can only work on hourly data.  If the
         # data is less than hourly, I filter each data point separately.  For
@@ -982,11 +971,31 @@ class tappy:
 
         tot_rep = rep_dict[interval.seconds/60]
 
+        dates, elevation = self.missing('fill', 
+                                        dates, 
+                                        elevation)
+
         relevation = N.empty_like(elevation)
 
         for rep in range(tot_rep):
             ndates = dates[rep::tot_rep]
             nelevation = elevation[rep::tot_rep]
+
+            if nstype == 'doodson':
+                # Doodson filter
+
+                # The Doodson X0 filter is a simple filter designed to damp out
+                # the main tidal frequencies. It takes hourly values, 19 values
+                # either side of the central one. A weighted average is taken
+                # with the following weights
+
+                #(1010010110201102112 0 2112011020110100101)/30.
+                kern = [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 2, 0, 1, 1, 0, 2, 1, 1, 2,
+                        0,
+                        2, 1, 1, 2, 0, 1, 1, 0, 2, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1]
+
+                kern = [i/30.0 for i in kern]
+                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)
 
             if nstype == 'usgs':
                 relevation[rep::tot_rep] = self.usgs_filter(ndates, nelevation)
@@ -1143,7 +1152,6 @@ class tappy:
 
 
     def print_v_u_table(self):
-
         dates = []
         for d in range(1850, 2001):
             dates.append(datetime.datetime(d, 1, 1, 0, 0))
@@ -1156,6 +1164,7 @@ class tappy:
         key_list.sort()
         for key in key_list:
             print key, speed_dict[key]['VAU']
+
 
     def print_node_factor_table(self):
         pass
@@ -1211,10 +1220,6 @@ def main(options, args):
         x.write_file('outts_filled.dat', x.dates_filled, x.elevation_filled)
 
     if x.options.filter:
-        if x.options.missing_data != 'fill':
-            x.dates_filled, x.elevation_filled = x.missing(x.options.missing_data, 
-                                                           x.dates, 
-                                                           x.elevation)
         for item in x.options.filter.split(','):
             if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs']:# 'lecolazet', 'godin', 'sfa']:
                 result = x.filters(item, x.dates_filled, x.elevation_filled)
