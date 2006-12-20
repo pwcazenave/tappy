@@ -146,7 +146,7 @@ def __reverse(in_vector):
     '''
     in_list = in_vector.tolist()
     in_list.reverse()
-    return N.array(in_list).astype(in_vector.typecode())
+    return N.array(in_list).astype(in_vector.dtype)
 
 def __loop_across(matrix, pad_width, function, **kw):
     '''
@@ -162,7 +162,7 @@ def __loop_across(matrix, pad_width, function, **kw):
     total_dim_increase = [N.sum(pad_width[i]) for i in rank]
     offset_slices = [slice(pad_width[i][0],  pad_width[i][0] + matrix.shape[i]) for i in rank]
     new_shape = N.array(matrix.shape) + total_dim_increase
-    newmat = N.zeros(new_shape).astype(matrix.typecode())
+    newmat = N.zeros(new_shape).astype(matrix.dtype)
     newmat[offset_slices] = matrix
     if len(matrix.shape) > 1:
         for iaxis in rank:
@@ -232,12 +232,12 @@ def __linear_ramp(vector, pad_tuple, iaxis, kw):
     after_delta = (vector[-pad_tuple[1] - 1] - end_value[1])/float(pad_tuple[1])
 
     before_vector = N.ones((pad_tuple[0],)) * end_value[0]
-    before_vector = before_vector.astype(vector.typecode())
+    before_vector = before_vector.astype(vector.dtype)
     for i in range(len(before_vector)):
         before_vector[i] = before_vector[i] + i*before_delta
 
     after_vector = N.ones((pad_tuple[1],)) * end_value[1]
-    after_vector = after_vector.astype(vector.typecode())
+    after_vector = after_vector.astype(vector.dtype)
     for i in range(len(after_vector)):
         after_vector[i] = after_vector[i] + i*after_delta
     after_vector = __reverse(after_vector)
@@ -345,7 +345,7 @@ RETURNS -> N-dimensional matrix
 
     """
     constant_v = __validate_tuple(matrix, constant_v)
-    return __loop_across(matrix, pad_width, __constant, constant_v=constant_v)
+    return __loop_across(matrix, pad_width, __constant, constant=constant_v)
 
 def linear_ramp(matrix, pad_width=(1, ), end_value=(0, )):
     """ 

@@ -104,7 +104,7 @@ def interpolate(data, start, stop, iavg):
     for i in range(start, stop + 1):
         data[i] = m*i + b
 
-def zone_calculations(ftn, data, mask):
+def zone_calculations(ftn, data, mask, limit = 25):
     start = None
     stop = None
     for index, val in enumerate(mask):
@@ -113,7 +113,7 @@ def zone_calculations(ftn, data, mask):
         if not val and start:
             stop = index - 1
         if start and stop:
-            ftn(data, start, stop, 25)
+            ftn(data, start, stop, limit)
             start = None
             stop = None
 
@@ -681,27 +681,6 @@ class tappy:
         return (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1)
 
 
-    def usgs_filter(self, dates, elev):
-        """ Filters out periods of 25 hours and less from self.elevation.
-
-        """
-
-        kern = [  
-              -0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
-              -0.00537,-0.00641,-0.00735,-0.00811,-0.00864,
-              -0.00887,-0.00872,-0.00816,-0.00714,-0.00560,
-              -0.00355,-0.00097, 0.00213, 0.00574, 0.00980,
-               0.01425, 0.01902, 0.02400, 0.02911, 0.03423,
-               0.03923, 0.04399, 0.04842, 0.05237, 0.05576,
-               0.05850, 0.06051, 0.06174, 0.06215, ]
-
-        kern = N.concatenate((kern[:-1], kern[::-1]))
-
-        usgs_filtered = N.convolve(elev, kern, mode = 1)
-
-        return usgs_filtered
-
-
     def missing(self, task, dates, elev):
         """ What to do with the missing values """
 
@@ -771,6 +750,10 @@ class tappy:
 
 
     def remove_extreme_values(self):
+        """ Removes extreme elevation values from analsis.  Might be useful
+        when analyzing flow data series.
+        """
+
         avg = N.average(self.elevation)
         std = N.std(self.elevation)
 
@@ -785,8 +768,8 @@ class tappy:
 
     def residuals(self, p, ht, t, key_list):
         """ Used for least squares fit.
-    
         """
+
         H = {}
         phase = {}
         slope = {}
@@ -948,6 +931,34 @@ class tappy:
         return total
 
 
+    def pad_filters(self, pad_type, elevation, (blen, alen)):
+        if pad_type == "tide":
+            nelevation = pad.mean(elevation, (blen, alen), stat_len=(blen, alen))
+            ndates = self.cat_dates(ndates, blen)
+        if pad_type == "minimum":
+            return pad.minimum(elevation, (blen, alen))
+        if pad_type == "maximum":
+            return pad.maximum(elevation, (blen, alen))
+        if pad_type == "mean":
+            return pad.mean(elevation, (blen, alen))
+        if pad_type == "median":
+            return pad.median(elevation, (blen, alen))
+        if pad_type == "reflect":
+            return pad.reflect(elevation, (blen, alen))
+        if pad_type == "wrap":
+            return pad.wrap(elevation, (blen, alen))
+
+
+    def cat_dates(self, dates, len_dates):
+        interval = dates[1:] - dates[:-1]
+        interval.sort()
+        interval = interval[len(interval)/2]
+        cnt = N.arange(1, len_dates + 1)*datetime.timedelta(minutes = interval.seconds/60)
+        bdate = dates[0] - cnt
+        edate = dates[-1] + cnt
+        return N.concatenate((bdate, dates, edate))
+
+
     def filters(self, nstype, dates, elevation, pad_type=None):
 
         # For the time being the filters can only work on hourly data.  If the
@@ -975,11 +986,13 @@ class tappy:
                                         dates, 
                                         elevation)
 
+
         relevation = N.empty_like(elevation)
 
         for rep in range(tot_rep):
             ndates = dates[rep::tot_rep]
             nelevation = elevation[rep::tot_rep]
+            nslice = slice(0, len(nelevation))
 
             if nstype == 'doodson':
                 # Doodson filter
@@ -990,19 +1003,56 @@ class tappy:
                 # with the following weights
 
                 #(1010010110201102112 0 2112011020110100101)/30.
+
                 kern = [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 2, 0, 1, 1, 0, 2, 1, 1, 2,
                         0,
                         2, 1, 1, 2, 0, 1, 1, 0, 2, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1]
 
+                half_kern = len(kern)//2
+
+                if self.options.pad_filters:
+                    nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
+                    ndates = self.cat_dates(ndates, half_kern)
+                    nslice = slice(half_kern, -half_kern)
+
                 kern = [i/30.0 for i in kern]
-                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)
+                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)[nslice]
 
             if nstype == 'usgs':
-                relevation[rep::tot_rep] = self.usgs_filter(ndates, nelevation)
+                """ Filters out periods of 25 hours and less from self.elevation.
+        
+                """
+        
+                kern = [  
+                      -0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
+                      -0.00537,-0.00641,-0.00735,-0.00811,-0.00864,
+                      -0.00887,-0.00872,-0.00816,-0.00714,-0.00560,
+                      -0.00355,-0.00097, 0.00213, 0.00574, 0.00980,
+                       0.01425, 0.01902, 0.02400, 0.02911, 0.03423,
+                       0.03923, 0.04399, 0.04842, 0.05237, 0.05576,
+                       0.05850, 0.06051, 0.06174, 0.06215, ]
+        
+                kern = N.concatenate((kern[:-1], kern[::-1]))
+
+                half_kern = len(kern)//2
+
+                if self.options.pad_filters:
+                    nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
+                    ndates = self.cat_dates(ndates, half_kern)
+                    nslice = slice(half_kern, -half_kern)
+        
+                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)[nslice]
 
             if nstype == 'boxcar':
-                kern = N.ones(25) * (1./25.)
-                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)
+                kern = N.ones(25)/25.
+                half_kern = len(kern)//2
+
+                if self.options.pad_filters:
+                    nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
+                    ndates = self.cat_dates(ndates, half_kern)
+                    nslice = slice(half_kern, -half_kern)
+
+                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)[nslice]
 
             if nstype == 'mstha':
                 blen = 12
@@ -1221,9 +1271,9 @@ def main(options, args):
 
     if x.options.filter:
         for item in x.options.filter.split(','):
-            if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs']:# 'lecolazet', 'godin', 'sfa']:
-                result = x.filters(item, x.dates_filled, x.elevation_filled)
-                x.write_file('outts_filtered_%s.dat' % (item,), x.dates_filled, result)
+            if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs', 'doodson']:# 'lecolazet', 'godin', 'sfa']:
+                result = x.filters(item, x.dates, x.elevation)
+                x.write_file('outts_filtered_%s.dat' % (item,), x.dates, result)
 
     if not x.options.quiet:
         x.print_con()
@@ -1316,12 +1366,12 @@ if __name__ == '__main__':
                    help='Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: boxcar,usgs,mstha,wavelet,cd.',#,lecolazet,godin,sfa
                    metavar = 'FILTER',
                      )
-#    parser.add_option(
-#                   '-p',
-#                   '--pad-filters',
-#                   help='Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of [reflect, mean, median]',
-#                   action='store_true',
-#                     )
+    parser.add_option(
+                   '-p',
+                   '--pad-filters',
+                   help='Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["minimum", "maximum", "mean", "median", "reflect", "wrap"]',
+                   metavar = 'PAD_TYPE',
+                     )
     
     (options, args) = parser.parse_args()
 
