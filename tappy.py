@@ -90,6 +90,11 @@ def usage():
     print __doc__
 
 def interpolate(data, start, stop, iavg):
+    """
+    Linearly interpolate across a section of a vector.  A function used by
+    zone_calculations.  
+    """
+
     if start < 1 or stop > len(data) - 1:
         print 'can not interpolate without at least 1 valid point on each side'
     if start < iavg:
@@ -104,7 +109,13 @@ def interpolate(data, start, stop, iavg):
     for i in range(start, stop + 1):
         data[i] = m*i + b
 
+
 def zone_calculations(ftn, data, mask, limit = 25):
+    """
+    Apply the supplied function across the patches (zones) of missing values in
+    the input vector data.  Used to fill missing or bad data.
+    """
+
     start = None
     stop = None
     for index, val in enumerate(mask):
@@ -120,9 +131,12 @@ def zone_calculations(ftn, data, mask, limit = 25):
 
 #====================================
 class tappy:
-    #---class variables---
-    #--------------------------
     def __init__(self, filename, def_filename = None):
+        """ 
+        The initialization of the Tappy class reads in the data and
+        elevation data.
+        """
+
         ftn = "tappy.__init__"
         #---instance variables---
         self.speed_dict = {}
@@ -148,6 +162,11 @@ class tappy:
 
 
     def which_constituents(self, length, package, rayleigh_comp = 1.0):
+        """
+        Establishes which constituents are able to be determined according to
+        the length of the water elevation vector.  
+        """
+
         (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1) = package
         speed_dict = {}
 
@@ -274,6 +293,8 @@ class tappy:
                                   'VAU': T + 3*s + h - p - 90 - 2*zeta - nu,
                                   'FF': N.sin(ii)**2/0.1565
                                   }
+        #
+        # The M1/NO1 curse.
         #
         #        Foreman         Schureman           TASK
         #        =======         =========           ====
@@ -600,19 +621,28 @@ class tappy:
 
 
     def dates2jd(self, dates):
+        """
+        Given a dates vector will return a vector of Julian days as required by
+        astrolabe.  
+        """
+
         jd = N.zeros(len(dates), "d")
         if isinstance(dates[0], datetime.datetime):
             for index, dt in enumerate(dates):
-                # The -0.5 is needed because astronomers measure their zero from GMT noon,
-                # whereas oceanographers measure the tide from zero at midnight.
-                jd[index] = (cal.cal_to_jd(dt.year, dt.month, dt.day) + uti.hms_to_fday(dt.hour, dt.minute, dt.second))# + 0.5
+                jd[index] = (cal.cal_to_jd(dt.year, dt.month, dt.day) + uti.hms_to_fday(dt.hour, dt.minute, dt.second))
         else:
             jd = dates
         return jd
 
 
     def astronomic(self, dates):
-        # Work from astrolabe and Jean Meeuss
+        """
+        Calculates all of the required astronomic parameters needed for the
+        tidal analysis.  The node factor is returned as a vector equal in
+        length to the dates vector whereas V + u is returned for the first date
+        in the dates vector.  
+        """
+
         import astrolabe.elp2000 as elp
         import astrolabe.sun as sun
 
@@ -631,6 +661,8 @@ class tappy:
         p = N.mod(83.3532465 + 4069.0137287*jdc - 0.0103200*jdc**2
                    - (jdc**3)/80053.0 + (jdc**4)/18999000.0, 360)
 
+        # The -0.5 is needed because astronomers measure their zero from GMT noon,
+        # whereas oceanographers measure the tide from zero at midnight.
         s = lunar_eph.dimension(jd[0] - 0.5, 'L') * rad2deg
         h = solar_eph.dimension(jd[0] - 0.5, 'L') * rad2deg
 
@@ -682,7 +714,9 @@ class tappy:
 
 
     def missing(self, task, dates, elev):
-        """ What to do with the missing values """
+        """ 
+        What to do with the missing values. 
+        """
 
         if task not in ['fail', 'ignore', 'fill']:
             print "missing-data must be one of 'fail' (the default), 'ignore', or 'fill'"
@@ -750,7 +784,8 @@ class tappy:
 
 
     def remove_extreme_values(self):
-        """ Removes extreme elevation values from analsis.  Might be useful
+        """ 
+        Removes extreme elevation values from analsis.  Might be useful
         when analyzing flow data series.
         """
 
@@ -767,7 +802,8 @@ class tappy:
 
 
     def residuals(self, p, ht, t, key_list):
-        """ Used for least squares fit.
+        """ 
+        Used for least squares fit.
         """
 
         H = {}
@@ -794,10 +830,10 @@ class tappy:
                 self.inferred_r['J1'] = H['J1'] = 0.079 * H['O1']
                 self.inferred_phase['J1'] = phase['J1'] = phase['K1'] + 0.496*(phase['K1'] - phase['O1']) 
             # How should I handle this?  Shureman seems to confuse M1 and NO1
-            #if 'M1' not in key_list:
-            #    self.inferred_key_list.append('M1')
-            #    self.inferred_r['M1'] = H['M1'] = 0.071 * H['O1']
-            #    self.inferred_phase['M1'] = phase['M1'] = phase['K1'] - 0.5*(phase['K1'] - phase['O1']) 
+            if 'M1' not in key_list:
+                self.inferred_key_list.append('M1')
+                self.inferred_r['M1'] = H['M1'] = 0.071 * H['O1']
+                self.inferred_phase['M1'] = phase['M1'] = phase['K1'] - 0.5*(phase['K1'] - phase['O1']) 
             if 'OO1' not in key_list:
                 self.inferred_key_list.append('OO1')
                 self.inferred_r['OO1'] = H['OO1'] = 0.043 * H['O1']
@@ -958,6 +994,15 @@ class tappy:
         edate = dates[-1] + cnt
         return N.concatenate((bdate, dates, edate))
 
+    def delta_diff(self, elev, delta, start_index):
+        bindex = delta
+        if start_index > delta:
+            bindex = start_index
+        tmpe = elev[bindex:]
+        return tmpe - elev[bindex - delta:bindex - delta + len(tmpe)]
+
+    def delta_sum(self, elev, delta):
+        return elev[delta:] + elev[:-delta]
 
     def filters(self, nstype, dates, elevation, pad_type=None):
 
@@ -994,6 +1039,100 @@ class tappy:
             nelevation = elevation[rep::tot_rep]
             nslice = slice(0, len(nelevation))
 
+            if nstype == 'transform':
+                """
+                The article:
+                1981, 'Removing Tidal-Period Variations from Time-Series Data
+                Using Low Pass Filters' by Roy Walters and Cythia Heston, in
+                Physical Oceanography, Volume 12, pg 112.
+                compared several filters and determined that the following
+                order from best to worst:
+                    1) FFT Transform ramp to 0 in frequency domain from 40 to
+                       30 hours, 
+                    2) Godin
+                    3) cosine-Lanczos squared filter
+                    4) cosine-Lanczos filter
+                """
+                import numpy.fft
+                F = numpy.fft
+                result = F.rfft(nelevation)
+                freq = F.fftfreq(len(nelevation))[:len(nelevation)/2]
+                factor = N.ones_like(result)
+                factor[freq > 1/30.0] = 0.0
+                a = factor[N.logical_and(1/40.0 < freq, freq < 1/30.0)]
+                a = range(len(a))
+                a.reverse()
+                a = N.array(a)
+                a = a/a[0]
+
+                factor[N.logical_and(1/40.0 < freq, freq < 1/30.0)] = a
+                print len(result)
+                print len(factor)
+                result = result * factor
+
+                relevation[rep::tot_rep] = F.irfft(result)
+
+
+            if nstype == 'kalman':
+                # intial parameters
+                sz = (len(nelevation),) # size of array
+                x = -0.37727 # truth value (typo in example at top of p. 13 calls this z)
+
+                Q = 1e-5 # process variance
+
+                # allocate space for arrays
+                xhat=N.zeros(sz)      # a posteri estimate of x
+                P=N.zeros(sz)         # a posteri error estimate
+                xhatminus=N.zeros(sz) # a priori estimate of x
+                Pminus=N.zeros(sz)    # a priori error estimate
+                K=N.zeros(sz)         # gain or blending factor
+
+                R = N.var(nelevation)**0.5 # estimate of measurement variance, change to see effect
+
+                # intial guesses
+                xhat[0] = N.average(nelevation)
+                P[0] = 1.0
+
+                for k in range(1, len(nelevation)):
+                    # time update
+                    xhatminus[k] = xhat[k-1]
+                    Pminus[k] = P[k-1]+Q
+
+                    # measurement update
+                    K[k] = Pminus[k]/( Pminus[k]+R )
+                    xhat[k] = xhatminus[k]+K[k]*(nelevation[k]-xhatminus[k])
+                    P[k] = (1-K[k])*Pminus[k]
+
+                relevation[rep::tot_rep] = xhat
+
+            if nstype == 'lecolazet1':
+                # 1/16 * ( S24 * S25 ) ** 2
+
+                # The UNITS are important.  I think the 1/16 is for feet.  That
+                # really makes things painful because I have always wanted
+                # TAPPY to be unit blind.  I will have to think about whether
+                # to implement this or not.
+
+                # Available for testing but not documented in help.
+
+                half_kern = 25
+
+                if self.options.pad_filters:
+                    nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
+                    ndates = self.cat_dates(ndates, half_kern)
+                    nslice = slice(0, -half_kern)
+        
+                relevation[rep::tot_rep] = 1.0/16.0*(self.delta_diff(nelevation, 24, 25)[25:]*self.delta_diff(nelevation, 25, 25)[25:])**2
+
+            if nstype == 'lecolazet2':
+                # 1/64 * S1**3 * A3 * A6 ** 2
+
+                # The UNITS are important.  I think the 1/64 is for feet.  That
+                # really makes things painful because I have always wanted
+                # TAPPY to be unit blind.  I will have to think about whether
+                # to implement this or not.
+                pass
+
             if nstype == 'doodson':
                 # Doodson filter
 
@@ -1003,6 +1142,13 @@ class tappy:
                 # with the following weights
 
                 #(1010010110201102112 0 2112011020110100101)/30.
+
+                # In "Data Analaysis and Methods in Oceanography":
+
+                # "The cosine-Lanczos filter, the transform filter, and the
+                # Butterworth filter are often preferred to the Godin filter,
+                # to earlier Doodson filter, because of their superior ability
+                # to remove tidal period variability from oceanic signals."
 
                 kern = [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 2, 0, 1, 1, 0, 2, 1, 1, 2,
                         0,
@@ -1166,11 +1312,11 @@ class tappy:
         for k in self.key_list:
             ndict[k] = self.speed_dict[k]['speed']
 
-        print "\n%12s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
-        print   "%12s %12s %12s %12s" % ("====", "=====", "=", "=====")
+        print "\n#%12s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
+        print   "#%12s %12s %12s %12s" % ("====", "=====", "=", "=====")
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
-            print "%12s %12.8f %12.4f %12.4f" % (i, 
+            print " %12s %12.8f %12.4f %12.4f" % (i, 
                                                 self.speed_dict[i]['speed']*rad2deg, 
                                                 self.r[i], 
                                                 self.phase[i])
@@ -1178,18 +1324,18 @@ class tappy:
         ndict = {}
         for k in self.inferred_key_list:
             ndict[k] = self.tidal_dict[k]['speed']
-        print "%12s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
-        print "%12s %12s %12s %12s" % ("====", "=====", "=", "=====")
+        print "#%12s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE")
+        print "#%12s %12s %12s %12s" % ("====", "=====", "=", "=====")
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
-            print "%12s %12.8f %12.4f %12.4f" % (i, 
+            print " %12s %12.8f %12.4f %12.4f" % (i, 
                                                 self.tidal_dict[i]['speed']*rad2deg, 
                                                 self.inferred_r[i], 
                                                 self.inferred_phase[i])
 
-        print "\nAVERAGE (Z0) = ", self.fitted_average
+        print "\n# AVERAGE (Z0) = ", self.fitted_average
         if self.options.linear_trend:
-            print "SLOPE OF REMOVED LINEAR TREND = ", self.slope
+            print "# SLOPE OF REMOVED LINEAR TREND = ", self.slope
 
 
     def print_ephemeris_table(self):
@@ -1271,7 +1417,7 @@ def main(options, args):
 
     if x.options.filter:
         for item in x.options.filter.split(','):
-            if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs', 'doodson']:# 'lecolazet', 'godin', 'sfa']:
+            if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs', 'doodson', 'lecolazet1', 'kalman', 'transform']:# 'lecolazet', 'godin', 'sfa']:
                 result = x.filters(item, x.dates, x.elevation)
                 x.write_file('outts_filtered_%s.dat' % (item,), x.dates, result)
 
@@ -1357,13 +1503,13 @@ if __name__ == '__main__':
     parser.add_option(
                    '-z',
                    '--zero-ts',
-                   help='Zero the input time series before constituent analysis by subtracting filtered data. One of: boxcar,usgs,mstha,cd.',#lecolazet,godin,sfa
+                   help='Zero the input time series before constituent analysis by subtracting filtered data. One of: boxcar,usgs,mstha,cd,lecolazet,kalman',#,godin,sfa
                    metavar = 'FILTER',
                      )
     parser.add_option(
                    '-f',
                    '--filter',
-                   help='Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: boxcar,usgs,mstha,wavelet,cd.',#,lecolazet,godin,sfa
+                   help='Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: boxcar,usgs,mstha,wavelet,cd,lecolazet,kalman',#,godin,sfa
                    metavar = 'FILTER',
                      )
     parser.add_option(
