@@ -1059,15 +1059,17 @@ class tappy:
                 freq = F.fftfreq(len(nelevation))[:len(nelevation)/2]
                 factor = N.ones_like(result)
                 factor[freq > 1/30.0] = 0.0
-                a = factor[N.logical_and(1/40.0 < freq, freq < 1/30.0)]
-                a = range(len(a))
-                a.reverse()
-                a = N.array(a)
-                a = a/a[0]
 
-                factor[N.logical_and(1/40.0 < freq, freq < 1/30.0)] = a
-                print len(result)
-                print len(factor)
+                sl = N.logical_and(1/40.0 < freq, freq < 1/30.0)
+                a = factor[sl]
+                a = range(len(a) + 2)
+                a.reverse()
+                a = N.array(a).astype('float')
+                a = (a/a[0])[1:-1]
+
+                factor[sl] = a
+                print a
+                print len(sl)
                 result = result * factor
 
                 relevation[rep::tot_rep] = F.irfft(result)
