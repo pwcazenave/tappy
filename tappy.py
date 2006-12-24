@@ -1061,19 +1061,19 @@ class tappy:
                 factor[freq > 1/30.0] = 0.0
 
                 sl = N.logical_and(1/40.0 < freq, freq < 1/30.0)
+
                 a = factor[sl]
-                a = range(len(a) + 2)
-                a.reverse()
-                a = N.array(a).astype('float')
+                # Create float array of required length and reverse
+                a = N.arange(len(a) + 2).astype(float)[::-1]
+
+                # Ramp from 1 to 0 exclusive
                 a = (a/a[0])[1:-1]
 
+                # Insert ramp into factor
                 factor[sl] = a
-                print a
-                print len(sl)
                 result = result * factor
 
                 relevation[rep::tot_rep] = F.irfft(result)
-
 
             if nstype == 'kalman':
                 # intial parameters
