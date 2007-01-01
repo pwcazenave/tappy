@@ -120,6 +120,7 @@ def __create_vector(vector, pad_tuple, before_val, after_val):
     vector[-pad_tuple[1]:] = after_val
     return vector
 
+
 def __validate_tuple(vector, pad_width):
     '''
     Private function which does some checks and reformats the pad_width
