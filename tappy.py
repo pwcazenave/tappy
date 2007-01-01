@@ -969,6 +969,7 @@ class tappy:
 
     def pad_filters(self, pad_type, elevation, (blen, alen)):
         if pad_type == "tide":
+            # Will eventually use prediction to pad
             nelevation = pad.mean(elevation, (blen, alen), stat_len=(blen, alen))
             ndates = self.cat_dates(ndates, blen)
         if pad_type == "minimum":
@@ -990,9 +991,17 @@ class tappy:
         interval.sort()
         interval = interval[len(interval)/2]
         cnt = N.arange(1, len_dates + 1)*datetime.timedelta(minutes = interval.seconds/60)
-        bdate = dates[0] - cnt
+        bdate = dates[0] - cnt[::-1]
         edate = dates[-1] + cnt
         return N.concatenate((bdate, dates, edate))
+
+
+    def pad_f(self, nelevation, ndates, half_kern):
+        nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
+        ndates = self.cat_dates(ndates, half_kern)
+        nslice = slice(half_kern, -half_kern)
+        return nelevation, ndates, nslice
+
 
     def delta_diff(self, elev, delta, start_index):
         bindex = delta
@@ -1001,291 +1010,300 @@ class tappy:
         tmpe = elev[bindex:]
         return tmpe - elev[bindex - delta:bindex - delta + len(tmpe)]
 
+
     def delta_sum(self, elev, delta):
         return elev[delta:] + elev[:-delta]
 
+
     def filters(self, nstype, dates, elevation, pad_type=None):
+        delta_dt = datetime.timedelta(hours = 1)
 
-        # For the time being the filters can only work on hourly data.  If the
-        # data is less than hourly, I filter each data point separately.  For
-        # example: if the data is every 15 minutes I run the filter 4 times -
-        # on the hour, quarter past, half past, quarter till.
-
+        # For the time being the filters and padding can only work on hourly data.
+        
+        # Current implementation:
+        # Determines the average hourly elevation.
         interval = dates[1:] - dates[:-1]
         interval.sort()
-        interval = interval[len(interval)/2]
 
-        rep_dict = {
-                    60: 1,
-                    6 : 10,
-                    10: 6,
-                    12: 5,
-                    15: 4,
-                    20: 3,
-                    30: 2,
-                   }
+        nslice = slice(0, len(elevation))
 
-        tot_rep = rep_dict[interval.seconds/60]
+        dates_filled = dates
+        if N.any(interval != delta_dt):
 
-        dates, elevation = self.missing('fill', 
-                                        dates, 
-                                        elevation)
-
-
-        relevation = N.empty_like(elevation)
-
-        for rep in range(tot_rep):
-            ndates = dates[rep::tot_rep]
-            nelevation = elevation[rep::tot_rep]
-            nslice = slice(0, len(nelevation))
-
-            if nstype == 'transform':
-                """
-                The article:
-                1981, 'Removing Tidal-Period Variations from Time-Series Data
-                Using Low Pass Filters' by Roy Walters and Cythia Heston, in
-                Physical Oceanography, Volume 12, pg 112.
-                compared several filters and determined that the following
-                order from best to worst:
-                    1) FFT Transform ramp to 0 in frequency domain from 40 to
-                       30 hours, 
-                    2) Godin
-                    3) cosine-Lanczos squared filter
-                    4) cosine-Lanczos filter
-                """
-                import numpy.fft
-                F = numpy.fft
-                result = F.rfft(nelevation)
-                freq = F.fftfreq(len(nelevation))[:len(nelevation)/2]
-                factor = N.ones_like(result)
-                factor[freq > 1/30.0] = 0.0
-
-                sl = N.logical_and(1/40.0 < freq, freq < 1/30.0)
-
-                a = factor[sl]
-                # Create float array of required length and reverse
-                a = N.arange(len(a) + 2).astype(float)[::-1]
-
-                # Ramp from 1 to 0 exclusive
-                a = (a/a[0])[1:-1]
-
-                # Insert ramp into factor
-                factor[sl] = a
-                result = result * factor
-
-                relevation[rep::tot_rep] = F.irfft(result)
-
-            if nstype == 'kalman':
-                # intial parameters
-                sz = (len(nelevation),) # size of array
-                x = -0.37727 # truth value (typo in example at top of p. 13 calls this z)
-
-                Q = 1e-5 # process variance
-
-                # allocate space for arrays
-                xhat=N.zeros(sz)      # a posteri estimate of x
-                P=N.zeros(sz)         # a posteri error estimate
-                xhatminus=N.zeros(sz) # a priori estimate of x
-                Pminus=N.zeros(sz)    # a priori error estimate
-                K=N.zeros(sz)         # gain or blending factor
-
-                R = N.var(nelevation)**0.5 # estimate of measurement variance, change to see effect
-
-                # intial guesses
-                xhat[0] = N.average(nelevation)
-                P[0] = 1.0
-
-                for k in range(1, len(nelevation)):
-                    # time update
-                    xhatminus[k] = xhat[k-1]
-                    Pminus[k] = P[k-1]+Q
-
-                    # measurement update
-                    K[k] = Pminus[k]/( Pminus[k]+R )
-                    xhat[k] = xhatminus[k]+K[k]*(nelevation[k]-xhatminus[k])
-                    P[k] = (1-K[k])*Pminus[k]
-
-                relevation[rep::tot_rep] = xhat
-
-            if nstype == 'lecolazet1':
-                # 1/16 * ( S24 * S25 ) ** 2
-
-                # The UNITS are important.  I think the 1/16 is for feet.  That
-                # really makes things painful because I have always wanted
-                # TAPPY to be unit blind.  I will have to think about whether
-                # to implement this or not.
-
-                # Available for testing but not documented in help.
-
-                half_kern = 25
-
-                if self.options.pad_filters:
-                    nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
-                    ndates = self.cat_dates(ndates, half_kern)
-                    nslice = slice(0, -half_kern)
-        
-                relevation[rep::tot_rep] = 1.0/16.0*(self.delta_diff(nelevation, 24, 25)[25:]*self.delta_diff(nelevation, 25, 25)[25:])**2
-
-            if nstype == 'lecolazet2':
-                # 1/64 * S1**3 * A3 * A6 ** 2
-
-                # The UNITS are important.  I think the 1/64 is for feet.  That
-                # really makes things painful because I have always wanted
-                # TAPPY to be unit blind.  I will have to think about whether
-                # to implement this or not.
-                pass
-
-            if nstype == 'doodson':
-                # Doodson filter
-
-                # The Doodson X0 filter is a simple filter designed to damp out
-                # the main tidal frequencies. It takes hourly values, 19 values
-                # either side of the central one. A weighted average is taken
-                # with the following weights
-
-                #(1010010110201102112 0 2112011020110100101)/30.
-
-                # In "Data Analaysis and Methods in Oceanography":
-
-                # "The cosine-Lanczos filter, the transform filter, and the
-                # Butterworth filter are often preferred to the Godin filter,
-                # to earlier Doodson filter, because of their superior ability
-                # to remove tidal period variability from oceanic signals."
-
-                kern = [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 2, 0, 1, 1, 0, 2, 1, 1, 2,
-                        0,
-                        2, 1, 1, 2, 0, 1, 1, 0, 2, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1]
-
-                half_kern = len(kern)//2
-
-                if self.options.pad_filters:
-                    nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
-                    ndates = self.cat_dates(ndates, half_kern)
-                    nslice = slice(half_kern, -half_kern)
-
-                kern = [i/30.0 for i in kern]
-                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)[nslice]
-
-            if nstype == 'usgs':
-                """ Filters out periods of 25 hours and less from self.elevation.
-        
-                """
-        
-                kern = [  
-                      -0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
-                      -0.00537,-0.00641,-0.00735,-0.00811,-0.00864,
-                      -0.00887,-0.00872,-0.00816,-0.00714,-0.00560,
-                      -0.00355,-0.00097, 0.00213, 0.00574, 0.00980,
-                       0.01425, 0.01902, 0.02400, 0.02911, 0.03423,
-                       0.03923, 0.04399, 0.04842, 0.05237, 0.05576,
-                       0.05850, 0.06051, 0.06174, 0.06215, ]
-        
-                kern = N.concatenate((kern[:-1], kern[::-1]))
-
-                half_kern = len(kern)//2
-
-                if self.options.pad_filters:
-                    nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
-                    ndates = self.cat_dates(ndates, half_kern)
-                    nslice = slice(half_kern, -half_kern)
-        
-                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)[nslice]
-
-            if nstype == 'boxcar':
-                kern = N.ones(25)/25.
-                half_kern = len(kern)//2
-
-                if self.options.pad_filters:
-                    nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
-                    ndates = self.cat_dates(ndates, half_kern)
-                    nslice = slice(half_kern, -half_kern)
-
-                relevation[rep::tot_rep] = N.convolve(nelevation, kern, mode = 1)[nslice]
-
-            if nstype == 'mstha':
-                blen = 12
-                s_list = ['M2', 'K1', 'M3', 'M4']
-
-                p0 = [1.0]*(len(s_list)*2 + 2)
-                p0[-2] = 0.0
-                new_dates = N.concatenate(([ndates[0] - datetime.timedelta(hours = blen)],
-                                        ndates,
-                                        [ndates[-1] + datetime.timedelta(hours = blen)]))
-                new_elevation = N.concatenate(([nelevation[0]],
-                                            nelevation,
-                                            [nelevation[-1]]))
-                (new_dates, new_elev) = self.missing('fill', new_dates, new_elevation)
-                slope = []
-                new_dates = self.dates2jd(new_dates)
-                ntimes = N.arange(2*blen + 1)
-                for d in range(len(new_dates))[blen:-blen]:
-              #      ntimes = (new_dates[d-12:d+12] - new_dates[d]) * 24 
-                    nelev = new_elev[d-blen:d+blen+1]
-                    lsfit = leastsq(self.residuals, p0, args=(nelev, ntimes, s_list))
-                    slope.append(lsfit[0][-2])
-
-                relevation[rep::tot_rep] = slope
-
-            if nstype == 'wavelet':
-                import pywt
-                import pylab
+            # Probably the worst way you can get the average for the hour...
     
-                for wl in pywt.wavelist():
+            dt = dates[0]
+            dates_filled = []
+            while dt <= dates[-1]:
+                dates_filled.append(dt)
+                dt = dt + delta_dt
+            dates_filled = N.array(dates_filled)
     
-                    w = pywt.Wavelet(wl)
+            new_elev = []
+            for d in dates_filled:
+                sl = N.logical_and(dates > datetime.datetime(d.year, d.month, d.day, d.hour), dates < d + delta_dt)
+                new_elev.append(N.average(elevation[sl]))
     
-                    max_level = pywt.dwt_max_level(len(elevation), w.dec_len)
-                    a = pywt.wavedec(elevation, w, level = max_level, mode='sym')
+            nelevation = N.array(new_elev)
     
-                    for i in range(len(a))[1:]:
-                        avg = N.average(a[i][:])
-                        std = 2.0*N.std(a[i][:])
-                        a[i][(a[i][:] < (avg + std)) & (a[i][:] > (avg - std))] = 0.0
-        
-                    for index, items in enumerate(a):
-                        self.write_file("outts_wavelet_%s_%i.dat" % (wl, index), dates, items)
-        
-                    y = pywt.waverec(a, w, mode='sym')
-                    self.write_file("%s.dat" % wl, dates, y)
-        
-                relevation[rep::tot_rep] = y
+            relevation = N.empty_like(elevation)
+
+
+        if nstype == 'transform':
+            """
+            The article:
+            1981, 'Removing Tidal-Period Variations from Time-Series Data
+            Using Low Pass Filters' by Roy Walters and Cythia Heston, in
+            Physical Oceanography, Volume 12, pg 112.
+            compared several filters and determined that the following
+            order from best to worst:
+                1) FFT Transform ramp to 0 in frequency domain from 40 to
+                   30 hours, 
+                2) Godin
+                3) cosine-Lanczos squared filter
+                4) cosine-Lanczos filter
+            """
+            import numpy.fft
+            F = numpy.fft
+            result = F.rfft(nelevation)
+            freq = F.fftfreq(len(nelevation))[:len(nelevation)/2]
+            factor = N.ones_like(result)
+            factor[freq > 1/30.0] = 0.0
+
+            sl = N.logical_and(1/40.0 < freq, freq < 1/30.0)
+
+            a = factor[sl]
+            # Create float array of required length and reverse
+            a = N.arange(len(a) + 2).astype(float)[::-1]
+
+            # Ramp from 1 to 0 exclusive
+            a = (a/a[0])[1:-1]
+
+            # Insert ramp into factor
+            factor[sl] = a
+
+            result = result * factor
+
+            relevation = F.irfft(result)
+
+        if nstype == 'kalman':
+            # I threw this in from an example on scipy's web site.  I will keep
+            # it here, but I can't see an immediate use for in in tidal
+            # analysis.  It dappens out all frequencies.
+
+            # Might be able to use it it fill missing values.
+
+            # intial parameters
+            sz = (len(nelevation),) # size of array
+            x = -0.37727 # truth value 
+
+            Q = (max(nelevation) - min(nelevation))/10000.0 # process variance
+            Q = 1.0e-2
+
+            # allocate space for arrays
+            xhat=N.zeros(sz)      # a posteri estimate of x
+            P=N.zeros(sz)         # a posteri error estimate
+            xhatminus=N.zeros(sz) # a priori estimate of x
+            Pminus=N.zeros(sz)    # a priori error estimate
+            K=N.zeros(sz)         # gain or blending factor
+
+            R = N.var(nelevation)**0.5 # estimate of measurement variance, change to see effect
+
+            # intial guesses
+            xhat[0] = N.average(nelevation)
+            P[0] = 1.0
+
+            for k in range(1, len(nelevation)):
+                # time update
+                xhatminus[k] = xhat[k-1]
+                Pminus[k] = P[k-1]+Q
+
+                # measurement update
+                K[k] = Pminus[k]/( Pminus[k]+R )
+                xhat[k] = xhatminus[k]+K[k]*(nelevation[k]-xhatminus[k])
+                P[k] = (1-K[k])*Pminus[k]
+
+            relevation = xhat
+
+        if nstype == 'lecolazet1':
+            # 1/16 * ( S24 * S25 ) ** 2
+
+            # The UNITS are important.  I think the 1/16 is for feet.  That
+            # really makes things painful because I have always wanted
+            # TAPPY to be unit blind.  I will have to think about whether
+            # to implement this or not.
+
+            # Available for testing but not documented in help.
+
+            half_kern = 25
+
+            nslice = slice(half_kern, -half_kern)
+
+            if self.options.pad_filters:
+                nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
     
-            if nstype == 'cd':
-                print "Complex demodulation filter doesn't work right yet - still testing."
-        
-                (new_dates, new_elev) = self.missing('fill', ndates, nelevation)
-                package = self.astronomic(new_dates)
-                (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
-                (speed_dict, key_list) = self.which_constituents(len(new_dates), package)
-                kern = N.ones(25) * (1./25.)
+            relevation = 1.0/16.0*(self.delta_diff(nelevation, 24, 25)[25:]*self.delta_diff(nelevation, 25, 25)[25:])**2
+
+        if nstype == 'lecolazet2':
+            # 1/64 * S1**3 * A3 * A6 ** 2
+
+            # The UNITS are important.  I think the 1/64 is for feet.  That
+            # really makes things painful because I have always wanted
+            # TAPPY to be unit blind.  I will have to think about whether
+            # to implement this or not.
+            pass
+
+        if nstype == 'doodson':
+            # Doodson filter
+
+            # The Doodson X0 filter is a simple filter designed to damp out
+            # the main tidal frequencies. It takes hourly values, 19 values
+            # either side of the central one. A weighted average is taken
+            # with the following weights
+
+            #(1010010110201102112 0 2112011020110100101)/30.
+
+            # In "Data Analaysis and Methods in Oceanography":
+
+            # "The cosine-Lanczos filter, the transform filter, and the
+            # Butterworth filter are often preferred to the Godin filter,
+            # to earlier Doodson filter, because of their superior ability
+            # to remove tidal period variability from oceanic signals."
+
+            kern = [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 2, 0, 1, 1, 0, 2, 1, 1, 2,
+                    0,
+                    2, 1, 1, 2, 0, 1, 1, 0, 2, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1]
+
+            half_kern = len(kern)//2
+
+            nslice = slice(half_kern, -half_kern)
+
+            if self.options.pad_filters:
+                nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
+
+            kern = [i/30.0 for i in kern]
+            relevation = N.convolve(nelevation, kern, mode = 1)
+
+        if nstype == 'usgs':
+            """ Filters out periods of 25 hours and less from self.elevation.
     
-                ns_amplitude = {}
-                ns_phase = {}
-                constituent_residual = {}
-                tot_amplitude = N.zeros(len(jd_filled))
-                for key in key_list:
-                    # Since speed that I have been using is radians/hour
-                    # you have to divide by 2*N.pi so I just removed 2*N.pi
-                    # from the multiplication.
-                    ntimes_filled = (jd_filled - jd_filled[0])*24
-                    yt = new_elev*N.exp(-1j*speed_dict[key]['speed']*ntimes_filled)
+            """
     
-                    ns_amplitude[key] = N.absolute(yt)
-                    ns_amplitude[key] = yt.real
-                    ns_amplitude[key] = N.convolve(ns_amplitude[key], 
-                                                   kern, 
-                                                   mode = 1)
+            kern = [  
+                  -0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
+                  -0.00537,-0.00641,-0.00735,-0.00811,-0.00864,
+                  -0.00887,-0.00872,-0.00816,-0.00714,-0.00560,
+                  -0.00355,-0.00097, 0.00213, 0.00574, 0.00980,
+                   0.01425, 0.01902, 0.02400, 0.02911, 0.03423,
+                   0.03923, 0.04399, 0.04842, 0.05237, 0.05576,
+                   0.05850, 0.06051, 0.06174, 0.06215, ]
     
-                    ns_phase[key] = N.arctan2(yt.imag, yt.real) * rad2deg
-                    ns_phase[key] = N.convolve(ns_phase[key], kern, mode = 1)
+            kern = N.concatenate((kern[:-1], kern[::-1]))
+
+            half_kern = len(kern)//2
+
+            nslice = slice(half_kern, -half_kern)
+
+            if self.options.pad_filters:
+                nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
     
-                    new_list = [i for i in self.key_list if i != key]
-                    everything_but = self.sum_signals(new_list, 
-                                                      ntimes_filled, 
-                                                      speed_dict)
-                    constituent_residual[key] = new_elev - everything_but
-                relevation[rep::tot_rep] = everything_but
-        return relevation
+            relevation = N.convolve(nelevation, kern, mode = 1)
+
+        if nstype == 'boxcar':
+            kern = N.ones(25)/25.
+            half_kern = len(kern)//2
+
+            nslice = slice(half_kern, -half_kern)
+
+            if self.options.pad_filters:
+                nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
+
+            relevation = N.convolve(nelevation, kern, mode = 1)
+
+        if nstype == 'mstha':
+            blen = 12
+            s_list = ['M2', 'K1', 'M3', 'M4']
+
+            p0 = [1.0]*(len(s_list)*2 + 2)
+            p0[-2] = 0.0
+            new_dates = N.concatenate(([ndates[0] - datetime.timedelta(hours = blen)],
+                                    ndates,
+                                    [ndates[-1] + datetime.timedelta(hours = blen)]))
+            new_elevation = N.concatenate(([nelevation[0]],
+                                        nelevation,
+                                        [nelevation[-1]]))
+            (new_dates, new_elev) = self.missing('fill', new_dates, new_elevation)
+            slope = []
+            new_dates = self.dates2jd(new_dates)
+            ntimes = N.arange(2*blen + 1)
+            for d in range(len(new_dates))[blen:-blen]:
+          #      ntimes = (new_dates[d-12:d+12] - new_dates[d]) * 24 
+                nelev = new_elev[d-blen:d+blen+1]
+                lsfit = leastsq(self.residuals, p0, args=(nelev, ntimes, s_list))
+                slope.append(lsfit[0][-2])
+
+            relevation = slope
+
+        if nstype == 'wavelet':
+            import pywt
+            import pylab
+
+            for wl in pywt.wavelist():
+
+                w = pywt.Wavelet(wl)
+
+                max_level = pywt.dwt_max_level(len(elevation), w.dec_len)
+                a = pywt.wavedec(elevation, w, level = max_level, mode='sym')
+
+                for i in range(len(a))[1:]:
+                    avg = N.average(a[i][:])
+                    std = 2.0*N.std(a[i][:])
+                    a[i][(a[i][:] < (avg + std)) & (a[i][:] > (avg - std))] = 0.0
+    
+                for index, items in enumerate(a):
+                    self.write_file("outts_wavelet_%s_%i.dat" % (wl, index), dates, items)
+    
+                y = pywt.waverec(a, w, mode='sym')
+                self.write_file("%s.dat" % wl, dates, y)
+    
+            relevation = y
+
+        if nstype == 'cd':
+            print "Complex demodulation filter doesn't work right yet - still testing."
+    
+            (new_dates, new_elev) = self.missing('fill', ndates, nelevation)
+            package = self.astronomic(new_dates)
+            (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
+            (speed_dict, key_list) = self.which_constituents(len(new_dates), package)
+            kern = N.ones(25) * (1./25.)
+
+            ns_amplitude = {}
+            ns_phase = {}
+            constituent_residual = {}
+            tot_amplitude = N.zeros(len(jd_filled))
+            for key in key_list:
+                # Since speed that I have been using is radians/hour
+                # you have to divide by 2*N.pi so I just removed 2*N.pi
+                # from the multiplication.
+                ntimes_filled = (jd_filled - jd_filled[0])*24
+                yt = new_elev*N.exp(-1j*speed_dict[key]['speed']*ntimes_filled)
+
+                ns_amplitude[key] = N.absolute(yt)
+                ns_amplitude[key] = yt.real
+                ns_amplitude[key] = N.convolve(ns_amplitude[key], 
+                                               kern, 
+                                               mode = 1)
+
+                ns_phase[key] = N.arctan2(yt.imag, yt.real) * rad2deg
+                ns_phase[key] = N.convolve(ns_phase[key], kern, mode = 1)
+
+                new_list = [i for i in self.key_list if i != key]
+                everything_but = self.sum_signals(new_list, 
+                                                  ntimes_filled, 
+                                                  speed_dict)
+                constituent_residual[key] = new_elev - everything_but
+            relevation = everything_but
+        return dates_filled[nslice], relevation[nslice]
 
 
     def write_file(self, fname, x, y):
@@ -1322,7 +1340,7 @@ class tappy:
                                                 self.speed_dict[i]['speed']*rad2deg, 
                                                 self.r[i], 
                                                 self.phase[i])
-        print "\nINFERRED CONSTITUENTS"
+        print "\n# INFERRED CONSTITUENTS"
         ndict = {}
         for k in self.inferred_key_list:
             ndict[k] = self.tidal_dict[k]['speed']
@@ -1420,8 +1438,8 @@ def main(options, args):
     if x.options.filter:
         for item in x.options.filter.split(','):
             if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs', 'doodson', 'lecolazet1', 'kalman', 'transform']:# 'lecolazet', 'godin', 'sfa']:
-                result = x.filters(item, x.dates, x.elevation)
-                x.write_file('outts_filtered_%s.dat' % (item,), x.dates, result)
+                filtered_dates, result = x.filters(item, x.dates, x.elevation)
+                x.write_file('outts_filtered_%s.dat' % (item,), filtered_dates, result)
 
     if not x.options.quiet:
         x.print_con()
