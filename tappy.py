@@ -89,20 +89,24 @@ def fatal(ftn, txt):
 def usage():
     print __doc__
 
+
 def interpolate(data, start, stop, iavg):
     """
     Linearly interpolate across a section of a vector.  A function used by
     zone_calculations.  
     """
 
-    if start < 1 or stop > len(data) - 1:
-        print 'can not interpolate without at least 1 valid point on each side'
     if start < iavg:
         ssl = slice(0, start)
     else:
         ssl = slice(start - iavg, start)
 
-    deltay = N.average(data[stop + 1:stop + iavg]) - N.average(data[ssl])
+    if stop > (len(data) - iavg):
+        stop_sl = slice(stop + 1, len(data))
+    else:
+        stop_sl = slice(stop + 1, stop + iavg)
+
+    deltay = N.average(data[stop_sl]) - N.average(data[ssl])
     numx = stop - start + 2.0
     m = deltay/numx
     b = N.average(data[ssl]) - m*(start - 1)
@@ -758,28 +762,27 @@ class tappy:
             # Had to make this 'f8' in order to match 'total' and 'self.elevation'
             # Don't know why this was different.
             residuals = N.ones(len(dates_filled), dtype='f8') * -99999.0
-    
+
             package = self.astronomic(dates_filled)
             (speed_dict, key_list) = self.which_constituents(len(dates_filled), package)
             (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
 
-            # This means that we might do this twice...
+            # Try not to do this twice.
             try:
                 a = self.r
             except AttributeError:
                 self.constituents()
-    
+
             ntimes_filled = (jd_filled - jd_filled[0])*24
             total = self.sum_signals(self.key_list, ntimes_filled, speed_dict)
-    
-    
+
             residuals[where_good] = elev - total[where_good]
-    
+
             # Might be able to use N.piecewise, but have to rethink
             # N.piecewise gives the piece of the array to the function
             #  but I want to use the border values of the array zone
             zone_calculations(interpolate, residuals, residuals == -99999)
-   
+
             return (dates_filled, residuals + total)
 
 
@@ -967,25 +970,6 @@ class tappy:
         return total
 
 
-    def pad_filters(self, pad_type, elevation, (blen, alen)):
-        if pad_type == "tide":
-            # Will eventually use prediction to pad
-            nelevation = pad.mean(elevation, (blen, alen), stat_len=(blen, alen))
-            ndates = self.cat_dates(ndates, blen)
-        if pad_type == "minimum":
-            return pad.minimum(elevation, (blen, alen))
-        if pad_type == "maximum":
-            return pad.maximum(elevation, (blen, alen))
-        if pad_type == "mean":
-            return pad.mean(elevation, (blen, alen))
-        if pad_type == "median":
-            return pad.median(elevation, (blen, alen))
-        if pad_type == "reflect":
-            return pad.reflect(elevation, (blen, alen))
-        if pad_type == "wrap":
-            return pad.wrap(elevation, (blen, alen))
-
-
     def cat_dates(self, dates, len_dates):
         interval = dates[1:] - dates[:-1]
         interval.sort()
@@ -997,10 +981,39 @@ class tappy:
 
 
     def pad_f(self, nelevation, ndates, half_kern):
-        nelevation = self.pad_filters(self.options.pad_filters, nelevation, (half_kern, half_kern))
-        ndates = self.cat_dates(ndates, half_kern)
+        blen = alen = half_kern
+
         nslice = slice(half_kern, -half_kern)
-        return nelevation, ndates, nslice
+        cndates = self.cat_dates(ndates, half_kern)
+
+        if self.options.pad_filters == "tide":
+            tnelevation = N.concatenate((N.array([N.average(nelevation[0:half_kern])]), nelevation, N.array([N.average(nelevation[-half_kern:])])))
+            interval = ndates[1:] - ndates[:-1]
+            interval.sort()
+            interval = interval[len(interval)/2]
+            deltat = datetime.timedelta(minutes = interval.seconds/60)
+            tndates = N.concatenate((N.array([ndates[0] - blen*deltat]), ndates, N.array([ndates[-1] + alen*deltat])))
+            (cndates, nelevation) = self.missing('fill', tndates, tnelevation)
+        #    cndates = ndates[nslice]
+        #    nelevation = nelevation[nslice]
+
+        if self.options.pad_filters == "minimum":
+            nelevation = pad.minimum(nelevation, (blen, alen))
+        if self.options.pad_filters == "maximum":
+            nelevation = pad.maximum(nelevation, (blen, alen))
+        if self.options.pad_filters == "mean":
+            nelevation = pad.mean(nelevation, (blen, alen))
+        if self.options.pad_filters == "median":
+            nelevation = pad.median(nelevation, (blen, alen))
+        if self.options.pad_filters == "reflect":
+            nelevation = pad.reflect(nelevation, (blen, alen))
+        if self.options.pad_filters == "wrap":
+            nelevation = pad.wrap(nelevation, (blen, alen))
+
+        print nelevation.shape
+        print ndates.shape
+        print '-'
+        return nelevation, cndates, nslice
 
 
     def delta_diff(self, elev, delta, start_index):
@@ -1025,8 +1038,6 @@ class tappy:
         interval = dates[1:] - dates[:-1]
         interval.sort()
 
-        nslice = slice(0, len(elevation))
-
         dates_filled = dates
         if N.any(interval != delta_dt):
 
@@ -1041,13 +1052,12 @@ class tappy:
     
             new_elev = []
             for d in dates_filled:
-                sl = N.logical_and(dates > datetime.datetime(d.year, d.month, d.day, d.hour), dates < d + delta_dt)
+                sl = N.logical_and(dates > datetime.datetime(d.year, d.month, d.day, d.hour) - delta_dt/2, dates <= d + delta_dt/2)
                 new_elev.append(N.average(elevation[sl]))
-    
-            nelevation = N.array(new_elev)
-    
-            relevation = N.empty_like(elevation)
 
+            nelevation = N.array(new_elev)
+
+            relevation = N.empty_like(elevation)
 
         if nstype == 'transform':
             """
@@ -1085,6 +1095,7 @@ class tappy:
             result = result * factor
 
             relevation = F.irfft(result)
+            return dates_filled, relevation
 
         if nstype == 'kalman':
             # I threw this in from an example on scipy's web site.  I will keep
@@ -1124,6 +1135,7 @@ class tappy:
                 P[k] = (1-K[k])*Pminus[k]
 
             relevation = xhat
+            return dates_filled, relevation
 
         if nstype == 'lecolazet1':
             # 1/16 * ( S24 * S25 ) ** 2
@@ -1143,6 +1155,7 @@ class tappy:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
     
             relevation = 1.0/16.0*(self.delta_diff(nelevation, 24, 25)[25:]*self.delta_diff(nelevation, 25, 25)[25:])**2
+            return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'lecolazet2':
             # 1/64 * S1**3 * A3 * A6 ** 2
@@ -1152,6 +1165,7 @@ class tappy:
             # TAPPY to be unit blind.  I will have to think about whether
             # to implement this or not.
             pass
+            return dates_filled, relevation
 
         if nstype == 'doodson':
             # Doodson filter
@@ -1183,6 +1197,7 @@ class tappy:
 
             kern = [i/30.0 for i in kern]
             relevation = N.convolve(nelevation, kern, mode = 1)
+            return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'usgs':
             """ Filters out periods of 25 hours and less from self.elevation.
@@ -1208,6 +1223,7 @@ class tappy:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
     
             relevation = N.convolve(nelevation, kern, mode = 1)
+            return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'boxcar':
             kern = N.ones(25)/25.
@@ -1219,6 +1235,7 @@ class tappy:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
 
             relevation = N.convolve(nelevation, kern, mode = 1)
+            return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'mstha':
             blen = 12
@@ -1243,6 +1260,7 @@ class tappy:
                 slope.append(lsfit[0][-2])
 
             relevation = slope
+            return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'wavelet':
             import pywt
@@ -1267,6 +1285,7 @@ class tappy:
                 self.write_file("%s.dat" % wl, dates, y)
     
             relevation = y
+            return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'cd':
             print "Complex demodulation filter doesn't work right yet - still testing."
@@ -1303,7 +1322,7 @@ class tappy:
                                                   speed_dict)
                 constituent_residual[key] = new_elev - everything_but
             relevation = everything_but
-        return dates_filled[nslice], relevation[nslice]
+            return dates_filled[nslice], relevation[nslice]
 
 
     def write_file(self, fname, x, y):
