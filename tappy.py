@@ -79,11 +79,11 @@ def msg(txt):
 
 def debug(ftn, txt):
     if debug_p:
-        sys.stdout.write("%s.%s:%s\n" % (modname, ftn,txt))
+        sys.stdout.write("%s.%s:%s\n" % (modname, ftn, txt))
         sys.stdout.flush()
 
 def fatal(ftn, txt):
-    msg = "%s.%s:FATAL:%s\n" % (modname, ftn,txt)
+    msg = "%s.%s:FATAL:%s\n" % (modname, ftn, txt)
     raise SystemExit, msg
  
 def usage():
@@ -114,7 +114,7 @@ def interpolate(data, start, stop, iavg):
         data[i] = m*i + b
 
 
-def zone_calculations(ftn, data, mask, limit = 25):
+def zone_calculations(zftn, data, mask, limit = 25):
     """
     Apply the supplied function across the patches (zones) of missing values in
     the input vector data.  Used to fill missing or bad data.
@@ -128,7 +128,7 @@ def zone_calculations(ftn, data, mask, limit = 25):
         if not val and start:
             stop = index - 1
         if start and stop:
-            ftn(data, start, stop, limit)
+            zftn(data, start, stop, limit)
             start = None
             stop = None
 
@@ -994,8 +994,6 @@ class tappy:
             deltat = datetime.timedelta(minutes = interval.seconds/60)
             tndates = N.concatenate((N.array([ndates[0] - blen*deltat]), ndates, N.array([ndates[-1] + alen*deltat])))
             (cndates, nelevation) = self.missing('fill', tndates, tnelevation)
-        #    cndates = ndates[nslice]
-        #    nelevation = nelevation[nslice]
 
         if self.options.pad_filters == "minimum":
             nelevation = pad.minimum(nelevation, (blen, alen))
@@ -1010,9 +1008,6 @@ class tappy:
         if self.options.pad_filters == "wrap":
             nelevation = pad.wrap(nelevation, (blen, alen))
 
-        print nelevation.shape
-        print ndates.shape
-        print '-'
         return nelevation, cndates, nslice
 
 
@@ -1483,78 +1478,79 @@ if __name__ == '__main__':
     parser.add_option(
                    '-q', 
                    '--quiet', 
-                   help='Print nothing to the screen.', 
-                   action='store_true',
+                   help = 'Print nothing to the screen.', 
+                   action = 'store_true',
                    default = False,
                      )
     parser.add_option(
                    '-d',
                    '--debug',
-                   help='Print debug messages.',
-                   action='store_true',
+                   help = 'Print debug messages.',
+                   action = 'store_true',
                    default = False,
                      )
     parser.add_option(
                    '-o',
                    '--output',
-                   help='Write output time-series.',
-                   action='store_true',
+                   help = 'Write output time-series.',
+                   action = 'store_true',
                    default = False,
                      )
     parser.add_option(
                    '-e',
                    '--ephemeris',
-                   help='Print out ephemeris tables.',
-                   action='store_true',
+                   help = 'Print out ephemeris tables.',
+                   action = 'store_true',
                    default = False,
                      )
     parser.add_option(
                    '-y',
                    '--rayleigh',
-                   help='Print out ephemeris tables.',
-                   metavar = 'FACTOR'
+                   help = 'The Rayleigh coefficient is used to compare against to determine time series length to differentiate between two frequencies. [default: %default]',
+                   metavar = 'FACTOR',
+                   default = 1.0,
                      )
     parser.add_option(
                    '-u',
                    '--print-vau_table',
-                   help='Print out VAU table.',
-                   action='store_true',
+                   help = 'Print out VAU table.',
+                   action = 'store_true',
                    default = False,
                      )
     parser.add_option(
                    '-m',
                    '--missing-data',
-                   help='What should be done if there is missing data.  One of: fail, ignore, or fill. [default: %default]',
+                   help = 'What should be done if there is missing data.  One of: fail, ignore, or fill. [default: %default]',
                    default = 'ignore',
                      )
     parser.add_option(
                    '-l',
                    '--linear-trend',
-                   help='Include a linear trend in the least squares fit.',
+                   help = 'Include a linear trend in the least squares fit.',
                    action = 'store_true',
                      )
     parser.add_option(
                    '-r',
                    '--remove-extreme',
-                   help='Remove values outside of 2 standard deviations before analysis.',
+                   help = 'Remove values outside of 2 standard deviations before analysis.',
                    action = 'store_true',
                      )
     parser.add_option(
                    '-z',
                    '--zero-ts',
-                   help='Zero the input time series before constituent analysis by subtracting filtered data. One of: boxcar,usgs,mstha,cd,lecolazet,kalman',#,godin,sfa
+                   help = 'Zero the input time series before constituent analysis by subtracting filtered data. One of: transform,usgs,doodson,boxcar',
                    metavar = 'FILTER',
                      )
     parser.add_option(
                    '-f',
                    '--filter',
-                   help='Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: boxcar,usgs,mstha,wavelet,cd,lecolazet,kalman',#,godin,sfa
+                   help = 'Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: transform,usgs,doodson,boxcar',
                    metavar = 'FILTER',
                      )
     parser.add_option(
                    '-p',
                    '--pad-filters',
-                   help='Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["minimum", "maximum", "mean", "median", "reflect", "wrap"]',
+                   help = 'Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["tide", "minimum", "maximum", "mean", "median", "reflect", "wrap"]',
                    metavar = 'PAD_TYPE',
                      )
     
