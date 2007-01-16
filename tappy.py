@@ -1034,6 +1034,7 @@ class tappy:
         interval.sort()
 
         dates_filled = dates
+        nelevation = elevation
         if N.any(interval != delta_dt):
 
             # Probably the worst way you can get the average for the hour...
@@ -1052,7 +1053,7 @@ class tappy:
 
             nelevation = N.array(new_elev)
 
-            relevation = N.empty_like(elevation)
+        relevation = N.empty_like(elevation)
 
         if nstype == 'transform':
             """
