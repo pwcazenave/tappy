@@ -153,14 +153,15 @@ class tappy:
         self.elevation = []
         self.dates = []
         for line in fp:
-            if not isinstance(line, dict):
+            if 'water_level' not in line.parsed_dict.keys():
+                print 'record number %i did not parse correctly according to the supplied definition file' % line.line_number
                 continue
-            self.elevation.append(line['water_level'])
-            self.dates.append(datetime.datetime(line['year'],
-                                                line['month'],
-                                                line['day'],
-                                                line['hour'],
-                                                line['minute']))
+            self.elevation.append(line.parsed_dict['water_level'])
+            self.dates.append(datetime.datetime(line.parsed_dict['year'],
+                                                line.parsed_dict['month'],
+                                                line.parsed_dict['day'],
+                                                line.parsed_dict['hour'],
+                                                line.parsed_dict['minute']))
         self.elevation = N.array(self.elevation)
         self.dates = N.array(self.dates)
 

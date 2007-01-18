@@ -274,7 +274,19 @@ def number_as_string(name,
 
 def insert(name, value):
     extra_dict[name] = value
-    
+
+
+class ParsedString(str):
+    """ 
+    String class inherited from 'str' plus a dictionary of parsed
+    values and a line number.
+    """
+    def __init__(self, *args, **kw):
+        str.__init__(args, kw)
+        self.parsed_dict = {}
+        self.line_number = 0
+
+
 class ParseFileLineByLine:
     """
     Bring data from text files into a program, optionally parsing each line
@@ -315,6 +327,9 @@ class ParseFileLineByLine:
 
         self.file = filelike.open(filename, mode)
 
+        # Try to maintain a line count
+        self.record_number = 0
+
         self.grammar = None
         self.parsedef = None
 
@@ -339,6 +354,7 @@ class ParseFileLineByLine:
         #          positive_real('water_level'),
         #         ]
 
+        self.line_number = 0
         
         definition_file_one = filen + ".def"
         if os.path.dirname(filen):
@@ -371,14 +387,16 @@ class ParseFileLineByLine:
     def readline(self):
         """Reads (and optionally parses) a single line."""
         line = self.file.readline()
+        line = ParsedString(line)
+        self.line_number = self.line_number + 1
+        line.line_number = self.line_number
         if self.grammar and line:
             try:
-                tmp = self.grammar.parseString(line).asDict()
+                line.parsed_dict = self.grammar.parseString(line).asDict()
                 for key in extra_dict.keys():
-                    tmp[key] = extra_dict[key]
-                return tmp
+                    line.parsed_dict[key] = extra_dict[key]
             except ParseException:
-                pass
+                line.parsed_dict = {}
         return line
 
     def readlines(self):
