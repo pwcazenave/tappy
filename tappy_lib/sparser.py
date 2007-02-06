@@ -215,7 +215,7 @@ def integer_as_string(name,
                       exact=None, 
                       sign=Optional(oneOf("- +")), 
                       parseAct=toString):
-    """Parses an integer, but returns is as a string."""
+    """Parses an integer, but returns it as a string."""
     integer(name, 
             minimum=minimum, 
             maximum=maximum, 
@@ -250,7 +250,7 @@ def number_as_integer(name,
                     exact=None, 
                     sign=Optional(oneOf("- +")), 
                     parseAct=toInteger):
-    """Parses any number as a real."""
+    """Parses any number as a integer."""
     integer(name,
          minimum=None, 
          maximum=None, 
@@ -325,7 +325,14 @@ class ParseFileLineByLine:
 
         filen, file_extension = os.path.splitext(filename)
 
-        self.file = filelike.open(filename, mode)
+        # I use filelike which allows you to open up compressed files and urls
+        # as files.  Test to see whether it is available.
+        try:
+            import filelike
+            tmp_open = filelike.open
+        except ImportError:
+            tmp_open = open
+        self.file = tmp_open(filename, mode)
 
         # Try to maintain a line count
         self.record_number = 0
