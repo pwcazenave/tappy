@@ -206,6 +206,7 @@ class tappy:
                                  }
         self.tidal_dict["M6"] = {'speed': 86.952312720*deg2rad,
                                  'VAU': 3.*self.tidal_dict['M2']['VAU'],
+                                 # From Parker, et. al node factor for M6 is square of M2
                                  'FF': self.tidal_dict['M2']['FF']**2
                                  }
         self.tidal_dict["M8"] = {'speed': 115.936416972*deg2rad,
@@ -1287,25 +1288,30 @@ class tappy:
         if nstype == 'cd':
             print "Complex demodulation filter doesn't work right yet - still testing."
     
-            (new_dates, new_elev) = self.missing('fill', ndates, nelevation)
-            package = self.astronomic(new_dates)
-            (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
-            (speed_dict, key_list) = self.which_constituents(len(new_dates), package)
+            (new_dates, new_elev) = self.missing('fill', dates_filled, nelevation)
+#            package = self.astronomic(new_dates)
+#            (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
+#            (speed_dict, key_list) = self.which_constituents(len(new_dates), package)
             kern = N.ones(25) * (1./25.)
 
+            nslice = slice(0, len(nelevation))
             ns_amplitude = {}
             ns_phase = {}
             constituent_residual = {}
-            tot_amplitude = N.zeros(len(jd_filled))
-            for key in key_list:
+            #tot_amplitude = N.zeros(len(jd_filled))
+            tot_amplitude = N.zeros(len(dates_filled))
+            for key in self.key_list:
                 # Since speed that I have been using is radians/hour
                 # you have to divide by 2*N.pi so I just removed 2*N.pi
                 # from the multiplication.
-                ntimes_filled = (jd_filled - jd_filled[0])*24
-                yt = new_elev*N.exp(-1j*speed_dict[key]['speed']*ntimes_filled)
+                #ntimes_filled = (jd_filled - jd_filled[0])*24
+                ntimes_filled = N.arange(len(dates_filled))*24
+                yt = new_elev*N.exp(-1j*self.speed_dict[key]['speed']*ntimes_filled)
 
                 ns_amplitude[key] = N.absolute(yt)
                 ns_amplitude[key] = yt.real
+                ns_amplitude[key] = N.convolve(ns_amplitude[key], kern, mode='same')
+                print key, N.average(ns_amplitude[key])
                 ns_amplitude[key] = N.convolve(ns_amplitude[key], 
                                                kern, 
                                                mode = 1)
@@ -1316,7 +1322,7 @@ class tappy:
                 new_list = [i for i in self.key_list if i != key]
                 everything_but = self.sum_signals(new_list, 
                                                   ntimes_filled, 
-                                                  speed_dict)
+                                                  self.speed_dict)
                 constituent_residual[key] = new_elev - everything_but
             relevation = everything_but
             return dates_filled[nslice], relevation[nslice]
@@ -1465,6 +1471,9 @@ def main(options, args):
             x.write_file("outts_%s.dat" % (key,), 
                          x.dates, 
                          x.sum_signals([key], x.dates, x.speed_dict))
+            x.write_file("outts_ff_%s.dat" % (key,),
+                                                  x.dates,
+                                                  x.speed_dict[key]['FF'])
         x.write_file("outts_total_prediction.dat", 
                      x.dates, 
                      x.sum_signals(x.key_list, x.dates, x.speed_dict))
