@@ -1,4 +1,8 @@
 
+Version 0.2.2
+
+        * Several patches to Cat thanks to Alan Fairless
+
 Version 0.2.1
 
 	* Added filelike.open() functions, which tries to open files in
@@ -26,3 +30,4 @@ Version 0.2.0:
     			* Head: similar to unix `head` command
     			* Cat: similar to unix `cat` command
     			* BZ2File: similar to that found in the std lib
+

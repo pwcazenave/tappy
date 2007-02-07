@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: filelike
-Version: 0.2.1
+Version: 0.2.2
 Summary: Classes for creating and wrapping file-like objects
 Home-page: http://www.rfk.id.au/software/projects/filelike/
 Author: Ryan Kelly
@@ -58,7 +58,7 @@ Description:
         
         Finally, the function filelike.open() mirrors the standard file opening function
         but tries to be clever about accessing the file - URLs are automatically fetched
-        using urllib2, compressed files and decompressed on the fly, and so-forth.
+        using urllib2, compressed files are decompressed on-the-fly, and so-forth.
         
         
 Keywords: file filelike file-like filter crypt compress

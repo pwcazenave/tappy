@@ -810,7 +810,7 @@ class Cat(FileWrapper):
         only arguments.  Data will be read from them in the order they
         are provided.
         """
-        FileWapper.__init__(self,None,"r")
+        FileWrapper.__init__(self,None,"r")
         self._files = files
         self._curFile = 0
     
@@ -821,16 +821,39 @@ class Cat(FileWrapper):
                 f.close()
     
     def _read(self,sizehint=-1):
-        if len(self._files) >= self._curFile:
+        if len(self._files) <= self._curFile:
             return None
-        data = self._curFile.read(sizehint)
-        if data == "":
+        data = self._files[self._curFile].read(sizehint)
+        if not len(data):
             self._curFile += 1
             data = self._read(sizehint)
         return data
     
     def _write(self,data):
         raise IOError("Cat wrappers cannot be written to.")
+
+
+class Test_Cat(unittest.TestCase):
+    """Testcases for the filelike.Cat wrapper."""
+    
+    def setUp(self):
+        self.intext1 = "Guido van Rossum\n is a space\n alien."
+        self.intext2 = "But that's ok with me!"
+        self.intext3 = "What do you think?"
+        self.infile1 = StringIO.StringIO(self.intext1)
+        self.infile2 = StringIO.StringIO(self.intext2)
+        self.infile3 = StringIO.StringIO(self.intext3)
+
+    def tearDown(self):
+        pass
+
+    def test_basic(self):
+        """Test basic concatenation of files."""
+        fs = Cat(self.infile1,self.infile2,self.infile3)
+        txt = "".join(fs.readlines())
+        txtC = "".join([self.intext1,self.intext2,self.intext3])
+        self.assertEquals(txt,txtC)
+
 
 ## Conditionally provide BZ2File if bz2 library is present
 try:
@@ -964,6 +987,7 @@ def testsuite():
     suite.addTest(unittest.makeSuite(Test_CryptFiles))
     suite.addTest(unittest.makeSuite(Test_Head))
     suite.addTest(unittest.makeSuite(Test_PaddedToBlockSizeFile))
+    suite.addTest(unittest.makeSuite(Test_Cat))
     suite.addTest(unittest.makeSuite(Test_OpenerDecoders))
     return suite
         
@@ -971,3 +995,4 @@ def testsuite():
 # Run regression tests when called from comand-line
 if __name__ == "__main__":
     UnitTest.TextTestRunner().run(testsuite())
+

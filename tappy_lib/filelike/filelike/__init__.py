@@ -69,13 +69,13 @@ first five lines of an encrypted file:
 
 Finally, the function filelike.open() mirrors the standard file opening function
 but tries to be clever about accessing the file - URLs are automatically fetched
-using urllib2, compressed files and decompressed on the fly, and so-forth.
+using urllib2, compressed files are decompressed on-the-fly, and so-forth.
 
 """ 
 
 __ver_major__ = 0
 __ver_minor__ = 2
-__ver_patch__ = 1
+__ver_patch__ = 2
 __ver_sub__ = ""
 __version__ = "%d.%d.%d%s" % (__ver_major__,__ver_minor__,
                               __ver_patch__,__ver_sub__)
