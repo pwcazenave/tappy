@@ -29,6 +29,10 @@ EXAMPLES:
     python setup.py sdist
 """
 
+# I REALLY don't like ez_setup - but when in Rome...
+import ez_setup
+ez_setup.use_setuptools()
+
 #===imports=============
 import os,sys,re,string,getopt,shutil,commands
 from distutils.core import setup,Extension
