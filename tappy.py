@@ -61,7 +61,7 @@ import pad.pad as pad
 
 #===globals======================
 modname = "tappy"
-__version__ = "0.7.3"
+__version__ = "0.7.4"
 
 #--option args--
 debug_p = 0
