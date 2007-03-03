@@ -12,5 +12,3 @@
 # Output
 ../tappy.py -o mayport_florida_8720220_data.txt mayport_florida_8720220_data_def.txt
 
-# Filter wavelet
-../tappy.py --aggressive-fit mayport_florida_8720220_data.txt mayport_florida_8720220_data_def.txt
