@@ -766,8 +766,8 @@ class tappy:
             residuals = N.ones(len(dates_filled), dtype='f8') * -99999.0
 
             package = self.astronomic(dates_filled)
-            (speed_dict, key_list) = self.which_constituents(len(dates_filled), package)
-            (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
+            (self.ispeed_dict, key_list) = self.which_constituents(len(dates_filled), package)
+            (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
 
             # Try not to do this twice.
             try:
@@ -1049,13 +1049,19 @@ class tappy:
             dates_filled = N.array(dates_filled)
     
             new_elev = []
-            for d in dates_filled:
+            ind = []
+            for index, d in enumerate(dates_filled):
                 sl = N.logical_and(dates > datetime.datetime(d.year, d.month, d.day, d.hour) - delta_dt/2, dates <= d + delta_dt/2)
+                if len(elevation[sl]) == 0:
+                    continue
+                ind.append(index)
                 new_elev.append(N.average(elevation[sl]))
 
+            dates_filled = dates_filled[ind]
             nelevation = N.array(new_elev)
+            dates_filled, nelevation = self.missing('fill', dates_filled, nelevation)
 
-        relevation = N.empty_like(elevation)
+        relevation = N.empty_like(nelevation)
 
         if nstype == 'transform':
             """
