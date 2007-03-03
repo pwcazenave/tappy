@@ -34,8 +34,7 @@ import ez_setup
 ez_setup.use_setuptools()
 
 #===imports=============
-import os,sys,re,string,getopt,shutil,commands
-from distutils.core import setup,Extension
+import sys,string
 
 #===globals======
 modname='setup'
@@ -100,27 +99,3 @@ def main():
            packages = packages,
 	   package_data = {'tappy_lib' : ['astrolabe/data/vsop87d.txt']},
            )
-#==============================
-if __name__ == '__main__':
-    opts,pargs=getopt.getopt(sys.argv[1:],'hv',
-                 ['help','version','exec-prefix'])
-    for opt in opts:
-        if opt[0]=='-h' or opt[0]=='--help':
-            usage()
-            sys.exit(0)
-        elif opt[0]=='-v' or opt[0]=='--version':
-            print modname+": version="+version_text
-        elif opt[0]=='--exec-prefix':
-            exec_prefix=opt[1]
-
-    for arg in pargs:
-        if arg=='test':
-            do_test()
-            sys.exit(0)
-        elif arg=='doc':
-            do_doc()
-            sys.exit(0)
-        else:
-            pass
-
-    main()
