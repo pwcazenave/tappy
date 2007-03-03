@@ -113,7 +113,7 @@ def toFloat(instring, loc, tokenlist):
     return float(tokenlist[0])
 
 def toString(instring, loc, tokenlist):
-    """Returns a integer or real as a string."""
+    """Returns an integer or real as a string."""
     return tokenlist[0]
 
 def integer(name, 
