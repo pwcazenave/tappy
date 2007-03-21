@@ -61,7 +61,7 @@ import pad.pad as pad
 
 #===globals======================
 modname = "tappy"
-__version__ = "0.7.5"
+__version__ = "0.7.6"
 
 #--option args--
 debug_p = 0
@@ -135,18 +135,18 @@ def zone_calculations(zftn, data, mask, limit = 25):
 
 #====================================
 class tappy:
-    def __init__(self, filename, def_filename = None):
+    def __init__(self, filename, def_filename = None, options = None):
         """ 
-        The initialization of the Tappy class reads in the data and
+        The initialization of the Tappy class reads in the date and
         elevation data.
         """
 
         ftn = "tappy.__init__"
         #---instance variables---
         self.speed_dict = {}
+        self.options = options
 
         # Read in data file
-        # Data file format is what can be downloaded from COOPS web site.
         fp = sparser.ParseFileLineByLine(filename, 
                                          def_filename = def_filename, 
                                          mode='r')
@@ -154,7 +154,7 @@ class tappy:
         self.dates = []
         for line in fp:
             if 'water_level' not in line.parsed_dict.keys():
-                print 'record number %i did not parse correctly according to the supplied definition file' % line.line_number
+                print 'Warning: record %i did not parse according to the supplied definition file' % line.line_number
                 continue
             self.elevation.append(line.parsed_dict['water_level'])
             self.dates.append(datetime.datetime(line.parsed_dict['year'],
@@ -1423,9 +1423,9 @@ def main(options, args):
     else:
         fatal('main', 'Need to pass input file name and optional definition file name')
 
-    x = tappy(args[0], def_filename = def_filename)
+    x = tappy(args[0], def_filename = def_filename, options = options)
 
-    x.options = options
+#    x.options = options
 
     if x.options.ephemeris:
         x.print_ephemeris_table()
@@ -1485,11 +1485,13 @@ def main(options, args):
                      x.sum_signals(x.key_list, x.dates, x.speed_dict))
         x.write_file("outts_original.dat", x.dates, x.elevation)
 
-#-------------------------
-if __name__ == '__main__':
-    ftn = "main"
+
+def process_options(cmdargstr):
 
     from optparse import OptionParser
+
+    if isinstance(cmdargstr, str):
+        cmdargstr = cmdargstr.split()
 
     parser = OptionParser(usage = '%prog [options] input_file [optional_definition_file]', version = __version__)
     parser.add_option(
@@ -1571,11 +1573,19 @@ if __name__ == '__main__':
                    metavar = 'PAD_TYPE',
                      )
     
-    (options, args) = parser.parse_args()
+    return parser.parse_args(cmdargstr)
 
+
+#-------------------------
+if __name__ == '__main__':
+    ftn = "main"
+
+    # Process the command line arguments
+    options, args = process_options(sys.argv[1:])
 
     #---make the object and run it---
     main(options, args)
+
 
 #===Revision Log===
 #Created by mkpythonproj:
