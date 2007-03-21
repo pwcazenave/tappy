@@ -47,7 +47,7 @@ version_text=string.strip(open("VERSION").readline())
 exec_prefix=sys.exec_prefix
 description = "Tidal Analysis Program in PYthon"
 long_description = "TAPPY is a tidal analysis package. It breaks down an hourly record of water levels into the component sine waves. It is written in Python and uses the least squares optimization and other functions in SciPy?. The focus is to make the most accurate analysis possible. TAPPY only determines the constituents that are calculatable according to the length of the time series."
-download_url = "http://prdownloads.sourceforge.net/tappy/tappy-0.7.5.tar.gz?download"
+download_url = "http://prdownloads.sourceforge.net/tappy/tappy-0.7.6.tar.gz?download"
 author = "Tim Cera"
 author_email = "timcera@earthlink.net"
 url="http://tappy.sourceforge.net"
@@ -76,51 +76,26 @@ def usage():
     print __doc__
 
 #=============================
-def main():
-    # patch distutils if it can't cope with the "classifiers" or
-    # "download_url" keywords
-    from sys import version
-    if version < '2.2.3':
-            from distutils.dist import DistributionMetadata
-            DistributionMetadata.classifiers = None
-            DistributionMetadata.download_url = None
-    setup (#---meta-data---
-           name = pkgname,
-           version = version_text,
-           description = description,
-           long_description = long_description,
-           download_url = download_url,
-           author = author,
-           author_email = author_email,
-           url=url,
-           license = license,
+# patch distutils if it can't cope with the "classifiers" or
+# "download_url" keywords
+from sys import version
+if version < '2.2.3':
+        from distutils.dist import DistributionMetadata
+        DistributionMetadata.classifiers = None
+        DistributionMetadata.download_url = None
+setup (#---meta-data---
+       name = pkgname,
+       version = version_text,
+       description = description,
+       long_description = long_description,
+       download_url = download_url,
+       author = author,
+       author_email = author_email,
+       url=url,
+       license = license,
 
-           #---scripts,modules and packages---
-           scripts=scripts,
-           packages = packages,
-	   package_data = {'tappy_lib' : ['astrolabe/data/vsop87d.txt']},
-           )
-#==============================
-if __name__ == '__main__':
-    opts,pargs=getopt.getopt(sys.argv[1:],'hv',
-                 ['help','version','exec-prefix'])
-    for opt in opts:
-        if opt[0]=='-h' or opt[0]=='--help':
-            usage()
-            sys.exit(0)
-        elif opt[0]=='-v' or opt[0]=='--version':
-            print modname+": version="+version_text
-        elif opt[0]=='--exec-prefix':
-            exec_prefix=opt[1]
-
-    for arg in pargs:
-        if arg=='test':
-            do_test()
-            sys.exit(0)
-        elif arg=='doc':
-            do_doc()
-            sys.exit(0)
-        else:
-            pass
-
-    main()
+       #---scripts,modules and packages---
+       scripts=scripts,
+       packages = packages,
+       package_data = {'tappy_lib' : ['astrolabe/data/vsop87d.txt']},
+       )
