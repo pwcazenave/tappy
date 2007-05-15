@@ -775,8 +775,8 @@ class tappy:
             except AttributeError:
                 self.constituents()
 
-            ntimes_filled = (jd_filled - jd_filled[0])*24
-            total = self.sum_signals(self.key_list, ntimes_filled, speed_dict)
+            ntimes_filled = (self.jd - self.jd[0])*24
+            total = self.sum_signals(self.key_list, ntimes_filled, self.ispeed_dict)
 
             residuals[where_good] = elev - total[where_good]
 
@@ -1295,22 +1295,14 @@ class tappy:
             print "Complex demodulation filter doesn't work right yet - still testing."
     
             (new_dates, new_elev) = self.missing('fill', dates_filled, nelevation)
-#            package = self.astronomic(new_dates)
-#            (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
-#            (speed_dict, key_list) = self.which_constituents(len(new_dates), package)
             kern = N.ones(25) * (1./25.)
 
             nslice = slice(0, len(nelevation))
             ns_amplitude = {}
             ns_phase = {}
             constituent_residual = {}
-            #tot_amplitude = N.zeros(len(jd_filled))
             tot_amplitude = N.zeros(len(dates_filled))
             for key in self.key_list:
-                # Since speed that I have been using is radians/hour
-                # you have to divide by 2*N.pi so I just removed 2*N.pi
-                # from the multiplication.
-                #ntimes_filled = (jd_filled - jd_filled[0])*24
                 ntimes_filled = N.arange(len(dates_filled))*24
                 yt = new_elev*N.exp(-1j*self.speed_dict[key]['speed']*ntimes_filled)
 
@@ -1391,7 +1383,7 @@ class tappy:
             dates = [datetime.datetime(d, 1, 1, 12, 0), 
                      datetime.datetime(d, 1, 2, 12, 0)]
             package = self.astronomic(dates)
-            (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
+            (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
             print dates[0].isoformat(), h, p1[0], s, p, Nv[0]
 
 
@@ -1402,7 +1394,7 @@ class tappy:
         dates = N.array(dates)
 
         package = self.astronomic(dates)
-        (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd_filled, s, h, Nv, p, p1) = package
+        (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
         (speed_dict, key_list) = self.which_constituents(len(dates), package)
 
         key_list.sort()

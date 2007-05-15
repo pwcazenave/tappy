@@ -340,7 +340,7 @@ class ParseFileLineByLine:
         self.grammar = None
         self.parsedef = None
 
-        # Try to find a parse ('*_def.ext') definition file.  First try to find
+        # Try to find a parse ('*.def') definition file.  First try to find
         # a file specific parse definition file, then look for 'sparse.def'
         # that would be the definition file for all files within the directory.
 
