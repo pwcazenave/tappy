@@ -51,12 +51,11 @@ import re
 import gzip
 
 from tappy_lib.pyparsing.pyparsing import *
-import filelike
 
 
 #===globals======================
 modname = "sparser"
-__version__ = "0.1"
+__version__ = "0.2"
 
 
 #--option args--
@@ -264,7 +263,7 @@ def number_as_string(name,
                     exact=None, 
                     sign=Optional(oneOf("- +")), 
                     parseAct=toString):
-    """Parses any number as a real."""
+    """Parses any number as a string."""
     real(name,
          minimum=None, 
          maximum=None, 
@@ -296,26 +295,25 @@ class ParseFileLineByLine:
     calling readline(), readlines(), and write()), but can also be used as
     sequences of lines in for-loops.
 
-    ParseFileLineByLine objects also handle compression transparently. i.e. it
-    is possible to read lines from a compressed text file as if it were not
-    compressed.  Compression is deduced from the file name suffixes '.Z'
-    (compress/uncompress), '.gz' (gzip/gunzip), and '.bz2' (bzip2).
+    If the 'filelike' module is available ParseFileLineByLine objects also
+    handles compression transparently. i.e. it is possible to read lines from a
+    compressed text file as if it were not compressed.  Compression is deduced
+    from the file name suffixes '.Z' (compress/uncompress), '.gz'
+    (gzip/gunzip), and '.bz2' (bzip2).  With 'filelike' you can also pass a URL
+    as filename and ParseFileLineByLine will download data from the URL.
 
     The parse definition file name is developed based on the input file name.
     If the input file name is 'basename.ext', then the definition file is
-    'basename_def.ext'.  If a definition file specific to the input file is not
+    'basename.def'.  If a definition file specific to the input file is not
     found, then the program searches for the file 'sparse.def' which would be
     the definition file for all files in that directory without a file specific
     definition file.
 
-    Finally, ParseFileLineByLine objects accept file names that start with '~'
-    or '~user' to indicate a home directory, as well as URLs (for reading
-    only).
-
     Constructor: 
     ParseFileLineByLine(|filename|, |mode|='"r"'), where |filename| is the name
-    of the file (or a URL) and |mode| is one of '"r"' (read), '"w"' (write) or
-    '"a"' (append, not supported for .Z files).  
+    of the file (compressed or a URL if 'filelike' module is available) and
+    |mode| is one of '"r"' (read), '"w"' (write) or '"a"' (append, not
+    supported for .Z files).  
     """
 
     def __init__(self, filename, def_filename=None, mode = 'r'):
