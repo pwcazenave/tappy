@@ -412,7 +412,7 @@ class tappy:
                                   'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K2']['VAU'],
                                   'FF': self.tidal_dict['M2']['FF'] * self.tidal_dict['K2']['FF']
                                   }
-        self.tidal_dict["MSN2"] = {'speed': 59.066241516*deg2rad,
+        self.tidal_dict["MSN2"] = {'speed': 30.544374672*deg2rad,
                                   'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K2']['VAU'],
                                   'FF': self.tidal_dict['M2']['FF'] * self.tidal_dict['K2']['FF']
                                   }
