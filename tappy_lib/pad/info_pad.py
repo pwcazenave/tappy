@@ -1,11 +1,11 @@
 """
-The pad module is to add a padding to rank 1 arrays.
+The pad module is to add a padding to the edge of an array.
 
 This is documentation of pad.
 Provides:
-    pad.average
-    pad.minimum
-    pad.maximum
+    pad.mean
+    pad.min
+    pad.max
     pad.nearest
     pad.constant
     pad.reflect
