@@ -2,6 +2,155 @@
 Change Log
 ==========
 
+Version 1.4.11 - February 10, 2008
+----------------------------------
+- With help from Robert A. Clark, this version of pyparsing
+  is compatible with Python 3.0a3.  Thanks for the help, 
+  Robert!
+
+- Added WordStart and WordEnd positional classes, to support
+  expressions that must occur at the start or end of a word.
+  Proposed by piranha on the pyparsing wiki, good idea!
+
+- Added matchOnlyAtCol helper parser action, to simplify 
+  parsing log or data files that have optional fields that are
+  column dependent.  Inspired by a discussion thread with 
+  hubritic on comp.lang.python.
+
+- Added withAttribute.ANY_VALUE as a match-all value when using
+  withAttribute.  Used to ensure that an attribute is present,
+  without having to match on the actual attribute value.
+
+- Added get() method to ParseResults, similar to dict.get().
+  Suggested by new pyparsing user, Alejandro Dubrovksy, thanks!
+
+- Added '==' short-cut to see if a given string matches a 
+  pyparsing expression.  For instance, you can now write:
+
+    integer = Word(nums)
+    if "123" == integer:
+       # do something
+    
+    print [ x for x in "123 234 asld".split() if x==integer ]
+    # prints ['123', '234']
+
+- Simplified the use of nestedExpr when using an expression for
+  the opening or closing delimiters.  Now the content expression
+  will not have to explicitly negate closing delimiters.  Found 
+  while working with dfinnie on GHOP Task #277, thanks!
+
+- Fixed bug when defining ignorable expressions that are
+  later enclosed in a wrapper expression (such as ZeroOrMore,
+  OneOrMore, etc.) - found while working with Prabhu 
+  Gurumurthy, thanks Prahbu!
+
+- Fixed bug in withAttribute in which keys were automatically
+  converted to lowercase, making it impossible to match XML
+  attributes with uppercase characters in them.  Using with-
+  Attribute requires that you reference attributes in all
+  lowercase if parsing HTML, and in correct case when parsing
+  XML.
+
+- Changed '<<' operator on Forward to return None, since this
+  is really used as a pseudo-assignment operator, not as a 
+  left-shift operator.  By returning None, it is easier to 
+  catch faulty statements such as a << b | c, where precedence
+  of operations causes the '|' operation to be performed 
+  *after* inserting b into a, so no alternation is actually
+  implemented.  The correct form is a << (b | c).  With this
+  change, an error will be reported instead of silently 
+  clipping the alternative term.  (Note: this may break some
+  existing code, but if it does, the code had a silent bug in
+  it anyway.)  Proposed by wcbarksdale on the pyparsing wiki,
+  thanks!
+
+- Several unit tests were added to pyparsing's regression
+  suite, courtesy of the Google Highly-Open Participation
+  Contest.  Thanks to all who administered and took part in 
+  this event!
+
+
+Version 1.4.10 - December 9, 2007
+---------------------------------
+- Fixed bug introduced in v1.4.8, parse actions were called for
+  intermediate operator levels, not just the deepest matching
+  operation level.  Again, big thanks to Torsten Marek for 
+  helping isolate this problem!
+  
+
+Version 1.4.9 - December 8, 2007
+--------------------------------
+- Added '*' multiplication operator support when creating 
+  grammars, accepting either an integer, or a two-integer
+  tuple multiplier, as in:
+    ipAddress = Word(nums) + ('.'+Word(nums))*3
+    usPhoneNumber = Word(nums) + ('-'+Word(nums))*(1,2)
+  If multiplying by a tuple, the two integer values represent
+  min and max multiples.  Suggested by Vincent of eToy.com,
+  great idea, Vincent!
+
+- Fixed bug in nestedExpr, original version was overly greedy!
+  Thanks to Michael Ramirez for raising this issue.
+
+- Fixed internal bug in ParseResults - when an item was deleted,
+  the key indices were not updated.  Thanks to Tim Mitchell for 
+  posting a bugfix patch to the SF bug tracking system!
+
+- Fixed internal bug in operatorPrecedence - when the results of
+  a right-associative term were sent to a parse action, the wrong
+  tokens were sent.  Reported by Torsten Marek, nice job!
+
+- Added pop() method to ParseResults.  If pop is called with an
+  integer or with no arguments, it will use list semantics and 
+  update the ParseResults' list of tokens.  If pop is called with 
+  a non-integer (a string, for instance), then it will use dict 
+  semantics and update the ParseResults' internal dict.  
+  Suggested by Donn Ingle, thanks Donn!
+
+- Fixed quoted string built-ins to accept '\xHH' hex characters 
+  within the string.
+
+
+Version 1.4.8 - October, 2007
+-----------------------------
+- Added new helper method nestedExpr to easily create expressions
+  that parse lists of data in nested parentheses, braces, brackets,
+  etc.
+
+- Added withAttribute parse action helper, to simplify creating
+  filtering parse actions to attach to expressions returned by
+  makeHTMLTags and makeXMLTags.  Use withAttribute to qualify a
+  starting tag with one or more required attribute values, to avoid 
+  false matches on common tags such as <TD> or <DIV>.
+
+- Added new examples nested.py and withAttribute.py to demonstrate
+  the new features.
+
+- Added performance speedup to grammars using operatorPrecedence,
+  instigated by Stefan Reichör - thanks for the feedback, Stefan!
+  
+- Fixed bug/typo when deleting an element from a ParseResults by
+  using the element's results name.
+  
+- Fixed whitespace-skipping bug in wrapper classes (such as Group,
+  Suppress, Combine, etc.) and when using setDebug(), reported by
+  new pyparsing user dazzawazza on SourceForge, nice job!
+
+- Added restriction to prevent defining Word or CharsNotIn expressions
+  with minimum length of 0 (should use Optional if this is desired),
+  and enhanced docstrings to reflect this limitation.  Issue was
+  raised by Joey Tallieu, who submitted a patch with a slightly 
+  different solution.  Thanks for taking the initiative, Joey, and
+  please keep submitting your ideas!
+  
+- Fixed bug in makeHTMLTags that did not detect HTML tag attributes 
+  with no '= value' portion (such as "<td nowrap>"), reported by
+  hamidh on the pyparsing wiki - thanks!
+
+- Fixed minor bug in makeHTMLTags and makeXMLTags, which did not
+  accept whitespace in closing tags.
+
+
 Version 1.4.7 - July, 2007
 --------------------------
 - NEW NOTATION SHORTCUT: ParserElement now accepts results names using

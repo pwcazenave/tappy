@@ -116,7 +116,7 @@ def toString(instring, loc, tokenlist):
     return tokenlist[0]
 
 def integer(name, 
-            minimum=None, 
+            minimum=1, 
             maximum=None, 
             exact=None, 
             sign=Optional(oneOf("- +")), 
@@ -133,7 +133,7 @@ def integer(name,
                    .setParseAction(parseAct))
 
 def positive_integer(name, 
-                     minimum=None, 
+                     minimum=1, 
                      maximum=None, 
                      exact=None):
     """Will only parse a positive integer."""
@@ -144,7 +144,7 @@ def positive_integer(name,
             sign=Optional("+"))
 
 def negative_integer(name, 
-                     minimum=None, 
+                     minimum=1, 
                      maximum=None, 
                      exact=None):
     """Will only parse a negative integer."""
@@ -173,7 +173,7 @@ def real(name,
                    .setParseAction(parseAct))
 
 def positive_real(name, 
-                  minimum=None, 
+                  minimum=1, 
                   maximum=None, 
                   exact=None):
     """Will only parse a positive real."""
@@ -184,7 +184,7 @@ def positive_real(name,
          sign=Optional("+"))
 
 def negative_real(name, 
-                  minimum=None, 
+                  minimum=1, 
                   maximum=None, 
                   exact=None):
     """Will only parse a negative real."""
@@ -195,7 +195,7 @@ def negative_real(name,
          sign="-")
 
 def real_as_string(name, 
-                   minimum=None, 
+                   minimum=1, 
                    maximum=None, 
                    exact=None, 
                    sign=Optional(oneOf("- +")), 
@@ -209,7 +209,7 @@ def real_as_string(name,
          parseAct=parseAct)
 
 def integer_as_string(name, 
-                      minimum=None, 
+                      minimum=1, 
                       maximum=None, 
                       exact=None, 
                       sign=Optional(oneOf("- +")), 
@@ -244,28 +244,28 @@ def number_as_real(name,
          parseAct=toFloat)
     
 def number_as_integer(name,
-                    minimum=None, 
+                    minimum=1, 
                     maximum=None, 
                     exact=None, 
                     sign=Optional(oneOf("- +")), 
                     parseAct=toInteger):
     """Parses any number as a integer."""
     integer(name,
-         minimum=None, 
+         minimum=1, 
          maximum=None, 
          exact=None, 
          sign=Optional(oneOf("- +")), 
          parseAct=toInteger)
     
 def number_as_string(name,
-                    minimum=None, 
+                    minimum=1, 
                     maximum=None, 
                     exact=None, 
                     sign=Optional(oneOf("- +")), 
                     parseAct=toString):
     """Parses any number as a string."""
     real(name,
-         minimum=None, 
+         minimum=1, 
          maximum=None, 
          exact=None, 
          sign=Optional(oneOf("- +")), 
