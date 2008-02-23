@@ -115,9 +115,9 @@ def interpolate(data, start, stop, iavg):
 
 
 def zone_calculations(zftn, data, mask, limit = 25):
-    """
-    Apply the supplied function across the patches (zones) of missing values in
-    the input vector data.  Used to fill missing or bad data.
+    """ 
+    Apply the supplied function across the patches (zones) of missing
+    values in the input vector data.  Used to fill missing or bad data.
     """
 
     start = None
@@ -655,17 +655,13 @@ class tappy:
         lunar_eph = elp.ELP2000()
         solar_eph = sun.Sun()
 
-        Nv = N.zeros(len(dates), "d")
-        p1 = N.zeros(len(dates), "d")
         jd = self.dates2jd(dates)
-        for index, dt in enumerate(dates):
-            jdc = cal.jd_to_jcent(jd[index])
-            Nv[index] = N.mod(125.0445479 - 1934.1362891*jdc + 0.0020754*jdc**2
-                       + (jdc**3)/467441.0 - (jdc**4)/60616000.0, 360)
-            p1[index] = N.mod((1012395.0 + 6189.03*(jdc + 1) + 1.63*(jdc + 1)**2 + 0.012*(jdc + 1)**3)/3600.0, 360)
-        jdc = cal.jd_to_jcent(jd[0])
-        p = N.mod(83.3532465 + 4069.0137287*jdc - 0.0103200*jdc**2
-                   - (jdc**3)/80053.0 + (jdc**4)/18999000.0, 360)
+        jdc = cal.jd_to_jcent(jd)
+        Nv = N.mod(125.0445479 - 1934.1362891*jdc + 0.0020754*jdc**2
+                          + (jdc**3)/467441.0 - (jdc**4)/60616000.0, 360)
+        p1 = N.mod((1012395.0 + 6189.03*(jdc + 1) + 1.63*(jdc + 1)**2 + 0.012*(jdc + 1)**3)/3600.0, 360)
+        p = N.mod(83.3532465 + 4069.0137287*jdc[0] - 0.0103200*jdc[0]**2
+                   - (jdc[0]**3)/80053.0 + (jdc[0]**4)/18999000.0, 360)
 
         # The -0.5 is needed because astronomers measure their zero from GMT noon,
         # whereas oceanographers measure the tide from zero at midnight.
@@ -1301,7 +1297,6 @@ class tappy:
             ns_amplitude = {}
             ns_phase = {}
             constituent_residual = {}
-            tot_amplitude = N.zeros(len(dates_filled))
             for key in self.key_list:
                 ntimes_filled = N.arange(len(dates_filled))*24
                 yt = new_elev*N.exp(-1j*self.speed_dict[key]['speed']*ntimes_filled)
