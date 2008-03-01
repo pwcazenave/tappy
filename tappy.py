@@ -55,8 +55,8 @@ import datetime
 
 import tappy_lib
 import sparser
-import astrolabe.calendar as cal
-import astrolabe.util as uti
+import astronomia.calendar as cal
+import astronomia.util as uti
 import pad.pad as pad
 
 #===globals======================
@@ -707,7 +707,7 @@ class tappy:
     def dates2jd(self, dates):
         """
         Given a dates vector will return a vector of Julian days as required by
-        astrolabe.  
+        astronomia.  
         """
 
         jd = np.zeros(len(dates), "d")
@@ -727,8 +727,8 @@ class tappy:
         in the dates vector.  
         """
 
-        import astrolabe.elp2000 as elp
-        import astrolabe.sun as sun
+        import astronomia.elp2000 as elp
+        import astronomia.sun as sun
 
         lunar_eph = elp.ELP2000()
         solar_eph = sun.Sun()

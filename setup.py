@@ -56,7 +56,7 @@ license = "GPL-2"
 scripts=['tappy.py']
 packages=[
     'tappy_lib', 
-    'tappy_lib/astrolabe/lib/python/astrolabe', 
+    'tappy_lib/astronomia/astronomia', 
     'tappy_lib/filelike/filelike', 
     'tappy_lib/pyparsing',
     'tappy_lib/pad',
@@ -97,5 +97,4 @@ setup (#---meta-data---
        #---scripts,modules and packages---
        scripts=scripts,
        packages = packages,
-       package_data = {'tappy_lib' : ['astrolabe/data/vsop87d.txt']},
        )
