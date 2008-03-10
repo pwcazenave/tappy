@@ -193,13 +193,13 @@ class tappy:
         self.tidal_dict["M2"] = {
             'speed': 28.984104252*deg2rad, 
             'VAU': 2*(T - s + h + zeta - nu),
-            'FF': np.cos(0.5*ii)**4 /0.9154  # eq 78
+            'FF': np.cos(0.5*ii)**4 /0.91544  # eq 78
         }
         self.tidal_dict["K1"] = {
             'speed': 15.041068632*deg2rad,
-            'VAU': T + h - 90 - nupp,
+            'VAU': T + h - 90*deg2rad - nupp,
             'FF': (0.8965*(np.sin(2.*ii)**2) + 
-                   0.6001*np.sin(2.*ii)*np.cos(nu*deg2rad) + 
+                   0.6001*np.sin(2.*ii)*np.cos(nu) + 
                    0.1006)**0.5  # eq 227
         }
         self.tidal_dict["M3"] = {
@@ -230,8 +230,8 @@ class tappy:
         }
         self.tidal_dict["O1"] = {
             'speed': 13.943035584*deg2rad,
-            'VAU': T - 2*s + h + 90 + 2*zeta - nu,
-            'FF': np.sin(ii)*np.cos(0.5*ii)**2 /0.3800
+            'VAU': T - 2*s + h + 90*deg2rad + 2*zeta - nu,
+            'FF': np.sin(ii)*np.cos(0.5*ii)**2 /0.37988
         }
         self.tidal_dict["S2"] = {
             'speed': 30.0000000 * deg2rad,
@@ -281,7 +281,7 @@ class tappy:
         }
         self.tidal_dict["OO1"] = {
             'speed': 16.139101680*deg2rad,
-            'VAU': T + 2*s + h - 90 - 2*zeta - nu,
+            'VAU': T + 2*s + h - 90*deg2rad - 2*zeta - nu,
             'FF': (np.sin(ii)*np.sin(0.5*ii)**2)/0.0164
         }
         self.tidal_dict["MK3"] = {
@@ -309,17 +309,17 @@ class tappy:
         }
         self.tidal_dict["2Q1"] = {
             'speed': 12.854286252*deg2rad,
-            'VAU': T - 4*s + h + 2*p + 90 + 2*zeta - nu,
+            'VAU': T - 4*s + h + 2*p + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["Q1"] =  {
             'speed': 13.3986609*deg2rad,
-            'VAU': T - 3*s + h + p + 90 + 2*zeta - nu,
+            'VAU': T - 3*s + h + p + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["J1"] =  {
             'speed': 15.5854433*deg2rad,
-            'VAU': T + s + h - p - 90 - nu,
+            'VAU': T + s + h - p - 90*deg2rad - nu,
             'FF': np.sin(2.0*ii)/0.7214
         }
         # Seems like KJ2 in Schureman is equivalent to ETA2 in Foreman
@@ -331,7 +331,7 @@ class tappy:
         # Seems like KQ1 in Schureman is equivalent to UPS1 in Foreman
         self.tidal_dict["UPS1"] = {
             'speed': 16.683476328*deg2rad,
-            'VAU': T + 3*s + h - p - 90 - 2*zeta - nu,
+            'VAU': T + 3*s + h - p - 90*deg2rad - 2*zeta - nu,
             'FF': np.sin(ii)**2/0.1565
         }
         #
@@ -358,8 +358,12 @@ class tappy:
             # and hope for the best.  Future producers of harmonic constants
             # are advised to abolish M1 and just use NO1.
 
+        # More confusion: Flater in libcongen uses M1.
+
         # If M1 is 1/2 the speed of M2 that would mean TASK's M1 speed is
-        # correct.  How do I get V, u, and f?
+        # correct.  How do I get V, u, and f?  Let's use A71 from Schureman.
+        # Why?  Because A71 is listed as a major component of M1, and the
+        # speeds match (1/2 of M2 speed)
 
         # TAPPY
         # Constituent     Speed        V, u, and f
@@ -374,10 +378,13 @@ class tappy:
         }
         self.tidal_dict["NO1"] = {
             'speed': 14.496693984*deg2rad,
-            'VAU': T - s + h - 90 + zeta - nu + Q,
-            # 2.307**0.5 factor was missed in Darwin's analysis
-            'FF': (2.307**0.5*self.tidal_dict['O1']['FF']*
-                   (2.31+1.435*np.cos(2.0*kap_p))**0.5)
+            'VAU': T - s + h - 90*deg2rad + zeta - nu + Q,
+            # 2.307**0.5 factor was missed in Darwin's analysis and the wrong
+            # factor was used for M1 for many years.  Indicates the importance
+            # of M1 and NO1.  As with many constituents listed here, I have
+            # included them for completeness rather than necessity.
+            'FF': (self.tidal_dict['O1']['FF']*
+                   (2.31+1.435*np.cos(2.0*kap_p))**0.5/2.307**0.5)
         }
         self.tidal_dict["MN4"] = {
             'speed': 57.423833820*deg2rad,   # From TASK
@@ -391,10 +398,10 @@ class tappy:
         }
         self.tidal_dict["L2"] =  {
             'speed': 29.5284789*deg2rad,
-            'VAU': 2*T - s + 2*h - p + 180 + 2*zeta - 2*nu - R,
-            'FF': (self.tidal_dict['M2']['FF'] * 
-                   (1.0 - 12.0*np.tan(0.5*ii)**2 * np.cos(2.0*kap_p) + 
-                    36.0*np.tan(0.5*ii)**4)**0.5)
+            'VAU': 2*T - s + 2*h - p + 180*deg2rad + 2*zeta - 2*nu - R,
+            'FF': (self.tidal_dict['M2']['FF'] /
+                   (1.0/(1.0 - 12.0*np.tan(0.5*ii)**2 * np.cos(2.0*kap_p) + 
+                    36.0*np.tan(0.5*ii)**4)**0.5)) # eq 215, schureman
         }
         self.tidal_dict["MU2"] = {
             'speed': 27.9682084*deg2rad,
@@ -424,31 +431,29 @@ class tappy:
         }
         self.tidal_dict["P1"] = {
             'speed': 14.9589314*deg2rad,
-            'VAU': T - h + 90,
+            'VAU': T - h + 90*deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["K2"] = {
             'speed': 30.0821373*deg2rad,
-                                 
             'VAU': 2*(T + h - two_nupp),
-                                 
             'FF': (19.0444*(np.sin(ii)**4) + 
-                   2.7702*(np.sin(ii)**2) * np.cos(2.*nu*deg2rad) + 
-                   0.0981)**0.5
+                   2.7702*(np.sin(ii)**2) * np.cos(2.*nu) + 
+                   0.0981)**0.5  # eq 235 schureman
         }
         self.tidal_dict["SO3"] = {
             'speed': 43.9430356*deg2rad,
-            'VAU': 3*T - 2*s + h + 90 + 2*zeta - nu,
+            'VAU': 3*T - 2*s + h + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict["O1"]["FF"]
         }
         self.tidal_dict["PHI1"] = {
             'speed': 15.1232059*deg2rad,
-            'VAU': T + 3*h - 90,
+            'VAU': T + 3*h - 90*deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["SO1"] = {
             'speed': 16.0569644*deg2rad,
-            'VAU': T + 2*s - h - 90 - nu,
+            'VAU': T + 2*s - h - 90*deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         # Seems like A54 in Schureman is equivalent to MKS2 in Foreman
@@ -460,13 +465,13 @@ class tappy:
         # Seems like MP1 in Schureman is equivalent to TAU1 in Foreman
         self.tidal_dict["TAU1"] = {
             'speed': 14.025172896*deg2rad,
-            'VAU': T - 2*s + 3*h - 90 - nu,
+            'VAU': T - 2*s + 3*h - 90*deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         # Seems like A19 in Schureman is equivalent to BET1 in Foreman
         self.tidal_dict["BETA1"] = {
             'speed': 14.414556708*deg2rad,
-            'VAU': T - s - h + p - 90 - 2*zeta - nu,
+            'VAU': T - s - h + p - 90*deg2rad - 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["MK4"] = {
@@ -497,28 +502,28 @@ class tappy:
         }
         self.tidal_dict["SIGMA1"] = {
             'speed': 12.9271398*deg2rad,
-            'VAU': T - 4*s + 3*h + 90 + 2*zeta - nu,
+            'VAU': T - 4*s + 3*h + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["RHO1"] = {
             'speed': 13.4715145*deg2rad,
-            'VAU': T - 3*s + 3*h - p + 90 + 2*zeta - nu,
+            'VAU': T - 3*s + 3*h - p + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["CHI1"] = {
             'speed': 14.5695476*deg2rad,
-            'VAU': T - s + 3*h - p - 90 - nu,
+            'VAU': T - s + 3*h - p - 90*deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         self.tidal_dict["THETA1"] = {
             'speed': 15.5125897*deg2rad,
-            'VAU': T + s - h + p - 90 - nu,
+            'VAU': T + s - h + p - 90*deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
 #        self.tidal_dict["OQ2"] =
         self.tidal_dict["LAMBDA2"] = {
             'speed': 29.4556253*deg2rad,
-            'VAU': 2*T - s + p + 180,
+            'VAU': 2*T - s + p + 180*deg2rad,
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["Sa"] = {
@@ -538,17 +543,17 @@ class tappy:
         }
         self.tidal_dict["R2"] = {
             'speed': 30.0410667*deg2rad,
-            'VAU': 2*T + h - p1 + 180,
+            'VAU': 2*T + h - p1 + 180*deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["PI1"] = {
             'speed': 14.9178647*deg2rad,
-            'VAU': T - 2*h + p1 + 90,
+            'VAU': T - 2*h + p1 + 90*deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["PSI1"] = {
             'speed': 15.0821352*deg2rad,
-            'VAU': T + 2*h - p1 - 90,
+            'VAU': T + 2*h - p1 - 90*deg2rad,
             'FF': np.ones(length)
         }
 
@@ -694,8 +699,9 @@ class tappy:
         key_list = speed_dict.keys()
         key_list.sort()
 
-        # Fix VAU to be between 0 and 360
+        # Change VAU to degree and between 0 and 360
         for key in key_list:
+            speed_dict[key]['VAU'] = speed_dict[key]['VAU']*rad2deg
             speed_dict[key]['VAU'] = np.mod(speed_dict[key]['VAU'], 360)
             try:
                 speed_dict[key]['VAU'] = speed_dict[key]['VAU'][0]
@@ -735,62 +741,53 @@ class tappy:
 
         jd = self.dates2jd(dates)
         jdc = cal.jd_to_jcent(jd)
-        Nv = np.mod(125.0445479 - 1934.1362891*jdc + 0.0020754*jdc**2
-                          + (jdc**3)/467441.0 - (jdc**4)/60616000.0, 360)
-        p1 = np.mod((1012395.0 + 6189.03*(jdc + 1) + 1.63*(jdc + 1)**2 + 0.012*(jdc + 1)**3)/3600.0, 360)
-        p = np.mod(83.3532465 + 4069.0137287*jdc[0] - 0.0103200*jdc[0]**2
-                   - (jdc[0]**3)/80053.0 + (jdc[0]**4)/18999000.0, 360)
+        Nv = lunar_eph.mean_longitude_ascending_node(jd)
+        p = lunar_eph.mean_longitude_perigee(jd[0])
+        s = lunar_eph.mean_longitude(jd[0])
+        h = solar_eph.mean_longitude(jd[0])
 
-        # The -0.5 is needed because astronomers measure their zero from GMT noon,
-        # whereas oceanographers measure the tide from zero at midnight.
-        s = lunar_eph.dimension(jd[0] - 0.5, 'L') * rad2deg
-        h = solar_eph.dimension(jd[0] - 0.5, 'L') * rad2deg
+        p1 = np.mod((1012395.0 + 6189.03*(jdc + 1) + 1.63*(jdc + 1)**2 + 0.012*(jdc + 1)**3)/3600.0, 360)*deg2rad
 
-        Nrad = Nv * deg2rad
         # Calculate constants for V+u
         # I, inclination of Moon's orbit, pg 156, Schureman
-        i = np.arccos(0.9136949 - 0.0356926 * np.cos(Nrad))
+        i = np.arccos(0.9136949 - 0.0356926 * np.cos(Nv))
 
         # pg 156
-        const_1 = 1.01883*np.tan(0.5*Nrad)
-        const_2 = 0.64412*np.tan(0.5*Nrad)
-        const_3 = 2.*np.arctan(const_1)-Nrad
-        const_4 = 2.*np.arctan(const_2)-Nrad
+        const_1 = 1.01883*np.tan(0.5*Nv)
+        const_2 = 0.64412*np.tan(0.5*Nv)
+        const_3 = 2.*np.arctan(const_1)-Nv
+        const_4 = 2.*np.arctan(const_2)-Nv
         zeta = -0.5*(const_3+const_4)
         nu = 0.5*(const_3-const_4)
 
         const_1 = np.sin(2.0*i)*np.sin(nu)
         const_2 = np.sin(2.0*i)*np.cos(nu)+0.3347
-        nupp = np.arctan(const_1/const_2)  # eq 224
+        nupp = np.arctan2(const_1, const_2)  # eq 224
 
         const_1 = np.sin(i)**2 * np.sin(2.0*nu)
         const_2 = np.sin(i)**2 * np.cos(2.0*nu)+0.0727
-        two_nupp = np.arctan(const_1/const_2) # eq 232
+        two_nupp = np.arctan2(const_1, const_2) # eq 232
 
-        i = i*rad2deg
-        zeta = zeta*rad2deg
-        nu = nu*rad2deg
-        nupp = nupp*rad2deg
-        two_nupp = two_nupp*rad2deg
-        #hour = jd - jd.astype('i') 
         hour = jd[0] - int(jd[0])
 
-        kap_p = (p-zeta)*deg2rad
-        ii = i*deg2rad
+        kap_p = (p-zeta)  # eq 191
+
         # pg 44, Schureman
+        # Since R is only used for L2, should eventually move this
         term1 = np.sin(2.*kap_p)
-        term2 = (1./6.)*(1./np.tan(ii*0.5))**2
+        term2 = (1./6.)*(1./np.tan(i*0.5))**2
         term3 = np.cos(2.*kap_p)
-        R = np.arctan(term1/(term2-term3))*rad2deg
+        R = np.mod(np.arctan(term1/(term2-term3)), 2*np.pi)
 
         # pg 42
-        Q = np.arctan(0.483*np.tan(kap_p))*rad2deg
+        # Since Q is used only for NO1, should eventually move this
+        Q = np.mod(np.arctan(0.483*np.tan(kap_p)), 2*np.pi)
 
-        T = 360.*hour
+        T = 360.*hour*deg2rad
 
         # This should be stream lined... needed to support 
         # the larger sized vector when filling missing values.
-        return (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1)
+        return (zeta, nu, nupp, two_nupp, kap_p, i, R, Q, T, jd, s, h, Nv, p, p1)
 
 
     def missing(self, task, dates, elev):
@@ -1451,17 +1448,85 @@ class tappy:
 
 
     def print_ephemeris_table(self):
+        h_schureman = {
+            1600:279.857,
+            1700:280.624,
+            1800:280.407,
+            1900:280.190,
+            2000:279.973,
+        }
+        s_schureman = {
+            1600:99.725,
+            1700:47.604,
+            1800:342.313,
+            1900:277.026,
+            2000:211.744,
+        }
+        p1_schureman = {
+            1600:276.067,
+            1700:277.784,
+            1800:279.502,
+            1900:281.221,
+            2000:282.940,
+        }
+        p_schureman = {
+            1600:7.417,
+            1700:116.501,
+            1800:225.453,
+            1900:334.384,
+            2000:83.294,
+        }
+        N_schureman = {
+            1600:301.496,
+            1700:167.343,
+            1800:33.248,
+            1900:259.156,
+            2000:125.069,
+        }
+
         for d in range(1600, 2001, 100):
-            dates = [datetime.datetime(d, 1, 1, 12, 0), 
-                     datetime.datetime(d, 1, 2, 12, 0)]
+            dates = [datetime.datetime(d, 1, 1, 0, 0), 
+                     datetime.datetime(d, 1, 2, 0, 0)]
             package = self.astronomic(dates)
             (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
-            print dates[0].isoformat(), h, p1[0], s, p, Nv[0]
+            Ra = 1.0/np.sqrt(1.0 - 12.0*(np.tan(0.5*ii))**2 * np.cos(2.0*kap_p) + 
+                    36.0*(np.tan(0.5*ii))**4) # eq 215, schureman
+            print dates[0].isoformat(), 
+            print ' h = ', h*rad2deg, h_schureman[d], h*rad2deg - h_schureman[d]
+            print ' p1 = ', p1[0]*rad2deg, p1_schureman[d], p1[0]*rad2deg - p1_schureman[d]
+            print ' s = ', s*rad2deg, s_schureman[d], s*rad2deg - s_schureman[d]
+            print ' p = ', p*rad2deg, p_schureman[d], p*rad2deg - p_schureman[d]
+            print ' Nv = ', Nv[0]*rad2deg, N_schureman[d], Nv[0]*rad2deg - N_schureman[d]
+            print " zeta = ", zeta*rad2deg
+            print " nu = ", nu*rad2deg
+            print " nupp = ", nupp*rad2deg
+            print " two_nupp = ", two_nupp*rad2deg
+            print " kap_p = ", kap_p*rad2deg
+            print " ii = ", ii*rad2deg
+            print " R = ", R*rad2deg
+            print " Ra = ", Ra*rad2deg
+            print " log(Ra) = ", np.log10(Ra)
+            print " Q = ", Q*rad2deg
+            print " log(Q) = ", np.log(Q)
+            print " T = ", T*rad2deg
+
+        t = tappy()
+        t.dates = []
+        for d in range(1900, 2050):
+            t.dates.append(datetime.datetime(d, 1, 1, 0, 0) + (datetime.datetime(d+1, 1, 1, 0, 0) - datetime.datetime(d, 1, 1, 0, 0))/2)
+            #t.dates.append(datetime.datetime(d, 7, 1, 0, 0))
+        package = self.astronomic(t.dates)
+        (speed_dict, key_list) = t.which_constituents(len(dates), package)
+        for k in ['J1', 'K1', 'K2', 'L2', 'M1', 'M2', 'M3', 'M6', 'M8', 'O1', 'OO1', 'MO3', 'MO3', 'Mf', 'Mm']:
+            for i in [1900, 1930]:
+                print i, k, speed_dict[k]['FF'][i-1900]
+        self.print_v_u_table()
+
 
 
     def print_v_u_table(self):
         dates = []
-        for d in range(1850, 2001):
+        for d in range(1851, 2001):
             dates.append(datetime.datetime(d, 1, 1, 0, 0))
         dates = np.array(dates)
 
