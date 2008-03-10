@@ -41,7 +41,23 @@ class Sun:
     """
     def __init__(self):
         self.vsop = VSOP87d()
+
+    def mean_longitude(self, jd):
+        """Return mean longitude.
         
+        Parameters:
+            jd : Julian Day in dynamical time
+
+        Returns:
+            Longitude in radians
+                
+        """
+        T = jd_to_jcent(jd)
+        X = polynomial((d_to_r(100.466457), d_to_r(36000.7698278), d_to_r(0.00030322), d_to_r(0.000000020)), T)
+        X = modpi2(X + pi)
+        return X
+
+
     def dimension(self, jd, dim):
         """Return one of geocentric ecliptic longitude, latitude and radius.
         

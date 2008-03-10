@@ -202,6 +202,54 @@ def _constants(T):
 class ELP2000:
     """ELP2000 lunar position calculations"""
 
+
+    def mean_longitude_ascending_node(self, jd):
+        """Return mean longitude of ascending node
+
+        """
+        T = jd_to_jcent(jd)
+        X = polynomial(
+            (d_to_r(125.0445479), 
+             d_to_r(-1934.1362891), 
+             d_to_r(0.0020754), 
+             d_to_r(1.0/467441.0), 
+             d_to_r(1.0/60616000.0)
+            ), 
+            T)
+        return modpi2(X)
+
+
+    def mean_longitude_perigee(self, jd):
+        """Return mean longitude of lunar perigee
+
+        """
+        T = jd_to_jcent(jd)
+        X = polynomial(
+            (d_to_r(83.3532465), 
+             d_to_r(4069.0137287), 
+             d_to_r(-0.0103200), 
+             d_to_r(-1./80053), 
+             d_to_r(1./18999000)
+            ), 
+            T)
+        return modpi2(X)
+
+
+    def mean_longitude(self, jd):
+        """Return geocentric mean longitude.
+
+        Parameters:
+            jd : Julian Day in dynamical time
+
+        Returns:
+            longitude in radians
+
+        """
+        T = jd_to_jcent(jd)
+        L1 = modpi2(polynomial(_kL1, T))
+        return L1
+
+
     def dimension3(self, jd):
         """Return geocentric ecliptic longitude, latitude and radius.
 
@@ -264,6 +312,7 @@ class ELP2000:
         dist = 385000.56 + rsum / 1000
         return longitude, latitude, dist
 
+
     def dimension(self, jd, dim):
         """Return one of geocentric ecliptic longitude, latitude and radius.
 
@@ -284,6 +333,7 @@ class ELP2000:
         if dim == "R": 
             return self._radius(jd)
         raise Error("unknown dimension = " + dim)
+
 
     def _longitude(self, jd):
         """Return the geocentric ecliptic longitude in radians.
