@@ -234,7 +234,7 @@ class tappy:
             'FF': np.sin(ii)*np.cos(0.5*ii)**2 /0.37988
         }
         self.tidal_dict["S2"] = {
-            'speed': 30.0000000 * deg2rad,
+            'speed': 30.0000000*deg2rad,
             'VAU': 2*T,
             'FF': np.ones(length)
         }
