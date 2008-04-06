@@ -132,6 +132,33 @@ def zone_calculations(zftn, data, mask, limit = 25):
             start = None
             stop = None
 
+def node_factor_73(ii):
+    return ((2./3.) - np.sin(ii)**2)/0.5021
+def node_factor_74(ii):
+    return np.sin(ii)**2 /0.1578
+def node_factor_75(ii):
+    return np.sin(ii)*np.cos(0.5*ii)**2 /0.37988
+def node_factor_76(ii):
+    return np.sin(2.0*ii)/0.7214
+def node_factor_77(ii):
+    return (np.sin(ii)*np.sin(0.5*ii)**2)/0.0164
+def node_factor_78(ii):
+    return np.cos(0.5*ii)**4 /0.91544
+def node_factor_79(ii):
+    return np.sin(ii)**2/0.1565
+def node_factor_149(ii):
+    return np.cos(0.5*ii)**6 /0.8758
+def node_factor_144(ii):
+    return (1.0 - 10.0*np.sin(0.5*ii)**2 + 
+                   15.0*np.sin(0.5*ii)**4)*np.cos(0.5*ii)**2/0.5873
+def node_factor_227(ii, nu):
+    return (0.8965*(np.sin(2.*ii)**2) + 
+                   0.6001*np.sin(2.*ii)*np.cos(nu) + 
+                   0.1006)**0.5
+def node_factor_235(ii, nu):
+    return (19.0444*(np.sin(ii)**4) + 
+                   2.7702*(np.sin(ii)**2) * np.cos(2.*nu) + 
+                   0.0981)**0.5  # eq 235 schureman
 
 #====================================
 class tappy:
@@ -177,6 +204,427 @@ class tappy:
         (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, jd, s, h, Nv, p, p1) = package
         speed_dict = {}
 
+        master_speed_dict = {
+'Zo': [0, 'ZZZZZZZ', [0, 0, 0, 0, 0, 0, 0]], 
+'Sa': [0, 'ZZAZZYZ', [0, 0, 1, 0, 0, -1, 0]], 
+'Sa': [0, 'ZZAZZZZ', [0, 0, 1, 0, 0, 0, 0]], 
+'Ssa': [0, 'ZZBZZZZ', [0, 0, 2, 0, 0, 0, 0]], 
+'Sta': [0, 'ZZCZZYY', [0, 0, 3, 0, 0, -1, -1]], 
+'MSm': [0, 'ZAXAZZZ', [0, 1, -2, 1, 0, 0, 0]], 
+'Mnum': [0, 'ZAXAZZZ', [0, 1, -2, 1, 0, 0, 0]], 
+'Mm': [0, 'ZAZYZZZ', [0, 1, 0, -1, 0, 0, 0]], 
+'MSf': [0, 'ZBXZZZZ', [0, 2, -2, 0, 0, 0, 0]], 
+'MSo': [0, 'ZBXZZZZ', [0, 2, -2, 0, 0, 0, 0]], 
+'SM': [0, 'ZBXZZZZ', [0, 2, -2, 0, 0, 0, 0]], 
+'Mf': [0, 'ZBZZZZZ', [0, 2, 0, 0, 0, 0, 0]], 
+'KOo': [0, 'ZBZZZZZ', [0, 2, 0, 0, 0, 0, 0]], 
+'MKo': [0, 'ZBZZZZZ', [0, 2, 0, 0, 0, 0, 0]], 
+'Snu2': [0, 'ZCVAZZZ', [0, 3, -4, 1, 0, 0, 0]], 
+'SN': [0, 'ZCXYZZZ', [0, 3, -2, -1, 0, 0, 0]], 
+'MStm': [0, 'ZCXAZZZ', [0, 3, -2, 1, 0, 0, 0]], 
+'Mfm': [0, 'ZCZYZZZ', [0, 3, 0, -1, 0, 0, 0]], 
+'2SM': [0, 'ZDVZZZZ', [0, 4, -4, 0, 0, 0, 0]], 
+'MSqm': [0, 'ZDXZZZZ', [0, 4, -2, 0, 0, 0, 0]], 
+'Mqm': [0, 'ZDZXZZZ', [0, 4, 0, -2, 0, 0, 0]], 
+'2SMN': [0, 'ZEVYZZZ', [0, 5, -4, -1, 0, 0, 0]], 
+'2Q1': [1, 'AWZBZZY', [1, -3, 0, 2, 0, 0, -1]], 
+'NJ1': [1, 'AWZBZZY', [1, -3, 0, 2, 0, 0, -1]], 
+'nuJ1': [1, 'AWBZZZY', [1, -3, 2, 0, 0, 0, -1]], 
+'sigma1': [1, 'AWBZZZY', [1, -3, 2, 0, 0, 0, -1]], 
+'Q1': [1, 'AXZAZZY', [1, -2, 0, 1, 0, 0, -1]], 
+'NK1': [1, 'AXZAZZZ', [1, -2, 0, 1, 0, 0, 0]], 
+'rho1': [1, 'AXBYZZY', [1, -2, 2, -1, 0, 0, -1]], 
+'nuK1': [1, 'AXBYZZY', [1, -2, 2, -1, 0, 0, -1]], 
+'O1': [1, 'AYZZZZY', [1, -1, 0, 0, 0, 0, -1]], 
+'MK1': [1, 'AYZZZZY', [1, -1, 0, 0, 0, 0, -1]], 
+'MS1': [1, 'AYAZZZB', [1, -1, 1, 0, 0, 0, 2]], 
+'MP1': [1, 'AYBZZZZ', [1, -1, 2, 0, 0, 0, 0]], 
+'MP1': [1, 'AYBZZZA', [1, -1, 2, 0, 0, 0, 1]], 
+'tau1': [1, 'AYBZZZA', [1, -1, 2, 0, 0, 0, 1]], 
+'M1B': [1, 'AZZYZZY', [1, 0, 0, -1, 0, 0, -1]], 
+'M1B': [1, 'AZZYZZA', [1, 0, 0, -1, 0, 0, 1]], 
+'M1C': [1, 'AZZZZZZ', [1, 0, 0, 0, 0, 0, 0]], 
+'M1': [1, 'AZZZZZA', [1, 0, 0, 0, 0, 0, 1]], 
+'M1': [1, 'AZZZZZB', [1, 0, 0, 0, 0, 0, 2]], 
+'NO1': [1, 'AZZAZZA', [1, 0, 0, 1, 0, 0, 1]], 
+'M1A': [1, 'AZZAZZA', [1, 0, 0, 1, 0, 0, 1]], 
+'M1': [1, 'AZZAZZA', [1, 0, 0, 1, 0, 0, 1]], 
+'LP1': [1, 'AZBYZZY', [1, 0, 2, -1, 0, 0, -1]], 
+'chi1': [1, 'AZBYZZA', [1, 0, 2, -1, 0, 0, 1]], 
+'pi1': [1, 'AAWZZAY', [1, 1, -3, 0, 0, 1, -1]], 
+'TK1': [1, 'AAWZZAY', [1, 1, -3, 0, 0, 1, -1]], 
+'P1': [1, 'AAXZZZY', [1, 1, -2, 0, 0, 0, -1]], 
+'SK1': [1, 'AAXZZZZ', [1, 1, -2, 0, 0, 0, 0]], 
+'S1': [1, 'AAYZZZZ', [1, 1, -1, 0, 0, 0, 0]], 
+'S1': [1, 'AAYZZZB', [1, 1, -1, 0, 0, 0, 2]], 
+'S1': [1, 'AAYZZAA', [1, 1, -1, 0, 0, 1, 1]], 
+'SP1': [1, 'AAZZZZZ', [1, 1, 0, 0, 0, 0, 0]], 
+'K1': [1, 'AAZZZZZ', [1, 1, 0, 0, 0, 0, 0]], 
+'MO1': [1, 'AAZZZZZ', [1, 1, 0, 0, 0, 0, 0]], 
+'K1': [1, 'AAZZZZA', [1, 1, 0, 0, 0, 0, 1]], 
+'RP1': [1, 'AAAZZYY', [1, 1, 1, 0, 0, -1, -1]], 
+'psi1': [1, 'AAAZZYA', [1, 1, 1, 0, 0, -1, 1]], 
+'phi1': [1, 'AABZZZA', [1, 1, 2, 0, 0, 0, 1]], 
+'KP1': [1, 'AABZZZA', [1, 1, 2, 0, 0, 0, 1]], 
+'lambdaO1': [1, 'ABXAZZY', [1, 2, -2, 1, 0, 0, -1]], 
+'theta1': [1, 'ABXAZZA', [1, 2, -2, 1, 0, 0, 1]], 
+'MQ1': [1, 'ABZYZZZ', [1, 2, 0, -1, 0, 0, 0]], 
+'J1': [1, 'ABZYZZA', [1, 2, 0, -1, 0, 0, 1]], 
+'2PO1': [1, 'ACVZZZY', [1, 3, -4, 0, 0, 0, -1]], 
+'SO1': [1, 'ACXZZZZ', [1, 3, -2, 0, 0, 0, 0]], 
+'SO1': [1, 'ACXZZZA', [1, 3, -2, 0, 0, 0, 1]], 
+'OO1': [1, 'ACZZZZA', [1, 3, 0, 0, 0, 0, 1]], 
+'ups1': [1, 'ADZYZZA', [1, 4, 0, -1, 0, 0, 1]], 
+'KQ1': [1, 'ADZYZZA', [1, 4, 0, -1, 0, 0, 1]], 
+'2MN2S2': [2, 'BUDAZZZ', [2, -5, 4, 1, 0, 0, 0]], 
+'3M(SK)2': [2, 'BVBZZZZ', [2, -4, 2, 0, 0, 0, 0]], 
+'3MKS2': [2, 'BVBZZZZ', [2, -4, 2, 0, 0, 0, 0]], 
+'2NS2': [2, 'BVBBZZZ', [2, -4, 2, 2, 0, 0, 0]], 
+'3M2S2': [2, 'BVDZZZZ', [2, -4, 4, 0, 0, 0, 0]], 
+'3MS2': [2, 'BVDZZZZ', [2, -4, 4, 0, 0, 0, 0]], 
+'2NK2S2': [2, 'BVDBZZZ', [2, -4, 4, 2, 0, 0, 0]], 
+'OQ2': [2, 'BWZAZZZ', [2, -3, 0, 1, 0, 0, 0]], 
+'MNK2': [2, 'BWZAZZZ', [2, -3, 0, 1, 0, 0, 0]], 
+'OQ2': [2, 'BWZAZZB', [2, -3, 0, 1, 0, 0, 2]], 
+'MNS2': [2, 'BWBAZZZ', [2, -3, 2, 1, 0, 0, 0]], 
+'eps2': [2, 'BWBAZZZ', [2, -3, 2, 1, 0, 0, 0]], 
+'MnuS2': [2, 'BWDYZZZ', [2, -3, 4, -1, 0, 0, 0]], 
+'2ML2S2': [2, 'BWDYZZB', [2, -3, 4, -1, 0, 0, 2]], 
+'MNK2S2': [2, 'BWDAZZZ', [2, -3, 4, 1, 0, 0, 0]], 
+'2MS2K2': [2, 'BXXZZZZ', [2, -2, -2, 0, 0, 0, 0]], 
+'2MK2': [2, 'BXZZZZZ', [2, -2, 0, 0, 0, 0, 0]], 
+'O2': [2, 'BXZZZZZ', [2, -2, 0, 0, 0, 0, 0]], 
+'NLK2': [2, 'BXZZZZB', [2, -2, 0, 0, 0, 0, 2]], 
+'2N2': [2, 'BXZBZZZ', [2, -2, 0, 2, 0, 0, 0]], 
+'mu2': [2, 'BXBZZZZ', [2, -2, 2, 0, 0, 0, 0]], 
+'2MS2': [2, 'BXBZZZZ', [2, -2, 2, 0, 0, 0, 0]], 
+'SNK2': [2, 'BYXAZZZ', [2, -1, -2, 1, 0, 0, 0]], 
+'NA2': [2, 'BYYAZZZ', [2, -1, -1, 1, 0, 0, 0]], 
+'NA2': [2, 'BYYAZAZ', [2, -1, -1, 1, 0, 1, 0]], 
+'N2': [2, 'BYZAZZZ', [2, -1, 0, 1, 0, 0, 0]], 
+'KQ2': [2, 'BYZAZZZ', [2, -1, 0, 1, 0, 0, 0]], 
+'NB2': [2, 'BYAAZYZ', [2, -1, 1, 1, 0, -1, 0]], 
+'NA2*': [2, 'BYAAZZZ', [2, -1, 1, 1, 0, 0, 0]], 
+'nu2': [2, 'BYBYZZZ', [2, -1, 2, -1, 0, 0, 0]], 
+'2KN2S2': [2, 'BYDAZZZ', [2, -1, 4, 1, 0, 0, 0]], 
+'MSK2': [2, 'BZXZZZZ', [2, 0, -2, 0, 0, 0, 0]], 
+'OP2': [2, 'BZXZZZZ', [2, 0, -2, 0, 0, 0, 0]], 
+'OP2': [2, 'BZXZZZB', [2, 0, -2, 0, 0, 0, 2]], 
+'gamma2': [2, 'BZXBZZB', [2, 0, -2, 2, 0, 0, 2]], 
+'MA2': [2, 'BZYZZZZ', [2, 0, -1, 0, 0, 0, 0]], 
+'MPS2': [2, 'BZYZZZA', [2, 0, -1, 0, 0, 0, 1]], 
+'alpha2': [2, 'BZYZZAB', [2, 0, -1, 0, 0, 1, 2]], 
+'M(SK)2': [2, 'BZYZZAB', [2, 0, -1, 0, 0, 1, 2]], 
+'M2': [2, 'BZZZZZZ', [2, 0, 0, 0, 0, 0, 0]], 
+'KO2': [2, 'BZZZZZZ', [2, 0, 0, 0, 0, 0, 0]], 
+'M(KS)2': [2, 'BZAZZYZ', [2, 0, 1, 0, 0, -1, 0]], 
+'MSP2': [2, 'BZAZZZY', [2, 0, 1, 0, 0, 0, -1]], 
+'MB2': [2, 'BZAZZZZ', [2, 0, 1, 0, 0, 0, 0]], 
+'MA2*': [2, 'BZAZZZZ', [2, 0, 1, 0, 0, 0, 0]], 
+'MKS2': [2, 'BZBZZZZ', [2, 0, 2, 0, 0, 0, 0]], 
+'delta2': [2, 'BZBZZZZ', [2, 0, 2, 0, 0, 0, 0]], 
+'M2(KS)2': [2, 'BZDZZZZ', [2, 0, 4, 0, 0, 0, 0]], 
+'2KM2S2': [2, 'BZDZZZZ', [2, 0, 4, 0, 0, 0, 0]], 
+'2SN(MK)2': [2, 'BAVAZZZ', [2, 1, -4, 1, 0, 0, 0]], 
+'lambda2': [2, 'BAXAZZB', [2, 1, -2, 1, 0, 0, 2]], 
+'L2': [2, 'BAZYZZB', [2, 1, 0, -1, 0, 0, 2]], 
+'2MN2': [2, 'BAZYZZB', [2, 1, 0, -1, 0, 0, 2]], 
+'L2A': [2, 'BAZYZZB', [2, 1, 0, -1, 0, 0, 2]], 
+'L2B': [2, 'BAZAZZZ', [2, 1, 0, 1, 0, 0, 0]], 
+'NKM2': [2, 'BAZAZZZ', [2, 1, 0, 1, 0, 0, 0]], 
+'2SK2': [2, 'BBVZZZZ', [2, 2, -4, 0, 0, 0, 0]], 
+'T2': [2, 'BBWZZAZ', [2, 2, -3, 0, 0, 1, 0]], 
+'S2': [2, 'BBXZZZZ', [2, 2, -2, 0, 0, 0, 0]], 
+'KP2': [2, 'BBXZZZZ', [2, 2, -2, 0, 0, 0, 0]], 
+'R2': [2, 'BBYZZYB', [2, 2, -1, 0, 0, -1, 2]], 
+'K2': [2, 'BBZZZZZ', [2, 2, 0, 0, 0, 0, 0]], 
+'MSnu2': [2, 'BCVAZZZ', [2, 3, -4, 1, 0, 0, 0]], 
+'MSN2': [2, 'BCXYZZZ', [2, 3, -2, -1, 0, 0, 0]], 
+'xi2': [2, 'BCXAZZZ', [2, 3, -2, 1, 0, 0, 0]], 
+'eta2': [2, 'BCZYZZZ', [2, 3, 0, -1, 0, 0, 0]], 
+'KJ2': [2, 'BCZYZZB', [2, 3, 0, -1, 0, 0, 2]], 
+'2KM(SN)2': [2, 'BCBYZZZ', [2, 3, 2, -1, 0, 0, 0]], 
+'2SM2': [2, 'BDVZZZZ', [2, 4, -4, 0, 0, 0, 0]], 
+'2MS2N2': [2, 'BDXXZZZ', [2, 4, -2, -2, 0, 0, 0]], 
+'SKM2': [2, 'BDXZZZZ', [2, 4, -2, 0, 0, 0, 0]], 
+'2Snu2': [2, 'BETAZZZ', [2, 5, -6, 1, 0, 0, 0]], 
+'3(SM)N2': [2, 'BETAZZZ', [2, 5, -6, 1, 0, 0, 0]], 
+'2SN2': [2, 'BEVYZZZ', [2, 5, -4, -1, 0, 0, 0]], 
+'SKN2': [2, 'BEXYZZZ', [2, 5, -2, -1, 0, 0, 0]], 
+'3S2M2': [2, 'BFTZZZZ', [2, 6, -6, 0, 0, 0, 0]], 
+'2SK2M2': [2, 'BFVZZZZ', [2, 6, -4, 0, 0, 0, 0]], 
+'MQ3': [3, 'CXZAZZY', [3, -2, 0, 1, 0, 0, -1]], 
+'NO3': [3, 'CXZAZZY', [3, -2, 0, 1, 0, 0, -1]], 
+'MQ3': [3, 'CXZAZZZ', [3, -2, 0, 1, 0, 0, 0]], 
+'NO3': [3, 'CXZAZZZ', [3, -2, 0, 1, 0, 0, 0]], 
+'MO3': [3, 'CYZZZZY', [3, -1, 0, 0, 0, 0, -1]], 
+'2MK3': [3, 'CYZZZZY', [3, -1, 0, 0, 0, 0, -1]], 
+'MO3': [3, 'CYZZZZZ', [3, -1, 0, 0, 0, 0, 0]], 
+'2NKM3': [3, 'CYZBZZA', [3, -1, 0, 2, 0, 0, 1]], 
+'2MS3': [3, 'CYAZZZB', [3, -1, 1, 0, 0, 0, 2]], 
+'2MP3': [3, 'CYBZZZA', [3, -1, 2, 0, 0, 0, 1]], 
+'M3': [3, 'CZZZZZB', [3, 0, 0, 0, 0, 0, 2]], 
+'NK3': [3, 'CZZAZZZ', [3, 0, 0, 1, 0, 0, 0]], 
+'NK3': [3, 'CZZAZZA', [3, 0, 0, 1, 0, 0, 1]], 
+'SO3': [3, 'CAXZZZY', [3, 1, -2, 0, 0, 0, -1]], 
+'MP3': [3, 'CAXZZZY', [3, 1, -2, 0, 0, 0, -1]], 
+'MP3': [3, 'CAXZZZZ', [3, 1, -2, 0, 0, 0, 0]], 
+'MS3': [3, 'CAYZZZB', [3, 1, -1, 0, 0, 0, 2]], 
+'MK3': [3, 'CAZZZZZ', [3, 1, 0, 0, 0, 0, 0]], 
+'MK3': [3, 'CAZZZZA', [3, 1, 0, 0, 0, 0, 1]], 
+'NSO3': [3, 'CBXAZZA', [3, 2, -2, 1, 0, 0, 1]], 
+'2MQ3': [3, 'CBZYZZA', [3, 2, 0, -1, 0, 0, 1]], 
+'SP3': [3, 'CCVZZZY', [3, 3, -4, 0, 0, 0, -1]], 
+'SP3': [3, 'CCVZZZZ', [3, 3, -4, 0, 0, 0, 0]], 
+'S3': [3, 'CCWZZZB', [3, 3, -3, 0, 0, 0, 2]], 
+'SK3': [3, 'CCXZZZZ', [3, 3, -2, 0, 0, 0, 0]], 
+'SK3': [3, 'CCXZZZA', [3, 3, -2, 0, 0, 0, 1]], 
+'K3': [3, 'CCZZZZZ', [3, 3, 0, 0, 0, 0, 0]], 
+'K3': [3, 'CCZZZZA', [3, 3, 0, 0, 0, 0, 1]], 
+'2SO3': [3, 'CEVZZZA', [3, 5, -4, 0, 0, 0, 1]], 
+'4MS4': [4, 'DVDZZZZ', [4, -4, 4, 0, 0, 0, 0]], 
+'4M2S4': [4, 'DVDZZZZ', [4, -4, 4, 0, 0, 0, 0]], 
+'2MNK4': [4, 'DWZAZZZ', [4, -3, 0, 1, 0, 0, 0]], 
+'3NM4': [4, 'DWZCZZZ', [4, -3, 0, 3, 0, 0, 0]], 
+'2MNS4': [4, 'DWBAZZZ', [4, -3, 2, 1, 0, 0, 0]], 
+'2MnuS4': [4, 'DWDYZZZ', [4, -3, 4, -1, 0, 0, 0]], 
+'3MK4': [4, 'DXZZZZZ', [4, -2, 0, 0, 0, 0, 0]], 
+'MNLK4': [4, 'DXZZZZB', [4, -2, 0, 0, 0, 0, 2]], 
+'N4': [4, 'DXZBZZZ', [4, -2, 0, 2, 0, 0, 0]], 
+'2N4': [4, 'DXZBZZZ', [4, -2, 0, 2, 0, 0, 0]], 
+'3MS4': [4, 'DXBZZZZ', [4, -2, 2, 0, 0, 0, 0]], 
+'2NKS4': [4, 'DXBBZZZ', [4, -2, 2, 2, 0, 0, 0]], 
+'MSNK4': [4, 'DYXAZZZ', [4, -1, -2, 1, 0, 0, 0]], 
+'MN4': [4, 'DYZAZZZ', [4, -1, 0, 1, 0, 0, 0]], 
+'Mnu4': [4, 'DYBYZZZ', [4, -1, 2, -1, 0, 0, 0]], 
+'2MLS4': [4, 'DYBYZZB', [4, -1, 2, -1, 0, 0, 2]], 
+'MNKS4': [4, 'DYBAZZZ', [4, -1, 2, 1, 0, 0, 0]], 
+'2MSK4': [4, 'DZXZZZZ', [4, 0, -2, 0, 0, 0, 0]], 
+'MA4': [4, 'DZYZZZZ', [4, 0, -1, 0, 0, 0, 0]], 
+'M4': [4, 'DZZZZZZ', [4, 0, 0, 0, 0, 0, 0]], 
+'2MRS4': [4, 'DZAZZYB', [4, 0, 1, 0, 0, -1, 2]], 
+'2MKS4': [4, 'DZBZZZZ', [4, 0, 2, 0, 0, 0, 0]], 
+'SN4': [4, 'DAXAZZZ', [4, 1, -2, 1, 0, 0, 0]], 
+'3MN4': [4, 'DAZYZZZ', [4, 1, 0, -1, 0, 0, 0]], 
+'ML4': [4, 'DAZYZZZ', [4, 1, 0, -1, 0, 0, 0]], 
+'ML4': [4, 'DAZYZZB', [4, 1, 0, -1, 0, 0, 2]], 
+'KN4': [4, 'DAZAZZZ', [4, 1, 0, 1, 0, 0, 0]], 
+'NK4': [4, 'DAZAZZZ', [4, 1, 0, 1, 0, 0, 0]], 
+'2SMK4': [4, 'DBVZZZZ', [4, 2, -4, 0, 0, 0, 0]], 
+'M2SK4': [4, 'DBVZZZZ', [4, 2, -4, 0, 0, 0, 0]], 
+'MT4': [4, 'DBWZZAZ', [4, 2, -3, 0, 0, 1, 0]], 
+'MS4': [4, 'DBXZZZZ', [4, 2, -2, 0, 0, 0, 0]], 
+'MR4': [4, 'DBYZZYB', [4, 2, -1, 0, 0, -1, 2]], 
+'MK4': [4, 'DBZZZZZ', [4, 2, 0, 0, 0, 0, 0]], 
+'2SNM4': [4, 'DCVAZZZ', [4, 3, -4, 1, 0, 0, 0]], 
+'2MSN4': [4, 'DCXYZZZ', [4, 3, -2, -1, 0, 0, 0]], 
+'2MSN4': [4, 'DCXYZZB', [4, 3, -2, -1, 0, 0, 2]], 
+'SL4': [4, 'DCXYZZB', [4, 3, -2, -1, 0, 0, 2]], 
+'2MKN4': [4, 'DCZYZZZ', [4, 3, 0, -1, 0, 0, 0]], 
+'ST4': [4, 'DDUZZAZ', [4, 4, -5, 0, 0, 1, 0]], 
+'S4': [4, 'DDVZZZZ', [4, 4, -4, 0, 0, 0, 0]], 
+'SK4': [4, 'DDXZZZZ', [4, 4, -2, 0, 0, 0, 0]], 
+'K4': [4, 'DDZZZZZ', [4, 4, 0, 0, 0, 0, 0]], 
+'3SM4': [4, 'DFTZZZZ', [4, 6, -6, 0, 0, 0, 0]], 
+'2SKM4': [4, 'DFVZZZZ', [4, 6, -4, 0, 0, 0, 0]], 
+'MNO5': [5, 'EXZAZZY', [5, -2, 0, 1, 0, 0, -1]], 
+'2MQ5': [5, 'EXZAZZY', [5, -2, 0, 1, 0, 0, -1]], 
+'2NKMS5': [5, 'EXBBZZA', [5, -2, 2, 2, 0, 0, 1]], 
+'3MK5': [5, 'EYZZZZY', [5, -1, 0, 0, 0, 0, -1]], 
+'2MO5': [5, 'EYZZZZY', [5, -1, 0, 0, 0, 0, -1]], 
+'2NK5': [5, 'EYZBZZA', [5, -1, 0, 2, 0, 0, 1]], 
+'3MS5': [5, 'EYAZZZB', [5, -1, 1, 0, 0, 0, 2]], 
+'3MP5': [5, 'EYBZZZA', [5, -1, 2, 0, 0, 0, 1]], 
+'NSO5': [5, 'EZXAZZY', [5, 0, -2, 1, 0, 0, -1]], 
+'M5': [5, 'EZZZZZA', [5, 0, 0, 0, 0, 0, 1]], 
+'M5': [5, 'EZZZZZB', [5, 0, 0, 0, 0, 0, 2]], 
+'M5': [5, 'EZZAZZA', [5, 0, 0, 1, 0, 0, 1]], 
+'MNK5': [5, 'EZZAZZA', [5, 0, 0, 1, 0, 0, 1]], 
+'MB5': [5, 'EZAZZZA', [5, 0, 1, 0, 0, 0, 1]], 
+'MSO5': [5, 'EAXZZZY', [5, 1, -2, 0, 0, 0, -1]], 
+'2MP5': [5, 'EAXZZZY', [5, 1, -2, 0, 0, 0, -1]], 
+'2MS5': [5, 'EAYZZZB', [5, 1, -1, 0, 0, 0, 2]], 
+'3MO5': [5, 'EAZZZZA', [5, 1, 0, 0, 0, 0, 1]], 
+'2MK5': [5, 'EAZZZZA', [5, 1, 0, 0, 0, 0, 1]], 
+'NSK5': [5, 'EBXYZZA', [5, 2, -2, -1, 0, 0, 1]], 
+'3MQ5': [5, 'EBZYZZA', [5, 2, 0, -1, 0, 0, 1]], 
+'MSP5': [5, 'ECVZZZY', [5, 3, -4, 0, 0, 0, -1]], 
+'MSK5': [5, 'ECXZZZZ', [5, 3, -2, 0, 0, 0, 0]], 
+'MSK5': [5, 'ECXZZZA', [5, 3, -2, 0, 0, 0, 1]], 
+'3KM5': [5, 'ECZZZZY', [5, 3, 0, 0, 0, 0, -1]], 
+'2SP5': [5, 'EETZZZY', [5, 5, -6, 0, 0, 0, -1]], 
+'2SK5': [5, 'EEVZZZA', [5, 5, -4, 0, 0, 0, 1]], 
+'(SK)K5': [5, 'EEXZZZA', [5, 5, -2, 0, 0, 0, 1]], 
+'2(MN)K6': [6, 'FVZBZZZ', [6, -4, 0, 2, 0, 0, 0]], 
+'5MKS6': [6, 'FVBZZZZ', [6, -4, 2, 0, 0, 0, 0]], 
+'2(MN)S6': [6, 'FVBBZZZ', [6, -4, 2, 2, 0, 0, 0]], 
+'5M2S6': [6, 'FVDZZZZ', [6, -4, 4, 0, 0, 0, 0]], 
+'3MNK6': [6, 'FWZAZZZ', [6, -3, 0, 1, 0, 0, 0]], 
+'N6': [6, 'FWZCZZZ', [6, -3, 0, 3, 0, 0, 0]], 
+'3MNS6': [6, 'FWBAZZZ', [6, -3, 2, 1, 0, 0, 0]], 
+'3NKS6': [6, 'FWBCZZZ', [6, -3, 2, 3, 0, 0, 0]], 
+'3MnuS6': [6, 'FWDYZZZ', [6, -3, 4, -1, 0, 0, 0]], 
+'4MK6': [6, 'FXZZZZZ', [6, -2, 0, 0, 0, 0, 0]], 
+'2NM6': [6, 'FXZBZZZ', [6, -2, 0, 2, 0, 0, 0]], 
+'M2N6': [6, 'FXZBZZZ', [6, -2, 0, 2, 0, 0, 0]], 
+'4MS6': [6, 'FXBZZZZ', [6, -2, 2, 0, 0, 0, 0]], 
+'2NMKS6': [6, 'FXBBZZZ', [6, -2, 2, 2, 0, 0, 0]], 
+'2MSNK6': [6, 'FYXAZZZ', [6, -1, -2, 1, 0, 0, 0]], 
+'2MN6': [6, 'FYZAZZZ', [6, -1, 0, 1, 0, 0, 0]], 
+'2Mnu6': [6, 'FYBYZZZ', [6, -1, 2, -1, 0, 0, 0]], 
+'2MNO6': [6, 'FYBYZZZ', [6, -1, 2, -1, 0, 0, 0]], 
+'2MNKS6': [6, 'FYBAZZZ', [6, -1, 2, 1, 0, 0, 0]], 
+'3MSK6': [6, 'FZXZZZZ', [6, 0, -2, 0, 0, 0, 0]], 
+'MA6': [6, 'FZYZZZZ', [6, 0, -1, 0, 0, 0, 0]], 
+'M6': [6, 'FZZZZZZ', [6, 0, 0, 0, 0, 0, 0]], 
+'3MKS6': [6, 'FZBZZZZ', [6, 0, 2, 0, 0, 0, 0]], 
+'MTN6': [6, 'FAWAZAZ', [6, 1, -3, 1, 0, 1, 0]], 
+'MSN6': [6, 'FAXAZZZ', [6, 1, -2, 1, 0, 0, 0]], 
+'4MN6': [6, 'FAZYZZZ', [6, 1, 0, -1, 0, 0, 0]], 
+'2ML6': [6, 'FAZYZZB', [6, 1, 0, -1, 0, 0, 2]], 
+'MNK6': [6, 'FAZAZZZ', [6, 1, 0, 1, 0, 0, 0]], 
+'MKN6': [6, 'FAZAZZZ', [6, 1, 0, 1, 0, 0, 0]], 
+'MKnu6': [6, 'FABYZZZ', [6, 1, 2, -1, 0, 0, 0]], 
+'2(MS)K6': [6, 'FBVZZZZ', [6, 2, -4, 0, 0, 0, 0]], 
+'2MT6': [6, 'FBWZZAZ', [6, 2, -3, 0, 0, 1, 0]], 
+'2MS6': [6, 'FBXZZZZ', [6, 2, -2, 0, 0, 0, 0]], 
+'2MK6': [6, 'FBZZZZZ', [6, 2, 0, 0, 0, 0, 0]], 
+'2SN6': [6, 'FCVAZZZ', [6, 3, -4, 1, 0, 0, 0]], 
+'3MTN6': [6, 'FCWYZAZ', [6, 3, -3, -1, 0, 1, 0]], 
+'3MSN6': [6, 'FCXYZZZ', [6, 3, -2, -1, 0, 0, 0]], 
+'MSL6': [6, 'FCXYZZB', [6, 3, -2, -1, 0, 0, 2]], 
+'NSK6': [6, 'FCXAZZZ', [6, 3, -2, 1, 0, 0, 0]], 
+'SNK6': [6, 'FCXAZZZ', [6, 3, -2, 1, 0, 0, 0]], 
+'MKL6': [6, 'FCZYZZB', [6, 3, 0, -1, 0, 0, 2]], 
+'3MKN6': [6, 'FCZYZZZ', [6, 3, 0, -1, 0, 0, 0]], 
+'MST6': [6, 'FDUZZAZ', [6, 4, -5, 0, 0, 1, 0]], 
+'2SM6': [6, 'FDVZZZZ', [6, 4, -4, 0, 0, 0, 0]], 
+'MSK6': [6, 'FDXZZZZ', [6, 4, -2, 0, 0, 0, 0]], 
+'SKM6': [6, 'FDXZZZZ', [6, 4, -2, 0, 0, 0, 0]], 
+'2KM6': [6, 'FDZZZZZ', [6, 4, 0, 0, 0, 0, 0]], 
+'2MSTN6': [6, 'FEUYZAZ', [6, 5, -5, -1, 0, 1, 0]], 
+'2(MS)N6': [6, 'FEVYZZZ', [6, 5, -4, -1, 0, 0, 0]], 
+'2MSKN6': [6, 'FEXYZZZ', [6, 5, -2, -1, 0, 0, 0]], 
+'S6': [6, 'FFTZZZZ', [6, 6, -6, 0, 0, 0, 0]], 
+'2MNO7': [7, 'GXZAZZY', [7, -2, 0, 1, 0, 0, -1]], 
+'3MQ7': [7, 'GXZAZZY', [7, -2, 0, 1, 0, 0, -1]], 
+'4MK7': [7, 'GYZZZZY', [7, -1, 0, 0, 0, 0, -1]], 
+'2NMK7': [7, 'GYZBZZA', [7, -1, 0, 2, 0, 0, 1]], 
+'MNSO7': [7, 'GZXAZZY', [7, 0, -2, 1, 0, 0, -1]], 
+'M7': [7, 'GZZZZZB', [7, 0, 0, 0, 0, 0, 2]], 
+'M7': [7, 'GZZAZZA', [7, 0, 0, 1, 0, 0, 1]], 
+'2MNK7': [7, 'GZZAZZA', [7, 0, 0, 1, 0, 0, 1]], 
+'MNKO7': [7, 'GZZAZZA', [7, 0, 0, 1, 0, 0, 1]], 
+'2MSO7': [7, 'GAXZZZY', [7, 1, -2, 0, 0, 0, -1]], 
+'3MK7': [7, 'GAZZZZA', [7, 1, 0, 0, 0, 0, 1]], 
+'MSKO7': [7, 'GCXZZZY', [7, 3, -2, 0, 0, 0, -1]], 
+'3M2NS8': [8, 'HVBBZZZ', [8, -4, 2, 2, 0, 0, 0]], 
+'4MNS8': [8, 'HWBAZZZ', [8, -3, 2, 1, 0, 0, 0]], 
+'5MK8': [8, 'HXZZZZZ', [8, -2, 0, 0, 0, 0, 0]], 
+'2(MN)8': [8, 'HXZBZZZ', [8, -2, 0, 2, 0, 0, 0]], 
+'5MS8': [8, 'HXBZZZZ', [8, -2, 2, 0, 0, 0, 0]], 
+'2(MN)KS8': [8, 'HXBBZZZ', [8, -2, 2, 2, 0, 0, 0]], 
+'3MSNK8': [8, 'HYXAZZZ', [8, -1, -2, 1, 0, 0, 0]], 
+'3MN8': [8, 'HYZAZZZ', [8, -1, 0, 1, 0, 0, 0]], 
+'3Mnu8': [8, 'HYBYZZZ', [8, -1, 2, -1, 0, 0, 0]], 
+'3MNKS8': [8, 'HYBAZZZ', [8, -1, 2, 1, 0, 0, 0]], 
+'4MSK8': [8, 'HZXZZZZ', [8, 0, -2, 0, 0, 0, 0]], 
+'MA8': [8, 'HZYZZZZ', [8, 0, -1, 0, 0, 0, 0]], 
+'M8': [8, 'HZZZZZZ', [8, 0, 0, 0, 0, 0, 0]], 
+'4MKS8': [8, 'HZBZZZZ', [8, 0, 2, 0, 0, 0, 0]], 
+'2MSN8': [8, 'HAXAZZZ', [8, 1, -2, 1, 0, 0, 0]], 
+'3ML8': [8, 'HAZYZZZ', [8, 1, 0, -1, 0, 0, 0]], 
+'2MNK8': [8, 'HAZAZZZ', [8, 1, 0, 1, 0, 0, 0]], 
+'3M2SK8': [8, 'HBVZZZZ', [8, 2, -4, 0, 0, 0, 0]], 
+'2(NS)8': [8, 'HBVBZZZ', [8, 2, -4, 2, 0, 0, 0]], 
+'3MT8': [8, 'HBWZZAZ', [8, 2, -3, 0, 0, 1, 0]], 
+'3MS8': [8, 'HBXZZZZ', [8, 2, -2, 0, 0, 0, 0]], 
+'3MK8': [8, 'HBZZZZZ', [8, 2, 0, 0, 0, 0, 0]], 
+'2SNM8': [8, 'HCVAZZZ', [8, 3, -4, 1, 0, 0, 0]], 
+'2SMN8': [8, 'HCVAZZZ', [8, 3, -4, 1, 0, 0, 0]], 
+'2MSL8': [8, 'HCXYZZB', [8, 3, -2, -1, 0, 0, 2]], 
+'MSNK8': [8, 'HCXAZZZ', [8, 3, -2, 1, 0, 0, 0]], 
+'4MSN8': [8, 'HCZYZZZ', [8, 3, 0, -1, 0, 0, 0]], 
+'2MST8': [8, 'HDUZZAZ', [8, 4, -5, 0, 0, 1, 0]], 
+'2(MS)8': [8, 'HDVZZZZ', [8, 4, -4, 0, 0, 0, 0]], 
+'2MSK8': [8, 'HDXZZZZ', [8, 4, -2, 0, 0, 0, 0]], 
+'2(MK)8': [8, 'HDZZZZZ', [8, 4, 0, 0, 0, 0, 0]], 
+'3SN8': [8, 'HETAZZZ', [8, 5, -6, 1, 0, 0, 0]], 
+'2SML8': [8, 'HEVYZZB', [8, 5, -4, -1, 0, 0, 2]], 
+'2SKN8': [8, 'HEVAZZZ', [8, 5, -4, 1, 0, 0, 0]], 
+'MSKL8': [8, 'HEXYZZB', [8, 5, -2, -1, 0, 0, 2]], 
+'3SM8': [8, 'HFTZZZZ', [8, 6, -6, 0, 0, 0, 0]], 
+'2SMK8': [8, 'HFVZZZZ', [8, 6, -4, 0, 0, 0, 0]], 
+'S8': [8, 'HHRZZZZ', [8, 8, -8, 0, 0, 0, 0]], 
+'3MNO9': [9, 'IXZAZZY', [9, -2, 0, 1, 0, 0, -1]], 
+'2M2NK9': [9, 'IYZBZZA', [9, -1, 0, 2, 0, 0, 1]], 
+'2(MN)K9': [9, 'IYZBZZA', [9, -1, 0, 2, 0, 0, 1]], 
+'MA9': [9, 'IZYZZZZ', [9, 0, -1, 0, 0, 0, 0]], 
+'3MNK9': [9, 'IZZAZZA', [9, 0, 0, 1, 0, 0, 1]], 
+'4MK9': [9, 'IAZZZZA', [9, 1, 0, 0, 0, 0, 1]], 
+'3MSK9': [9, 'ICXZZZA', [9, 3, -2, 0, 0, 0, 1]], 
+'5MNS10': [10, 'JWBAZZZ', [10, -3, 2, 1, 0, 0, 0]], 
+'3M2N10': [10, 'JXZBZZZ', [10, -2, 0, 2, 0, 0, 0]], 
+'6MS10': [10, 'JXBZZZZ', [10, -2, 2, 0, 0, 0, 0]], 
+'3M2NKS10': [10, 'JXBBZZZ', [10, -2, 2, 2, 0, 0, 0]], 
+'4MSNK10': [10, 'JYXAZZZ', [10, -1, -2, 1, 0, 0, 0]], 
+'4MN10': [10, 'JYZAZZZ', [10, -1, 0, 1, 0, 0, 0]], 
+'4Mnu10': [10, 'JYBYZZZ', [10, -1, 2, -1, 0, 0, 0]], 
+'5MSK10': [10, 'JZXZZZZ', [10, 0, -2, 0, 0, 0, 0]], 
+'M10': [10, 'JZZZZZZ', [10, 0, 0, 0, 0, 0, 0]], 
+'5MKS10': [10, 'JZBZZZZ', [10, 0, 2, 0, 0, 0, 0]], 
+'3MSN10': [10, 'JAXAZZZ', [10, 1, -2, 1, 0, 0, 0]], 
+'6MN10': [10, 'JAZYZZZ', [10, 1, 0, -1, 0, 0, 0]], 
+'4ML10': [10, 'JAZYZZB', [10, 1, 0, -1, 0, 0, 2]], 
+'3MNK10': [10, 'JAZAZZZ', [10, 1, 0, 1, 0, 0, 0]], 
+'2(SN)M10': [10, 'JBVBZZZ', [10, 2, -4, 2, 0, 0, 0]], 
+'4MS10': [10, 'JBXZZZZ', [10, 2, -2, 0, 0, 0, 0]], 
+'4MK10': [10, 'JBZZZZZ', [10, 2, 0, 0, 0, 0, 0]], 
+'2(MS)N10': [10, 'JCVAZZZ', [10, 3, -4, 1, 0, 0, 0]], 
+'2MNSK10': [10, 'JCXAZZZ', [10, 3, -2, 1, 0, 0, 0]], 
+'5MSN10': [10, 'JCZYZZZ', [10, 3, 0, -1, 0, 0, 0]], 
+'3M2S10': [10, 'JDVZZZZ', [10, 4, -4, 0, 0, 0, 0]], 
+'3MSK10': [10, 'JDXZZZZ', [10, 4, -2, 0, 0, 0, 0]], 
+'3SMN10': [10, 'JETAZZZ', [10, 5, -6, 1, 0, 0, 0]], 
+'2SMKN10': [10, 'JEVAZZZ', [10, 5, -4, 1, 0, 0, 0]], 
+'4M2SN10': [10, 'JEXYZZZ', [10, 5, -2, -1, 0, 0, 0]], 
+'3S2M10': [10, 'JFTZZZZ', [10, 6, -6, 0, 0, 0, 0]], 
+'2(MS)K10': [10, 'JFVZZZZ', [10, 6, -4, 0, 0, 0, 0]], 
+'4MSK11': [11, 'KCXZZZA', [11, 3, -2, 0, 0, 0, 1]], 
+'5M2NS12': [12, 'LVBBZZZ', [12, -4, 2, 2, 0, 0, 0]], 
+'3(MN)12': [12, 'LWZCZZZ', [12, -3, 0, 3, 0, 0, 0]], 
+'6MNS12': [12, 'LWBAZZZ', [12, -3, 2, 1, 0, 0, 0]], 
+'4M2N12': [12, 'LXZBZZZ', [12, -2, 0, 2, 0, 0, 0]], 
+'7MS12': [12, 'LXBZZZZ', [12, -2, 2, 0, 0, 0, 0]], 
+'4M2NKS12': [12, 'LXBBZZZ', [12, -2, 2, 2, 0, 0, 0]], 
+'5MSNK12': [12, 'LYXAZZZ', [12, -1, -2, 1, 0, 0, 0]], 
+'3N2MS12': [12, 'LYZAYZZ', [12, -1, 0, 1, -1, 0, 0]], 
+'5MN12': [12, 'LYZAZZZ', [12, -1, 0, 1, 0, 0, 0]], 
+'5Mnu12': [12, 'LYBYZZZ', [12, -1, 2, -1, 0, 0, 0]], 
+'6MSK12': [12, 'LZXZZZZ', [12, 0, -2, 0, 0, 0, 0]], 
+'3M2SN12': [12, 'LZXBZZZ', [12, 0, -2, 2, 0, 0, 0]], 
+'MA12': [12, 'LZYZZZZ', [12, 0, -1, 0, 0, 0, 0]], 
+'M12': [12, 'LZZZZZZ', [12, 0, 0, 0, 0, 0, 0]], 
+'4MSN12': [12, 'LAXAZZZ', [12, 1, -2, 1, 0, 0, 0]], 
+'4ML12': [12, 'LAZYZZB', [12, 1, 0, -1, 0, 0, 2]], 
+'4MNK12': [12, 'LAZAZZZ', [12, 1, 0, 1, 0, 0, 0]], 
+'2(MSN)12': [12, 'LBVBZZZ', [12, 2, -4, 2, 0, 0, 0]], 
+'5MT12': [12, 'LBWZZAZ', [12, 2, -3, 0, 0, 1, 0]], 
+'5MS12': [12, 'LBXZZZZ', [12, 2, -2, 0, 0, 0, 0]], 
+'5MK12': [12, 'LBZZZZZ', [12, 2, 0, 0, 0, 0, 0]], 
+'3M2SN12': [12, 'LCVAZZZ', [12, 3, -4, 1, 0, 0, 0]], 
+'6MSN12': [12, 'LCXYZZZ', [12, 3, -2, -1, 0, 0, 0]], 
+'3MNKS12': [12, 'LCXAZZZ', [12, 3, -2, 1, 0, 0, 0]], 
+'5MSN12': [12, 'LCZYZZZ', [12, 3, 0, -1, 0, 0, 0]], 
+'4MST12': [12, 'LDUZZAZ', [12, 4, -5, 0, 0, 1, 0]], 
+'4M2S12': [12, 'LDVZZZZ', [12, 4, -4, 0, 0, 0, 0]], 
+'4MSK12': [12, 'LDXZZZZ', [12, 4, -2, 0, 0, 0, 0]], 
+'3(MS)12': [12, 'LFTZZZZ', [12, 6, -6, 0, 0, 0, 0]], 
+'3M2SK12': [12, 'LFVZZZZ', [12, 6, -4, 0, 0, 0, 0]], 
+'5MSN14': [14, 'NAXAZZZ', [14, 1, -2, 1, 0, 0, 0]], 
+'5MNK14': [14, 'NAZAZZZ', [14, 1, 0, 1, 0, 0, 0]], 
+'6MS14': [14, 'NBXZZZZ', [14, 2, -2, 0, 0, 0, 0]], 
+}
         # Set data into speed_dict depending on length of time series
         # Required length of time series depends on Raleigh criteria to 
         # differentiate beteen constituents of simmilar speed.
@@ -191,148 +639,146 @@ class tappy:
         self.tidal_dict = {}
 
         self.tidal_dict["M2"] = {
-            'speed': 28.984104252*deg2rad, 
+            'ospeed': 28.984104252*deg2rad, 
             'VAU': 2*(T - s + h + zeta - nu),
-            'FF': np.cos(0.5*ii)**4 /0.91544  # eq 78
+            'FF': node_factor_78(ii)
         }
         self.tidal_dict["K1"] = {
-            'speed': 15.041068632*deg2rad,
+            'ospeed': 15.041068632*deg2rad,
             'VAU': T + h - 90*deg2rad - nupp,
-            'FF': (0.8965*(np.sin(2.*ii)**2) + 
-                   0.6001*np.sin(2.*ii)*np.cos(nu) + 
-                   0.1006)**0.5  # eq 227
+            'FF': node_factor_227(ii, nu)
         }
         self.tidal_dict["M3"] = {
-            'speed': 43.476156360*deg2rad,
+            'ospeed': 43.476156360*deg2rad,
             'VAU': 3*(T - s + h + zeta - nu),
-            'FF': np.cos(0.5*ii)**6 /0.8758  # eq 149
+            'FF': node_factor_149(ii)
         }
         self.tidal_dict["M4"] = {
-            'speed': 57.968208468*deg2rad,
+            'ospeed': 57.968208468*deg2rad,
             'VAU': 2.*self.tidal_dict['M2']['VAU'],
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["M6"] = {
-            'speed': 86.952312720*deg2rad,
+            'ospeed': 86.952312720*deg2rad,
             'VAU': 3.*self.tidal_dict['M2']['VAU'],
             # From Parker, et. al node factor for M6 is square of M2
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["M8"] = {
-            'speed': 115.936416972*deg2rad,
+            'ospeed': 115.936416972*deg2rad,
             'VAU': 4.*self.tidal_dict['M2']['VAU'],
             'FF': self.tidal_dict['M2']['FF']**4
         }
         self.tidal_dict["S6"] = {
-            'speed': 90.0*deg2rad,
+            'ospeed': 90.0*deg2rad,
             'VAU': 6*T,
             'FF': np.ones(length)
         }
         self.tidal_dict["O1"] = {
-            'speed': 13.943035584*deg2rad,
+            'ospeed': 13.943035584*deg2rad,
             'VAU': T - 2*s + h + 90*deg2rad + 2*zeta - nu,
-            'FF': np.sin(ii)*np.cos(0.5*ii)**2 /0.37988
+            'FF': node_factor_75(ii)
         }
         self.tidal_dict["S2"] = {
-            'speed': 30.0000000*deg2rad,
+            'ospeed': 30.0000000*deg2rad,
             'VAU': 2*T,
             'FF': np.ones(length)
         }
         self.tidal_dict["2MS6"] = {
-            'speed': 87.968208492*deg2rad, #?
+            'ospeed': 87.968208492*deg2rad, #?
             'VAU': (2.0*self.tidal_dict['M2']['VAU'] + 
                     self.tidal_dict['S2']['VAU']),
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["2SM6"] = {
-            'speed': 88.984104228*deg2rad, #?
+            'ospeed': 88.984104228*deg2rad, #?
             'VAU': (2.0*self.tidal_dict['S2']['VAU'] + 
                     self.tidal_dict['M2']['VAU']),
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["MSf"] = {
-            'speed': 1.0158957720*deg2rad,
+            'ospeed': 1.0158957720*deg2rad,
             'VAU': 2.0*(s - h),
-            'FF': ((2./3.) - np.sin(ii)**2)/0.5021
+            'FF': node_factor_75(ii)
         }
         self.tidal_dict["SK3"] = {
-            'speed': 45.041068656 * deg2rad,
+            'ospeed': 45.041068656 * deg2rad,
             'VAU': self.tidal_dict['S2']['VAU'] + self.tidal_dict['K1']['VAU'],
             'FF': self.tidal_dict['K1']['FF']
         }
         # Might need to move this to another time span - couldn't find this
         # in Foreman for Rayleigh comparison pair.
         self.tidal_dict["2SM2"] = {
-            'speed': 31.01589576*deg2rad,   
+            'ospeed': 31.01589576*deg2rad,   
             'VAU': (2.0*self.tidal_dict['S2']['VAU'] - 
                     self.tidal_dict['M2']['VAU']),
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["MS4"] = {
-            'speed': 58.984104240*deg2rad,
+            'ospeed': 58.984104240*deg2rad,
             'VAU': (self.tidal_dict['M2']['VAU'] + 
                     self.tidal_dict['S2']['VAU']),
-            'FF': self.tidal_dict['M2']['FF']
+            'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["S4"] = {
-            'speed': 60.0*deg2rad,
+            'ospeed': 60.0*deg2rad,
             'VAU': 4*T,
             'FF': np.ones(length)
         }
         self.tidal_dict["OO1"] = {
-            'speed': 16.139101680*deg2rad,
+            'ospeed': 16.139101680*deg2rad,
             'VAU': T + 2*s + h - 90*deg2rad - 2*zeta - nu,
-            'FF': (np.sin(ii)*np.sin(0.5*ii)**2)/0.0164
+            'FF': node_factor_77(ii)
         }
         self.tidal_dict["MK3"] = {
-            'speed': 44.025172884*deg2rad,
+            'ospeed': 44.025172884*deg2rad,
             'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K1']['VAU'],
             'FF': self.tidal_dict['M2']['FF']*self.tidal_dict['K1']['FF']
         }
         # Seems like 2MK3 in Schureman is equivalent to MO3 in Foreman
         self.tidal_dict["MO3"] = {
-            'speed': 42.927139836*deg2rad,
+            'ospeed': 42.927139836*deg2rad,
             'VAU': (2*self.tidal_dict['M2']['VAU'] - 
                     self.tidal_dict['K1']['VAU']),
             'FF': self.tidal_dict['M2']['FF']**2*self.tidal_dict['K1']['FF']
         }
         self.tidal_dict["N2"] =  {
-            'speed': 28.439729568*deg2rad,
+            'ospeed': 28.439729568*deg2rad,
             'VAU': 2*T - 3*s + 2*h + p + 2*zeta - 2*nu,
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["2MN6"] = {
-            'speed': 86.407938036*deg2rad,
+            'ospeed': 86.407938036*deg2rad,
             'VAU': (2*self.tidal_dict['M2']['VAU'] + 
                     self.tidal_dict['N2']['VAU']),
-            'FF': self.tidal_dict['M2']['FF']**2
+            'FF': self.tidal_dict['M2']['FF']**3
         }
         self.tidal_dict["2Q1"] = {
-            'speed': 12.854286252*deg2rad,
+            'ospeed': 12.854286252*deg2rad,
             'VAU': T - 4*s + h + 2*p + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["Q1"] =  {
-            'speed': 13.3986609*deg2rad,
+            'ospeed': 13.3986609*deg2rad,
             'VAU': T - 3*s + h + p + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["J1"] =  {
-            'speed': 15.5854433*deg2rad,
+            'ospeed': 15.5854433*deg2rad,
             'VAU': T + s + h - p - 90*deg2rad - nu,
-            'FF': np.sin(2.0*ii)/0.7214
+            'FF': node_factor_76(ii)
         }
-        # Seems like KJ2 in Schureman is equivalent to ETA2 in Foreman
-        self.tidal_dict["ETA2"] = {
-            'speed': 30.626511948*deg2rad,
+        # Seems like KJ2 in Schureman is equivalent to eta2 in Foreman
+        self.tidal_dict["eta2"] = {
+            'ospeed': 30.626511948*deg2rad,
             'VAU': 2*T + s + 2*h - p - 2*nu,
-            'FF': np.sin(ii)**2/0.1565
+            'FF': node_factor_79(ii)
         }
-        # Seems like KQ1 in Schureman is equivalent to UPS1 in Foreman
-        self.tidal_dict["UPS1"] = {
-            'speed': 16.683476328*deg2rad,
+        # Seems like KQ1 in Schureman is equivalent to ups1 in Foreman
+        self.tidal_dict["ups1"] = {
+            'ospeed': 16.683476328*deg2rad,
             'VAU': T + 3*s + h - p - 90*deg2rad - 2*zeta - nu,
-            'FF': np.sin(ii)**2/0.1565
+            'FF': node_factor_77(ii)
         }
         #
         # The M1/NO1 curse.
@@ -344,10 +790,10 @@ class tappy:
         # (M1)      NA           14.4920521         NA
         # 
         # Foreman mentions that M1 is a satellite of NO1 but does not have a
-        # speed for M1.
+        # ospeed for M1.
 
-        # By comparing the speeds from the different sources, I now think that
-        # the component of M1 in Schureman is actually NO1 (speed=14.496693984)
+        # By comparing the ospeeds from the different sources, I now think that
+        # the component of M1 in Schureman is actually NO1 (ospeed=14.496693984)
         # and M1 in TASK is equal to (M1) in Schureman.
 
         # Flater writes:
@@ -360,10 +806,10 @@ class tappy:
 
         # More confusion: Flater in libcongen uses M1.
 
-        # If M1 is 1/2 the speed of M2 that would mean TASK's M1 speed is
+        # If M1 is 1/2 the ospeed of M2 that would mean TASK's M1 ospeed is
         # correct.  How do I get V, u, and f?  Let's use A71 from Schureman.
         # Why?  Because A71 is listed as a major component of M1, and the
-        # speeds match (1/2 of M2 speed)
+        # ospeeds match (1/2 of M2 ospeed)
 
         # TAPPY
         # Constituent     Speed        V, u, and f
@@ -371,13 +817,12 @@ class tappy:
         # NO1           14.496693984  From Schureman M1
 
         self.tidal_dict["M1"] =  {
-            'speed': 14.4920521*deg2rad,
+            'ospeed': 14.4920521*deg2rad,
             'VAU': T - s + h + zeta + nu, # term A71 in Schureman
-            'FF': (1.0 - 10.0*np.sin(0.5*ii)**2 + 
-                   15.0*np.sin(0.5*ii)**4)*np.cos(0.5*ii)**2/0.5873
+            'FF': node_factor_144(ii)
         }
         self.tidal_dict["NO1"] = {
-            'speed': 14.496693984*deg2rad,
+            'ospeed': 14.496693984*deg2rad,
             'VAU': T - s + h - 90*deg2rad + zeta - nu + Q,
             # 2.307**0.5 factor was missed in Darwin's analysis and the wrong
             # factor was used for M1 for many years.  Indicates the importance
@@ -387,172 +832,170 @@ class tappy:
                    (2.31+1.435*np.cos(2.0*kap_p))**0.5/2.307**0.5)
         }
         self.tidal_dict["MN4"] = {
-            'speed': 57.423833820*deg2rad,   # From TASK
+            'ospeed': 57.423833820*deg2rad,   # From TASK
             'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['N2']['VAU'],
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["Mm"] =  {
-            'speed': 0.5443747*deg2rad,
+            'ospeed': 0.5443747*deg2rad,
             'VAU': s - p,
-            'FF': ((2./3.) - np.sin(ii)**2)/0.5021
+            'FF': node_factor_73(ii)
         }
         self.tidal_dict["L2"] =  {
-            'speed': 29.5284789*deg2rad,
+            'ospeed': 29.5284789*deg2rad,
             'VAU': 2*T - s + 2*h - p + 180*deg2rad + 2*zeta - 2*nu - R,
             'FF': (self.tidal_dict['M2']['FF'] /
                    (1.0/(1.0 - 12.0*np.tan(0.5*ii)**2 * np.cos(2.0*kap_p) + 
                     36.0*np.tan(0.5*ii)**4)**0.5)) # eq 215, schureman
         }
-        self.tidal_dict["MU2"] = {
-            'speed': 27.9682084*deg2rad,
+        self.tidal_dict["mu2"] = {
+            'ospeed': 27.9682084*deg2rad,
             'VAU': 2*T - 4*s + 4*h + 2*zeta - 2*nu,
             'FF': self.tidal_dict['M2']['FF']
         }
 #        self.tidal_dict["ALPHA1"] = 
-        self.tidal_dict["EPS2"] = {
-            'speed': 27.423833796*deg2rad,
+        self.tidal_dict["eps2"] = {
+            'ospeed': 27.423833796*deg2rad,
             'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*nu, # verify
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["SN4"] = {
-            'speed': 58.4397295560*deg2rad,
+            'ospeed': 58.4397295560*deg2rad,
             'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*nu,
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["Ssa"] = {
-            'speed': 0.0821373*deg2rad,
+            'ospeed': 0.0821373*deg2rad,
             'VAU': 2.0*h,
             'FF': np.ones(length)
         }
         self.tidal_dict["Mf"] =  {
-            'speed': 1.0980331*deg2rad,
+            'ospeed': 1.0980331*deg2rad,
             'VAU': 2.0*(s - zeta),
-            'FF': np.sin(ii)**2 /0.1578
+            'FF': node_factor_74(ii)
         }
         self.tidal_dict["P1"] = {
-            'speed': 14.9589314*deg2rad,
+            'ospeed': 14.9589314*deg2rad,
             'VAU': T - h + 90*deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["K2"] = {
-            'speed': 30.0821373*deg2rad,
+            'ospeed': 30.0821373*deg2rad,
             'VAU': 2*(T + h - two_nupp),
-            'FF': (19.0444*(np.sin(ii)**4) + 
-                   2.7702*(np.sin(ii)**2) * np.cos(2.*nu) + 
-                   0.0981)**0.5  # eq 235 schureman
+            'FF': node_factor_235(ii)
         }
         self.tidal_dict["SO3"] = {
-            'speed': 43.9430356*deg2rad,
+            'ospeed': 43.9430356*deg2rad,
             'VAU': 3*T - 2*s + h + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict["O1"]["FF"]
         }
         self.tidal_dict["PHI1"] = {
-            'speed': 15.1232059*deg2rad,
+            'ospeed': 15.1232059*deg2rad,
             'VAU': T + 3*h - 90*deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["SO1"] = {
-            'speed': 16.0569644*deg2rad,
+            'ospeed': 16.0569644*deg2rad,
             'VAU': T + 2*s - h - 90*deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         # Seems like A54 in Schureman is equivalent to MKS2 in Foreman
         self.tidal_dict["MKS2"] = {
-            'speed': 29.066241528*deg2rad,
+            'ospeed': 29.066241528*deg2rad,
             'VAU': 2*T - 2*s + 4*h - 2*nu,
-            'FF': self.tidal_dict['ETA2']['FF']
+            'FF': self.tidal_dict['eta2']['FF']
         }
         # Seems like MP1 in Schureman is equivalent to TAU1 in Foreman
         self.tidal_dict["TAU1"] = {
-            'speed': 14.025172896*deg2rad,
+            'ospeed': 14.025172896*deg2rad,
             'VAU': T - 2*s + 3*h - 90*deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         # Seems like A19 in Schureman is equivalent to BET1 in Foreman
         self.tidal_dict["BETA1"] = {
-            'speed': 14.414556708*deg2rad,
+            'ospeed': 14.414556708*deg2rad,
             'VAU': T - s - h + p - 90*deg2rad - 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["MK4"] = {
-            'speed': 59.066241516*deg2rad,
+            'ospeed': 59.066241516*deg2rad,
             'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K2']['VAU'],
             'FF': self.tidal_dict['M2']['FF'] * self.tidal_dict['K2']['FF']
         }
         self.tidal_dict["MSN2"] = {
-            'speed': 30.544374672*deg2rad,
+            'ospeed': 30.544374672*deg2rad,
             'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K2']['VAU'],
             'FF': self.tidal_dict['M2']['FF'] * self.tidal_dict['K2']['FF']
         }
         self.tidal_dict["2N2"] = {
-            'speed': 27.8953548*deg2rad,
+            'ospeed': 27.8953548*deg2rad,
             'VAU': 2*(T - 2*s + h + p + zeta - nu),
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["NU2"] = {
-            'speed': 28.5125831*deg2rad,
+            'ospeed': 28.5125831*deg2rad,
             'VAU': 2*T - 3*s + 4*h - p + 2*zeta - 2*nu,
             'FF': self.tidal_dict['M2']['FF']
         }
         # Seems like A4 in Schureman is equivalent to MSM in Foreman
         self.tidal_dict["A4"] = {
-            'speed': 0.4715210880*deg2rad,
+            'ospeed': 0.4715210880*deg2rad,
             'VAU': s - 2*h + p,
             'FF': self.tidal_dict['Mm']['FF']
         }
         self.tidal_dict["SIGMA1"] = {
-            'speed': 12.9271398*deg2rad,
+            'ospeed': 12.9271398*deg2rad,
             'VAU': T - 4*s + 3*h + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["RHO1"] = {
-            'speed': 13.4715145*deg2rad,
+            'ospeed': 13.4715145*deg2rad,
             'VAU': T - 3*s + 3*h - p + 90*deg2rad + 2*zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["CHI1"] = {
-            'speed': 14.5695476*deg2rad,
+            'ospeed': 14.5695476*deg2rad,
             'VAU': T - s + 3*h - p - 90*deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         self.tidal_dict["THETA1"] = {
-            'speed': 15.5125897*deg2rad,
+            'ospeed': 15.5125897*deg2rad,
             'VAU': T + s - h + p - 90*deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
 #        self.tidal_dict["OQ2"] =
         self.tidal_dict["LAMBDA2"] = {
-            'speed': 29.4556253*deg2rad,
+            'ospeed': 29.4556253*deg2rad,
             'VAU': 2*T - s + p + 180*deg2rad,
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["Sa"] = {
-            'speed': 0.0410686*deg2rad,
+            'ospeed': 0.0410686*deg2rad,
             'VAU': h,
             'FF': np.ones(length)
         }
         self.tidal_dict["S1"] = {
-            'speed': 15.0000000*deg2rad,
+            'ospeed': 15.0000000*deg2rad,
             'VAU': T,
             'FF': np.ones(length)
         }
         self.tidal_dict["T2"] = {
-            'speed': 29.9589333*deg2rad,
+            'ospeed': 29.9589333*deg2rad,
             'VAU': 2*T - h + p1,
             'FF': np.ones(length)
         }
         self.tidal_dict["R2"] = {
-            'speed': 30.0410667*deg2rad,
+            'ospeed': 30.0410667*deg2rad,
             'VAU': 2*T + h - p1 + 180*deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["PI1"] = {
-            'speed': 14.9178647*deg2rad,
+            'ospeed': 14.9178647*deg2rad,
             'VAU': T - 2*h + p1 + 90*deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["PSI1"] = {
-            'speed': 15.0821352*deg2rad,
+            'ospeed': 15.0821352*deg2rad,
             'VAU': T + 2*h - p1 - 90*deg2rad,
             'FF': np.ones(length)
         }
@@ -619,8 +1062,8 @@ class tappy:
             speed_dict["MO3"] = self.tidal_dict["MO3"]
         if num_hours >= 662 * rayleigh_comp:
             # Slower than diurnal: 
-            # Diurnal: 2Q1, Q1, NO1, J1, UPS1
-            # Semidiurnal: N2, ETA2
+            # Diurnal: 2Q1, Q1, NO1, J1, ups1
+            # Semidiurnal: N2, eta2
             # Shallow water: MN4, 2MN6
             # Need: 
             speed_dict["N2"] =  self.tidal_dict["N2"]
@@ -628,23 +1071,23 @@ class tappy:
             speed_dict["2Q1"] = self.tidal_dict["2Q1"]
             speed_dict["Q1"] =  self.tidal_dict["Q1"]
             speed_dict["J1"] =  self.tidal_dict["J1"]
-            # Seems like KJ2 in Schureman is equivalent to ETA2 in Foreman
-            speed_dict["ETA2"] = self.tidal_dict["ETA2"]
-            # Seems like KQ1 in Schureman is equivalent to UPS1 in Foreman
-            speed_dict["UPS1"] = self.tidal_dict["UPS1"]
+            # Seems like KJ2 in Schureman is equivalent to eta2 in Foreman
+            speed_dict["eta2"] = self.tidal_dict["eta2"]
+            # Seems like KQ1 in Schureman is equivalent to ups1 in Foreman
+            speed_dict["ups1"] = self.tidal_dict["ups1"]
             speed_dict["NO1"] =  self.tidal_dict["NO1"]
             speed_dict["MN4"] = self.tidal_dict["MN4"]
         if num_hours >= 764 * rayleigh_comp:
             # Slower than diurnal: Mm
             # Diurnal: ALPHA1
-            # Semidiurnal: EPS2, MU2, L2
+            # Semidiurnal: eps2, mu2, L2
             # Shallow water: SN4
             # Need: ALPHA1
             speed_dict["Mm"] =  self.tidal_dict["Mm"]
             speed_dict["L2"] =  self.tidal_dict["L2"]
-            speed_dict["MU2"] = self.tidal_dict["MU2"]
+            speed_dict["mu2"] = self.tidal_dict["mu2"]
 #            speed_dict["ALPHA1"] = self.tidal_dict["ALPHA1"]
-            speed_dict["EPS2"] = self.tidal_dict["EPS2"]
+            speed_dict["eps2"] = self.tidal_dict["eps2"]
             speed_dict["SN4"] = self.tidal_dict["SN4"]
         if num_hours >= 4383 * rayleigh_comp:
             # Slower than diurnal: Ssa, Mf
@@ -699,8 +1142,17 @@ class tappy:
         key_list = speed_dict.keys()
         key_list.sort()
 
-        # Change VAU to degree and between 0 and 360
+        w = [2*np.pi + h - s, s, h, p, Nv[0], p1[0], 0]
+        w = [360 + 360/(365.24219264) - 360/( 27.321582), 360/( 27.321582), 360/(365.24219264), 360/(365.25* 8.85), -360/(365.25*18.61), 360/(365.25*20942), 0]
+        w = np.array(w)/24
+        print w
         for key in key_list:
+            # Calculate speeds
+            speed_dict[key]['speed'] = np.sum(np.array(master_speed_dict[key][-1])*w)
+            speed_dict[key]['speed'] = np.mod(speed_dict[key]['speed'], 360)
+            speed_dict[key]['speed'] = speed_dict[key]['speed']*deg2rad
+
+            # Change VAU to degree and between 0 and 360
             speed_dict[key]['VAU'] = speed_dict[key]['VAU']*rad2deg
             speed_dict[key]['VAU'] = np.mod(speed_dict[key]['VAU'], 360)
             try:
@@ -838,15 +1290,11 @@ class tappy:
 
             # This is to get FF to be all of the filled dates
             package = self.astronomic(dates_filled)
-            (self.ispeed_dict, key_list) = self.which_constituents(len(dates_filled), package)
+            (self.speed_dict, self.key_list) = self.which_constituents(len(dates_filled), package)
+            (self.zeta, self.nu, self.nupp, self.two_nupp, self.kap_p, self.ii, self.R, self.Q, self.T, self.jd, self.s, self.h, self.N, self.p, self.p1) = package
 
-            # Try not to do this twice.
-            try:
-                a = self.r
-            except AttributeError:
-                self.constituents()
-
-            total = self.sum_signals(self.key_list, dates_filled, self.ispeed_dict)
+            self.constituents()
+            total = self.sum_signals(self.key_list, dates_filled, self.speed_dict)
 
             residuals[where_good] = elev - total[where_good]
 
@@ -854,7 +1302,6 @@ class tappy:
             # np.piecewise gives the piece of the array to the function
             #  but I want to use the border values of the array zone
             zone_calculations(interpolate, residuals, residuals == -99999)
-
             return (dates_filled, residuals + total)
 
 
@@ -958,10 +1405,10 @@ class tappy:
                 self.inferred_key_list.append('LAMBDA2')
                 self.inferred_r['LAMBDA2'] = H['LAMBDA2'] = 0.007 * H['M2']
                 self.inferred_phase['LAMBDA2'] = phase['LAMBDA2'] = phase['S2'] - 0.536*(phase['S2'] - phase['M2']) 
-            if 'MU2' not in key_list:
-                self.inferred_key_list.append('MU2')
-                self.inferred_r['MU2'] = H['MU2'] = 0.024 * H['M2']
-                self.inferred_phase['MU2'] = phase['MU2'] = phase['S2'] - 2.0*(phase['S2'] - phase['M2']) 
+            if 'mu2' not in key_list:
+                self.inferred_key_list.append('mu2')
+                self.inferred_r['mu2'] = H['mu2'] = 0.024 * H['M2']
+                self.inferred_phase['mu2'] = phase['mu2'] = phase['S2'] - 2.0*(phase['S2'] - phase['M2']) 
             if 'NU2' not in key_list:
                 self.inferred_key_list.append('NU2')
                 self.inferred_r['NU2'] = H['NU2'] = 0.038 * H['M2']
@@ -978,16 +1425,13 @@ class tappy:
 
 
         sumterm = np.zeros((len(t)))
-        for i in key_list + self.inferred_key_list:
+        for i in key_list: # + self.inferred_key_list:
             sumterm = sumterm + H[i]*ff[i]['FF']*np.cos(self.tidal_dict[i]['speed']*t - phase[i])
 
         if self.options.linear_trend:
             self.err = ht - (p[-2]*t + p[-1] + sumterm)
-        else:    
+        else:
             self.err = ht - (p[-1] + sumterm)
-
-# What was this from?
-#        self.err[np.absolute(self.err) > (np.average(self.err) + 3.0*np.std(self.err))] = 0.0
 
         return self.err
 
@@ -1021,6 +1465,7 @@ class tappy:
             self.phase[key] = np.mod(self.phase[key] + self.speed_dict[key]['VAU'], 360)
         self.fitted_average = p0[-1]
         self.slope = p0[-2]
+        # Should probably return something rather than change self.*
 
 
     def sum_signals(self, skey_list, hours, speed_dict, amp = None, phase = None):
@@ -1130,7 +1575,6 @@ class tappy:
             dates_filled = dates_filled[ind]
             nelevation = np.array(new_elev)
             dates_filled, nelevation = self.missing('fill', dates_filled, nelevation)
-
         relevation = np.empty_like(nelevation)
 
         if nstype == 'transform':
@@ -1425,7 +1869,8 @@ class tappy:
         print   "#%12s %12s %12s %12s" % ("====", "=====", "=", "=====")
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
-            print " %12s %12.8f %12.4f %12.4f" % (i, 
+            print " %12s %12.8f %12.8f %12.4f %12.4f" % (i, 
+                                                self.speed_dict[i]['ospeed']*rad2deg,
                                                 self.speed_dict[i]['speed']*rad2deg, 
                                                 self.r[i], 
                                                 self.phase[i])
@@ -1516,10 +1961,13 @@ class tappy:
             t.dates.append(datetime.datetime(d, 1, 1, 0, 0) + (datetime.datetime(d+1, 1, 1, 0, 0) - datetime.datetime(d, 1, 1, 0, 0))/2)
             #t.dates.append(datetime.datetime(d, 7, 1, 0, 0))
         package = self.astronomic(t.dates)
+        (zeta, nu, nupp, two_nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
         (speed_dict, key_list) = t.which_constituents(len(dates), package)
         for k in ['J1', 'K1', 'K2', 'L2', 'M1', 'M2', 'M3', 'M6', 'M8', 'O1', 'OO1', 'MO3', 'MO3', 'Mf', 'Mm']:
             for i in [1900, 1930]:
                 print i, k, speed_dict[k]['FF'][i-1900]
+                if k == 'M2':
+                    print 'M2>>',-2.14*np.sin(Nv[0]*deg2rad)*rad2deg, speed_dict[k]['VAU']
         self.print_v_u_table()
 
 
@@ -1582,10 +2030,16 @@ def main(options, args):
                                                       package, 
                                                       rayleigh_comp = ray)
 
+    print len(x.dates)
+    print len(x.elevation)
     if x.options.zero_ts:
         x.elevation = x.elevation - x.filters(options.zero_ts, 
                                               x.dates, 
                                               x.elevation)
+        package = x.astronomic(x.dates)
+        (x.zeta, x.nu, x.nupp, x.two_nupp, x.kap_p, x.ii, x.R, x.Q, x.T, x.jd, x.s, x.h, x.N, x.p, x.p1) = package
+    print len(x.dates)
+    print len(x.elevation)
 
     x.constituents()
 
