@@ -206,7 +206,34 @@ class ELP2000:
     def mean_longitude_ascending_node(self, jd):
         """Return mean longitude of ascending node
 
+        Another equation from:
+            *  This routine is part of the International Astronomical Union's
+            *  SOFA (Standards of Fundamental Astronomy) software collection.
+            *  Fundamental (Delaunay) arguments from Simon et al. (1994)
+        *  Arcseconds to radians
+           DOUBLE PRECISION DAS2R
+           PARAMETER ( DAS2R = 4.848136811095359935899141D-6 )
+
+        *  Milliarcseconds to radians
+           DOUBLE PRECISION DMAS2R
+           PARAMETER ( DMAS2R = DAS2R / 1D3 )
+
+        *  Arc seconds in a full circle
+           DOUBLE PRECISION TURNAS
+           PARAMETER ( TURNAS = 1296000D0 )
+
+        *  Mean longitude of the ascending node of the Moon.
+           OM  = MOD ( 450160.398036D0  -6962890.5431D0*T, TURNAS ) * DAS2R
+
+        Current implemention in astronomia is from:
+            PJ Naughter (Web: www.naughter.com, Email: pjna@naughter.com)
+
+            Look in nutation.py for calculation of omega
+            _ko  = (d_to_r(125.04452), d_to_r( -1934.136261), d_to_r( 0.0020708), d_to_r( 1.0/450000))
+            Though the last term was left off...
+            Will have to incorporate better...
         """
+
         T = jd_to_jcent(jd)
         X = polynomial(
             (d_to_r(125.0445479), 
