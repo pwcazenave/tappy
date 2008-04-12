@@ -53,7 +53,14 @@ class Sun:
                 
         """
         T = jd_to_jcent(jd)
-        X = polynomial((d_to_r(100.466457), d_to_r(36000.7698278), d_to_r(0.00030322), d_to_r(0.000000020)), T)
+
+        # From astrolabe
+        #X = polynomial((d_to_r(100.466457), d_to_r(36000.7698278), d_to_r(0.00030322), d_to_r(0.000000020)), T)
+
+        # From AA, Naughter
+        # Takes T/10.0
+        X = polynomial((d_to_r(100.4664567), d_to_r(360007.6982779), d_to_r(0.03032028), d_to_r(1.0/49931), d_to_r(-1.0/15300), d_to_r(-1.0/2000000)), T/10.0)
+
         X = modpi2(X + pi)
         return X
 
