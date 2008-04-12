@@ -382,12 +382,9 @@ def polynomial(terms, x):
     
     """
 
-    i = len(terms) - 1
-    result = terms[i]
-    i -= 1
-    while i >= 0:
-        result = result * x + terms[i]
-        i -= 1
+    result = 0.0
+    for index, i in enumerate(terms):
+        result = result + i*x**index
     return result
     
 #
