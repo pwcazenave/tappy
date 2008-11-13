@@ -14,18 +14,18 @@ import numpy as np
 #===globals======================
 modname = "pad"
 __version__ = "0.2"
-__revision__ = "0"
+__revision__ = "1"
 
 #---other---
 __all__ = [
-           'minimum',
-           'maximum',
-           'mean',
-           'median',
-           'linear_ramp',
-           'reflect',
-           'constant',
-           'wrap',
+           'with_minimum',
+           'with_maximum',
+           'with_mean',
+           'with_median',
+           'with_linear_ramp',
+           'with_reflect',
+           'with_constant',
+           'with_wrap',
            ]
 
 
@@ -37,12 +37,17 @@ class PadWidthWrongNumberOfValues(Exception):
     '''
     Error class for the wrong number of parameters to define the pad width.
     '''
-    def __init__(self, rk, pw):
-        self.rk = rk
-        self.pw = pw
+    def __init__(self, rnk, pdw):
+        self.rnk = rnk
+        self.pdw = pdw
 
     def __str__(self):
-        return "\n\nFor pad_width should get a list/tuple with length \nequal to rank (%i) of lists/tuples with length of 2.  \nInstead have %s" % (self.rk, self.pw)
+        return """
+
+            For pad_width should get a list/tuple with length 
+            equal to rank (%i) of lists/tuples with length of 2.
+            Instead have %s
+            """ % (self.rnk, self.pdw)
 
 
 class NegativePadWidth(Exception):
@@ -65,8 +70,8 @@ class NegativePadWidth(Exception):
 
 def __create_vector(vector, pad_tuple, before_val, after_val):
     '''
-    Private function which creates the padded vector to mean, maximum,
-    minimum, and median.
+    Private function which creates the padded vector to with_mean, with_maximum,
+    with_minimum, and with_median.
     '''
     vector[:pad_tuple[0]] = before_val
     if pad_tuple[1] > 0:
@@ -257,95 +262,107 @@ def __wrap(vector, pad_tuple, iaxis, bvec, avec, kw):
 # Public functions
 
 
-def maximum(matrix, pad_width=(1, ), stat_len=None):
-    """Pads with the maximum value of all or part of the vector along each
+def with_maximum(matrix, pad_width=(1, ), stat_len=None):
+    """
+    Pads with the maximum value of all or part of the vector along each 
     axis.
 
     Parameters
     ----------
-    matrix : array_like
-    pad_width : tuple
-        how many values padded to each end of the vector for each axis
-           ((before, after),) * np.rank(matrix)
-           (pad,) is a shortcut for before = after = pad for all axes
-    stat_len : tuple
-        how many values at each end of vector to calculate the statistic
-          ((before_len, after_len),) * np.rank(matrix)
-          (len,) is a shortcut for before = after = len for all dimensions
+    matrix : array_like of rank N
+        Input array
+    pad_width : {tuple of N tuples(before, after), tuple(pad,)}, optional
+        How many values padded to each end of the vector for each axis.
+        ((before, after),) * np.rank(`matrix`)
+        (pad,) is a shortcut for before = after = pad for all axes
+        Default is (1, ).
+    stat_len : {tuple of N tuples(before, after), tuple(len,)}, optional
+        How many values at each end of vector to determine the statistic.
+        ((before_len, after_len),) * np.rank(`matrix`)
+        (len,) is a shortcut for before = after = len for all dimensions
+        ``None`` uses the entire vector.
+        Default is ``None``.
 
     Returns
     -------
-    array
+    out : ndarray of rank N
+        Padded array.
 
     See Also
     --------
-    pad.minimum
-    pad.median
-    pad.mean
-    pad.constant
-    pad.linear_ramp
-    pad.reflect
-    pad.wrap
+    pad.with_minimum
+    pad.with_median
+    pad.with_mean
+    pad.with_constant
+    pad.with_linear_ramp
+    pad.with_reflect
+    pad.with_wrap
 
     Examples
     --------
     >>> import pad
     >>> a = [1, 2, 3, 4, 5]
-    >>> pad.maximum(a, (2,))
+    >>> pad.with_maximum(a, (2,))
     array([5, 5, 1, 2, 3, 4, 5, 5, 5])
 
-    >>> pad.maximum(a, (1, 7))
+    >>> pad.with_maximum(a, (1, 7))
     array([5, 1, 2, 3, 4, 5, 5, 5, 5, 5, 5, 5, 5])
 
-    >>> pad.maximum(a, (0, 7))
+    >>> pad.with_maximum(a, (0, 7))
     array([1, 2, 3, 4, 5, 5, 5, 5, 5, 5, 5, 5])
 
     """
     return __loop_across(matrix, pad_width, __maximum, stat_len=stat_len)
 
 
-def minimum(matrix, pad_width=(1, ), stat_len=None):
-    """Pads with the minimum value of all or part of the vector along each
+def with_minimum(matrix, pad_width=(1, ), stat_len=None):
+    """
+    Pads with the minimum value of all or part of the vector along each
     axis.
 
     Parameters
     ----------
-    matrix : array_like
-    pad_width : tuple
-        how many values padded to each end of the vector for each axis
-           ((before, after),) * np.rank(matrix)
-           (pad,) is a shortcut for before = after = pad for all axes
-    stat_len : tuple
-        how many values at each end of vector to calculate the statistic
-          ((before_len, after_len),) * np.rank(matrix)
-          (len,) is a shortcut for before = after = len for all dimensions
+    matrix : array_like of rank N
+        Input array
+    pad_width : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values padded to each end of the vector for each axis.
+        ((before, after),) * np.rank(`matrix`)
+        (pad,) is a shortcut for before = after = pad for all axes
+        Default is (1, ).
+    stat_len : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values at each end of vector to determine the statistic.
+        ((before_len, after_len),) * np.rank(`matrix`)
+        (len,) is a shortcut for before = after = len for all dimensions
+        ``None`` uses the entire vector.
+        Default is ``None``.
 
     Returns
     -------
-    array
+    out : ndarray of rank N
+        Padded array.
 
     See Also
     --------
-    pad.maximum
-    pad.median
-    pad.mean
-    pad.constant
-    pad.linear_ramp
-    pad.reflect
-    pad.wrap
+    pad.with_maximum
+    pad.with_median
+    pad.with_mean
+    pad.with_constant
+    pad.with_linear_ramp
+    pad.with_reflect
+    pad.with_wrap
 
     Examples
     --------
     >>> import pad
     >>> a = [1, 2, 3, 4, 5, 6]
-    >>> pad.minimum(a, (2,))
+    >>> pad.with_minimum(a, (2,))
     array([1, 1, 1, 2, 3, 4, 5, 6, 1, 1])
 
-    >>> pad.minimum(a, (4, 2))
+    >>> pad.with_minimum(a, (4, 2))
     array([1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 1, 1])
 
     >>> a = [[1,2], [3,4]]
-    >>> pad.minimum(a, ((3, 2), (2, 3)))
+    >>> pad.with_minimum(a, ((3, 2), (2, 3)))
     array([[1, 1, 1, 2, 1, 1, 1],
            [1, 1, 1, 2, 1, 1, 1],
            [1, 1, 1, 2, 1, 1, 1],
@@ -358,124 +375,142 @@ def minimum(matrix, pad_width=(1, ), stat_len=None):
     return __loop_across(matrix, pad_width, __minimum, stat_len=stat_len)
 
 
-def median(matrix, pad_width=(1, ), stat_len=None):
-    """Pads with the median value of all or part of the vector along each axis.
+def with_median(matrix, pad_width=(1, ), stat_len=None):
+    """
+    Pads with the median value of all or part of the vector along each axis.
 
     Parameters
     ----------
-    matrix : array_like
-    pad_width : tuple
-        how many values padded to each end of the vector for each axis
-           ((before, after),) * np.rank(matrix)
-           (pad,) is a shortcut for before = after = pad for all axes
-    stat_len : tuple
-        how many values at each end of vector to calculate the statistic
-          ((before_len, after_len),) * np.rank(matrix)
-          (len,) is a shortcut for before = after = len for all dimensions
+    matrix : array_like of rank N
+        Input array
+    pad_width : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values padded to each end of the vector for each axis.
+        ((before, after),) * np.rank(`matrix`)
+        (pad,) is a shortcut for before = after = pad for all axes
+        Default is (1, ).
+    stat_len : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values at each end of vector to determine the statistic.
+        ((before_len, after_len),) * np.rank(`matrix`)
+        (len,) is a shortcut for before = after = len for all dimensions
+        ``None`` uses the entire vector.
+        Default is ``None``.
 
     Returns
     -------
-    array
+    out : ndarray of rank N
+        Padded array.
 
     See Also
     --------
-    pad.maximum
-    pad.minimum
-    pad.mean
-    pad.constant
-    pad.linear_ramp
-    pad.reflect
-    pad.wrap
+    pad.with_maximum
+    pad.with_minimum
+    pad.with_mean
+    pad.with_constant
+    pad.with_linear_ramp
+    pad.with_reflect
+    pad.with_wrap
 
     Examples
     --------
     >>> import pad
     >>> a = [1, 2, 3, 4, 5]
-    >>> pad.median(a, (2,))
+    >>> pad.with_median(a, (2,))
     array([3, 3, 1, 2, 3, 4, 5, 3, 3])
 
-    >>> pad.median(a, (4, 0))
+    >>> pad.with_median(a, (4, 0))
     array([3, 3, 3, 3, 1, 2, 3, 4, 5])
 
     """
     return __loop_across(matrix, pad_width, __median, stat_len=stat_len)
 
 
-def mean(matrix, pad_width=(1, ), stat_len=None):
-    """Pads with the mean value of all or part of the vector along each axis.
+def with_mean(matrix, pad_width=(1, ), stat_len=None):
+    """
+    Pads with the mean value of all or part of the vector along each axis.
 
     Parameters
     ----------
-    matrix : array_like
-    pad_width : tuple
-        how many values padded to each end of the vector for each axis
-           ((before, after),) * np.rank(matrix)
-           (pad,) is a shortcut for before = after = pad for all axes
-    stat_len : tuple
-        how many values at each end of vector to calculate the statistic
-          ((before_len, after_len),) * np.rank(matrix)
-          (len,) is a shortcut for before = after = len for all dimensions
+    matrix : array_like of rank N
+        Input array
+    pad_width : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values padded to each end of the vector for each axis.
+        ((before, after),) * np.rank(`matrix`)
+        (pad,) is a shortcut for before = after = pad for all axes
+        Default is (1, ).
+    stat_len : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values at each end of vector to determine the statistic.
+        ((before_len, after_len),) * np.rank(`matrix`)
+        (len,) is a shortcut for before = after = len for all dimensions
+        ``None`` uses the entire vector.
+        Default is ``None``.
 
     Returns
     -------
-    array
+    out : ndarray of rank N
+        Padded array.
 
     See Also
     --------
-    pad.maximum
-    pad.minimum
-    pad.median
-    pad.constant
-    pad.linear_ramp
-    pad.reflect
-    pad.wrap
+    pad.with_maximum
+    pad.with_minimum
+    pad.with_median
+    pad.with_constant
+    pad.with_linear_ramp
+    pad.with_reflect
+    pad.with_wrap
 
     Examples
     --------
     >>> import pad
     >>> a = [1, 2, 3, 4, 5]
-    >>> pad.mean(a, (2,))
+    >>> pad.with_mean(a, (2,))
     array([3, 3, 1, 2, 3, 4, 5, 3, 3])
 
     """
     return __loop_across(matrix, pad_width, __mean, stat_len=stat_len)
 
 
-def constant(matrix, pad_width=(1, ), constant_values=(0, )):
-    """Pads with a constant value.
+def with_constant(matrix, pad_width=(1, ), constant_values=(0, )):
+    """
+    Pads with a constant value.
 
     Parameters
     ----------
-    matrix : array_like
-    pad_width : tuple
-        how many values padded to each end of the vector for each axis
-           ((before, after),) * np.rank(matrix)
-           (pad,) is a shortcut for before = after = pad for all axes
-    constant: tuple
-        the value to set the padded values to
-          ((before_constant, after_constant),) * np.rank(matrix)
-          (constant,) is a shortcut for before = after = constant for all
-          dimensions
+    matrix : array_like of rank N
+        Input array
+    pad_width : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values padded to each end of the vector for each axis.
+        ((before, after),) * np.rank(`matrix`)
+        (pad,) is a shortcut for before = after = pad for all axes
+        Default is (1, ).
+    constant_values : {tuple of N tuples(before, after), tuple(both,)}, 
+                      optional
+        The values to set the padded values to.
+        ((before_len, after_len),) * np.rank(`matrix`)
+        (len,) is a shortcut for before = after = len for all dimensions
+        ``None`` uses the entire vector.
+        Default is ``None``.
 
     Returns
     -------
-    array
+    out : ndarray of rank N
+        Padded array.
 
     See Also
     --------
-    pad.maximum
-    pad.minimum
-    pad.median
-    pad.mean
-    pad.linear_ramp
-    pad.reflect
-    pad.wrap
+    pad.with_maximum
+    pad.with_minimum
+    pad.with_median
+    pad.with_mean
+    pad.with_linear_ramp
+    pad.with_reflect
+    pad.with_wrap
 
     Examples
     --------
     >>> import pad
     >>> a = [1, 2, 3, 4, 5]
-    >>> pad.constant(a, (2,3), (4,6))
+    >>> pad.with_constant(a, (2,3), (4,6))
     array([4, 4, 1, 2, 3, 4, 5, 6, 6, 6])
 
     """
@@ -486,41 +521,47 @@ def constant(matrix, pad_width=(1, ), constant_values=(0, )):
                          constant_values=constant_values)
 
 
-def linear_ramp(matrix, pad_width=(1, ), end_value=(0, )):
-    """Pads with the linear ramp between end_value and the begining/end of the
+def with_linear_ramp(matrix, pad_width=(1, ), end_value=(0, )):
+    """
+    Pads with the linear ramp between end_value and the begining/end of the
     vector along each axis.
 
     Parameters
     ----------
-    matrix : array_like
-    pad_width : tuple
-        how many values padded to each end of the vector for each axis
-           ((before, after),) * np.rank(matrix)
-           (pad,) is a shortcut for before = after = pad for all axes
-    end_value: tuple
-        value to ramp to
-          ((before_len, after_len),) * np.rank(matrix)
-          (len,) is a shortcut for before = after = len for all dimensions
+    matrix : array_like of rank N
+        Input array
+    pad_width : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values padded to each end of the vector for each axis.
+        ((before, after),) * np.rank(`matrix`)
+        (pad,) is a shortcut for before = after = pad for all axes
+        Default is (1, ).
+    end_value : {tuple of N tuples(before, after), tuple(both,)}, optional
+        What value should the padded values end with.
+        ((before_len, after_len),) * np.rank(`matrix`)
+        (len,) is a shortcut for before = after = len for all dimensions
+        ``None`` uses the entire vector.
+        Default is ``None``.
 
     Returns
     -------
-    array
+    out : ndarray of rank N
+        Padded array.
 
     See Also
     --------
-    pad.maximum
-    pad.minimum
-    pad.median
-    pad.mean
-    pad.constant
-    pad.reflect
-    pad.wrap
+    pad.with_maximum
+    pad.with_minimum
+    pad.with_median
+    pad.with_mean
+    pad.with_constant
+    pad.with_reflect
+    pad.with_wrap
 
     Examples
     --------
     >>> import pad
     >>> a = [1, 2, 3, 4, 5]
-    >>> pad.linear_ramp(a, (2,3), (5,-4))
+    >>> pad.with_linear_ramp(a, (2,3), (5,-4))
     array([ 5,  3,  1,  2,  3,  4,  5,  2, -1, -4])
 
     """
@@ -528,37 +569,41 @@ def linear_ramp(matrix, pad_width=(1, ), end_value=(0, )):
     return __loop_across(matrix, pad_width, __linear_ramp, end_value=end_value)
 
 
-def reflect(matrix, pad_width=(1, )):
-    """Pads with the reflection of the vector mirrored on the first and last
+def with_reflect(matrix, pad_width=(1, )):
+    """
+    Pads with the reflection of the vector mirrored on the first and last
     values of the vector along each axis.
 
     Parameters
     ----------
-    matrix : array_like
-    pad_width : tuple
-        how many values padded to each end of the vector for each axis
-           ((before, after),) * np.rank(matrix)
-           (pad,) is a shortcut for before = after = pad for all axes
+    matrix : array_like of rank N
+        Input array
+    pad_width : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values padded to each end of the vector for each axis.
+        ((before, after),) * np.rank(`matrix`)
+        (pad,) is a shortcut for before = after = pad for all axes
+        Default is (1, ).
 
     Returns
     -------
-    array
+    out : ndarray of rank N
+        Padded array.
 
     See Also
     --------
-    pad.maximum
-    pad.minimum
-    pad.median
-    pad.mean
-    pad.constant
-    pad.linear_ramp
-    pad.wrap
+    pad.with_maximum
+    pad.with_minimum
+    pad.with_median
+    pad.with_mean
+    pad.with_constant
+    pad.with_linear_ramp
+    pad.with_wrap
 
     Examples
     --------
     >>> import pad
     >>> a = [1, 2, 3, 4, 5]
-    >>> pad.reflect(a, (2,3))
+    >>> pad.with_reflect(a, (2,3))
     array([3, 2, 1, 2, 3, 4, 5, 4, 3, 2])
 
     """
@@ -566,38 +611,42 @@ def reflect(matrix, pad_width=(1, )):
     return __loop_across(matrix, pad_width, __reflect)
 
 
-def wrap(matrix, pad_width=(1, )):
-    """Pads with the wrap of the vector along the axis.  The first values are
+def with_wrap(matrix, pad_width=(1, )):
+    """
+    Pads with the wrap of the vector along the axis.  The first values are
     used to pad the end and the end values are used to pad the beginning.
 
     Parameters
     ----------
-    matrix : array_like
-    pad_width : tuple
-        how many values padded to each end of the vector for each axis
-           ((before, after),) * np.rank(matrix)
-           (pad,) is a shortcut for before = after = pad for all axes
+    matrix : array_like of rank N
+        Input array
+    pad_width : {tuple of N tuples(before, after), tuple(both,)}, optional
+        How many values padded to each end of the vector for each axis.
+        ((before, after),) * np.rank(`matrix`)
+        (pad,) is a shortcut for before = after = pad for all axes
+        Default is (1, ).
 
     Returns
     -------
-    array
+    out : ndarray of rank N
+        Padded array.
 
     See Also
     --------
-    pad.maximum
-    pad.minimum
-    pad.median
-    pad.mean
-    pad.constant
-    pad.linear_ramp
-    pad.reflect
-    pad.wrap
+    pad.with_maximum
+    pad.with_minimum
+    pad.with_median
+    pad.with_mean
+    pad.with_constant
+    pad.with_linear_ramp
+    pad.with_reflect
+    pad.with_wrap
 
     Examples
     --------
     >>> import pad
     >>> a = [1, 2, 3, 4, 5]
-    >>> pad.wrap(a, (2,3))
+    >>> pad.with_wrap(a, (2,3))
     array([4, 5, 1, 2, 3, 4, 5, 1, 2, 3])
 
     """
@@ -608,13 +657,14 @@ def wrap(matrix, pad_width=(1, )):
 
 
 if __name__ == '__main__':
-    ''' This section is just used for testing.  Really you should only import
-        this module.
+    ''' 
+    This section is just used for testing.  Really you should only import
+    this module.
     '''
     arr = np.arange(100)
     print arr
-    print median(arr, (3, ))
-    print constant(arr, (-25, 20), (10, 20))
+    print with_median(arr, (3, ))
+    print with_constant(arr, (-25, 20), (10, 20))
     arr = np.arange(30)
     arr = np.reshape(arr, (6, 5))
-    print mean(arr, pad_width=((2, 3), (3, 2), (4,5)), stat_len=(3, ))
+    print with_mean(arr, pad_width=((2, 3), (3, 2), (4, 5)), stat_len=(3, ))

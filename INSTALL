@@ -1,10 +1,10 @@
 
 # This is a standard distutils install, e.g.:
 
-cp tappy-0.8.0.tar.gz myworkdir
+cp tappy-0.8.1.tar.gz myworkdir
 cd myworkdir
-gzip -cd tappy-0.8.0.tar.gz | tar xvf -
-cd tappy-0.8.0
+gzip -cd tappy-0.8.1.tar.gz | tar xvf -
+cd tappy-0.8.1
 
 # At this point you can try TAPPY out without installing.
 cd example
