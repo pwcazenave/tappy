@@ -1,0 +1,17 @@
+
+# You need to specify the separator between the integer part and the decimal
+# part of real numbers, even if you only have integers in your data file.
+decimal_sep = "."
+
+# TAPPy needs the variables 'year', 'month', 'day', 'hour', 'minute', 'water_level'.
+# Any other variable name can be used as a placeholder.
+parse = [ 
+          positive_integer('year'),
+          positive_integer('month'),
+          positive_integer('day'),
+          positive_integer('hour'),
+          positive_integer('minute'),
+          positive_integer('unused01'),
+          real('water_level'),
+         ]
+
