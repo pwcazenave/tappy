@@ -192,6 +192,9 @@ class tappy:
                                                 line.parsed_dict['day'],
                                                 line.parsed_dict['hour'],
                                                 line.parsed_dict['minute']))
+        if len(self.elevation) == 0:
+            print 'No data was found in the input file.'
+            sys.exit()
         self.elevation = np.array(self.elevation)
         self.dates = np.array(self.dates)
 
