@@ -62,7 +62,7 @@ from parameter_database import _master_speed_dict, letter_to_factor_map
 
 #===globals======================
 modname = "tappy"
-__version__ = "0.8.1"
+__version__ = "0.8.2"
 
 #--option args--
 debug_p = 0
@@ -165,8 +165,7 @@ def node_factor_235(ii, nu):
 class tappy:
     def __init__(self, options = None):
         """ 
-        The initialization of the Tappy class reads in the date and
-        elevation data.
+        The initialization of the Tappy class.
         """
 
         ftn = "tappy.__init__"
@@ -178,7 +177,7 @@ class tappy:
 
 
     def open(self, filename, def_filename = None):
-        # Read in data file
+        # Read and parse data file
         fp = sparser.ParseFileLineByLine(filename, 
                                          def_filename = def_filename, 
                                          mode='r')
@@ -186,14 +185,15 @@ class tappy:
             if 'water_level' not in line.parsed_dict.keys():
                 print 'Warning: record %i did not parse according to the supplied definition file' % line.line_number
                 continue
-            if 'minute' not in line.parsed_dict.keys():
-                line.parsed_dict['minute'] = 0
             self.elevation.append(line.parsed_dict['water_level'])
+            line.parsed_dict.setdefault('minute', 0)
+            line.parsed_dict.setdefault('second', 0)
             self.dates.append(datetime.datetime(line.parsed_dict['year'],
                                                 line.parsed_dict['month'],
                                                 line.parsed_dict['day'],
                                                 line.parsed_dict['hour'],
-                                                line.parsed_dict['minute']))
+                                                line.parsed_dict['minute'],
+                                                line.parsed_dict['second']))
         if len(self.elevation) == 0:
             print 'No data was found in the input file.'
             sys.exit()
@@ -592,7 +592,13 @@ class tappy:
 
         # p is 3232.575 days
         # N is 6793.391 days
-        w = [360 + 360/365.24219264 - 360/27.321582, 360/27.321582, 360/365.24219264, 360/3232.575, -360/6793.391, 360/(365.25*20942), 0]
+        w = [360 + 360/365.24219264 - 360/27.321582, 
+             360/27.321582, 
+             360/365.24219264, 
+             360/3232.575, 
+             -360/6793.391, 
+             360/(365.25*20942), 
+             0 ]
         w = np.array(w)/24
       
         # Need to find out about the 6th item.  Right now a placeholder of 0
@@ -602,7 +608,8 @@ class tappy:
 
         for key in self.tidal_dict:
             # Calculate speeds
-            constituent_factors = [letter_to_factor_map[i] for i in _master_speed_dict[key]['edn']]
+            constituent_factors = [letter_to_factor_map[i] 
+                                   for i in _master_speed_dict[key]['edn']]
             self.tidal_dict[key]['speed'] = np.sum(np.array(constituent_factors)*w)
             self.tidal_dict[key]['speed'] = np.mod(self.tidal_dict[key]['speed'], 360)
             self.tidal_dict[key]['speed'] = self.tidal_dict[key]['speed']*deg2rad
@@ -761,22 +768,22 @@ class tappy:
 
 
     def dates2jd(self, dates):
-        """
-        Given a dates vector will return a vector of Julian days as required by
-        astronomia.  
+        """ 
+        Given a dates vector will return a vector of Julian days as required
+        by astronomia.  
         """
 
-        jd = np.zeros(len(dates), "d")
         if isinstance(dates[0], datetime.datetime):
-            for index, dt in enumerate(dates):
-                jd[index] = (cal.cal_to_jd(dt.year, dt.month, dt.day) + uti.hms_to_fday(dt.hour, dt.minute, dt.second))
+            jd = [cal.cal_to_jd(i.year, i.month, i.day) + 
+                  uti.hms_to_fday(i.hour, i.minute, i.second) for i in dates]
+            jd = np.array(jd)
         else:
             jd = dates
         return jd
 
 
     def astronomic(self, dates):
-        """
+        """ 
         Calculates all of the required astronomic parameters needed for the
         tidal analysis.  The node factor is returned as a vector equal in
         length to the dates vector whereas V + u is returned for the first date
@@ -796,7 +803,10 @@ class tappy:
         s = lunar_eph.mean_longitude(jd[0])
         h = solar_eph.mean_longitude(jd[0])
 
-        p1 = np.mod((1012395.0 + 6189.03*(jdc + 1) + 1.63*(jdc + 1)**2 + 0.012*(jdc + 1)**3)/3600.0, 360)*deg2rad
+        p1 = np.mod((1012395.0 + 
+                     6189.03*(jdc + 1) + 
+                     1.63*(jdc + 1)**2 + 
+                     0.012*(jdc + 1)**3)/3600.0, 360)*deg2rad
 
         # Calculate constants for V+u
         # I, inclination of Moon's orbit, pg 156, Schureman
@@ -882,7 +892,8 @@ class tappy:
             if np.all(where_good):
                 return (dates, elev)
 
-            # Had to make this 'f8' in order to match 'total' and 'self.elevation'
+            # Had to make this 'f8' in order to match 'total' and
+            # 'self.elevation'
             # Don't know why this was different.
             residuals = np.ones(len(dates_filled), dtype='f8') * -99999.0
 
@@ -1264,7 +1275,6 @@ class tappy:
             # really makes things painful because I have always wanted
             # TAPPY to be unit blind.  I will have to think about whether
             # to implement this or not.
-            pass
             return dates_filled, relevation
 
         if nstype == 'doodson':
@@ -1300,9 +1310,7 @@ class tappy:
             return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'usgs':
-            """ Filters out periods of 25 hours and less from self.elevation.
-    
-            """
+            # Filters out periods of 25 hours and less from self.elevation.
     
             kern = [  
                   -0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
@@ -1537,10 +1545,11 @@ class tappy:
             print " T = ", T*rad2deg
 
         t = tappy()
-        t.dates = []
-        for d in range(1900, 2050):
-            t.dates.append(datetime.datetime(d, 1, 1, 0, 0) + (datetime.datetime(d+1, 1, 1, 0, 0) - datetime.datetime(d, 1, 1, 0, 0))/2)
-            #t.dates.append(datetime.datetime(d, 7, 1, 0, 0))
+        t.dates = [datetime.datetime(i, 1, 1, 0, 0) + 
+                   (datetime.datetime(i+1, 1, 1, 0, 0) - 
+                    datetime.datetime(i, 1, 1, 0, 0))/2
+                  for i in range(1900, 2050)
+                  ]
         package = self.astronomic(t.dates)
         (zeta, nu, nup, nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
         (speed_dict, key_list) = t.which_constituents(len(dates), package)
@@ -1548,7 +1557,7 @@ class tappy:
             for i in [1900, 1930]:
                 print i, k, speed_dict[k]['FF'][i-1900]
                 if k == 'M2':
-                    print 'M2>>',-2.14*np.sin(Nv[0]*deg2rad)*rad2deg, speed_dict[k]['VAU']
+                    print 'M2>>', -2.14*np.sin(Nv[0]*deg2rad)*rad2deg, speed_dict[k]['VAU']
         self.print_v_u_table()
 
 
@@ -1626,7 +1635,6 @@ def main(options, args):
     if x.options.filter:
         for item in x.options.filter.split(','):
             if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs', 'doodson', 'lecolazet1', 'kalman', 'transform']:# 'lecolazet', 'godin', 'sfa']:
-                a =  x.filters(item, x.dates, x.elevation)
                 filtered_dates, result = x.filters(item, x.dates, x.elevation)
                 x.write_file('outts_filtered_%s.dat' % (item,), filtered_dates, result)
 

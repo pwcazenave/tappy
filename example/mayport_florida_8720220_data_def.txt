@@ -13,7 +13,7 @@ parse = [
           positive_integer('month'),
           positive_integer('year'),
           positive_integer('hour'),
-          positive_integer('minute'),
+          positive_integer('dummy'),
           real('water_level'),
          ]
 

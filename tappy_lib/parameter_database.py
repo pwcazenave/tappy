@@ -38,14 +38,15 @@ _master_speed_dict = {
        'f':1.0,
        'aka':[],
       }, 
-    # Why are there 2 Sa constituents in the Proudman database?
-    # Kept the one also used by Flater.
-#'Sa': {
-#       'edn':'ZZAZZYZ', 
-#       'u':0.0,
-#       'f':1.0,
-#       'aka':[],
-#      }, 
+# Why are there 2 Sa constituents in the Proudman database?
+# Very close speeds.
+'Sa_': {
+       'edn':'ZZAZZYZ', 
+       'u':0.0,
+       'f':1.0,
+       'aka':[],
+      }, 
+# This is the one also used by Flater.
 'Sa': {
        'edn':'ZZAZZZZ', 
        'u':0.0,
@@ -64,29 +65,35 @@ _master_speed_dict = {
        'f':1.0,
        'aka':[],
       }, 
-# duplicate
+# MSm is duplicate of
+#  'Mnum': 'ZAXAZZZ', 
   'MSm':  {
          'edn':'ZAXAZZZ', 
        'u':0.0,
        'f':1.0,
-       'aka':[],
+       'aka':['Mnum'],
       }, 
-#  'Mnum': 'ZAXAZZZ', 
 'Mm': {
        'edn':'ZAZYZZZ', 
        'u':0.0,
        'f':1.0,
        'aka':[],
       }, 
-# duplicate
+# MSf duplicate of
+#  'MSo': 'ZBXZZZZ', 
   'MSf': {
        'edn':'ZBXZZZZ', 
        'u':0.0,
        'f':1.0,
        'aka':[],
       }, 
-#  'MSo': 'ZBXZZZZ', 
-#  'SM':  'ZBXZZZZ', 
+# SM has same speeds as above but different nodal and u factors
+  'SM': {
+      'edn':'ZBXZZZZ', 
+       'u':0.0,
+       'f':1.0,
+       'aka':[],
+      }, 
 # duplicate
   'Mf':  {
          'edn':'ZBZZZZZ', 
