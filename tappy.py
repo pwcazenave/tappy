@@ -186,6 +186,8 @@ class tappy:
             if 'water_level' not in line.parsed_dict.keys():
                 print 'Warning: record %i did not parse according to the supplied definition file' % line.line_number
                 continue
+            if 'minute' not in line.parsed_dict.keys():
+                line.parsed_dict['minute'] = 0
             self.elevation.append(line.parsed_dict['water_level'])
             self.dates.append(datetime.datetime(line.parsed_dict['year'],
                                                 line.parsed_dict['month'],
