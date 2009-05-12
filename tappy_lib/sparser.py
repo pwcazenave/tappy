@@ -162,11 +162,11 @@ def real(name,
     if required_decimal:
         lword = Combine(sign +
                     Regex('[0-9]*\.[0-9]*') +
-                    Optional(oneOf("E e") + Word(nums)))
+                    Optional(oneOf("E e") + Optional(oneOf("- +")) + Word(nums)))
     else: 
         lword = Combine(sign +
                     Word(nums + decimal_sep) + 
-                    Optional(oneOf("E e") + Word(nums)))
+                    Optional(oneOf("E e") + Optional(oneOf("- +")) + Word(nums)))
     grammar.append(SkipTo(lword))
     grammar.append(lword
                    .setResultsName(name)
