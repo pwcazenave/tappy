@@ -1,0 +1,29 @@
+
+# You need to specify the separator between the integer part and the decimal
+# part of real numbers, even if you only have integers in your data file.
+decimal_sep = "."
+
+
+# TAPPy needs the variables 
+#   'datetime': a single integer or real listing time units after a origin 
+#    OR 
+#   'year', 'month', 'day', 'hour', optional['minute', 'second'] 
+#    AND
+#   'water_level').
+
+# Any other variable name can be used as a placeholder.
+
+# integer_as_datetime and real_as_datetime require an origin and unit
+
+parse = [ 
+          integer_as_datetime('datetime', origin=datetime.datetime(1999,12,31,23), unit='hours'),
+          integer('state', exact=3),
+          integer_as_string('station', exact=4),
+          positive_integer('toss_day'),
+          positive_integer('toss_month'),
+          positive_integer('toss_year'),
+          positive_integer('toss_hour'),
+          positive_integer('toss_minute'),
+          real('water_level'),
+         ]
+

@@ -12,3 +12,7 @@
 # Output
 ../tappy.py -o mayport_florida_8720220_data.txt mayport_florida_8720220_data_def.txt
 
+# Test defining date as a single value.  Look at 
+# tridentpier_florida_8721604_datetime.txt.def for an explanation of what 
+# is going on.
+../tappy.py tridentpier_florida_8721604_datetime.txt.gz 

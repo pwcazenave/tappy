@@ -49,13 +49,14 @@ import os
 import getopt
 import re
 import gzip
+import datetime
 
 from tappy_lib.pyparsing.pyparsing import *
 
 
 #===globals======================
 modname = "sparser"
-__version__ = "0.2"
+__version__ = "0.3"
 
 
 #--option args--
@@ -114,6 +115,14 @@ def toFloat(instring, loc, tokenlist):
 def toString(instring, loc, tokenlist):
     """Returns an integer or real as a string."""
     return tokenlist[0]
+
+def toDatetime(instring, loc, tokenlist):
+    """Returns a datetime object."""
+    global _origin
+    global _unit
+    
+    exec('rvar = _origin + datetime.timedelta({0}={1})'.format(_unit, float(tokenlist[0])))
+    return rvar
 
 def integer(name, 
             minimum=1, 
@@ -221,6 +230,44 @@ def integer_as_string(name,
             exact=exact, 
             sign=Optional("+"), 
             parseAct=parseAct)
+
+def real_as_datetime(name,
+                     minimum=1, 
+                     maximum=None, 
+                     exact=None, 
+                     sign=Optional(oneOf("- +")), 
+                     origin=datetime.datetime(1900,1,1),
+                     unit='days',
+                     parseAct=toDatetime):
+    global _origin
+    global _unit
+    _origin = origin
+    _unit = unit
+    real(name, 
+         minimum=minimum, 
+         maximum=maximum, 
+         exact=exact, 
+         sign=Optional("- +"), 
+         parseAct=toDatetime)
+
+def integer_as_datetime(name,
+                      minimum=1, 
+                      maximum=None, 
+                      exact=None, 
+                      sign=Optional(oneOf("- +")), 
+                      origin=datetime.datetime(1900,1,1),
+                      unit='days',
+                      parseAct=toDatetime):
+    global _origin
+    global _unit
+    _origin = origin
+    _unit = unit
+    integer(name, 
+         minimum=minimum, 
+         maximum=maximum, 
+         exact=exact, 
+         sign=Optional("- +"), 
+         parseAct=toDatetime)
 
 def qstring(name):
     """Parses a quoted (either double or single quotes) string."""
