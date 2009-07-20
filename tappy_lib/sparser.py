@@ -104,13 +104,20 @@ extra_dict = {}
 
 #====================================
 
-def toInteger(instring, loc, tokenlist):
+def toInteger(s, l, t):
     """Converts parsed integer string to an integer."""
-    return int(tokenlist[0])
+    try:
+        return int(t[0])
+    except ValueError:
+        raise ParseException(s, l, t)
 
-def toFloat(instring, loc, tokenlist):
+def toFloat(missing=""):
     """Converts parsed real string to a real."""
-    return float(tokenlist[0])
+    def InsidetoFloat(s, l, t):
+        if t[0] == missing:
+            raise ParseException(s, l, t)
+        return float(t[0])
+    return InsidetoFloat
 
 def toString(instring, loc, tokenlist):
     """Returns an integer or real as a string."""
@@ -166,7 +173,7 @@ def negative_integer(name,
 def real(name, 
          required_decimal=True,
          sign=Optional(oneOf("- +")), 
-         parseAct=toFloat):
+         missing=""):
     """Appends a skip/real pair to the parse constructs."""
     if required_decimal:
         lword = Combine(sign +
@@ -179,7 +186,7 @@ def real(name,
     grammar.append(SkipTo(lword))
     grammar.append(lword
                    .setResultsName(name)
-                   .setParseAction(parseAct))
+                   .setParseAction(toFloat(missing=missing)))
 
 def positive_real(name, 
                   minimum=1, 
@@ -283,12 +290,12 @@ def delimited_as_string(name):
 
 def number_as_real(name,
                     sign=Optional(oneOf("- +")), 
-                    parseAct=toFloat):
+                    missing=""):
     """Parses any number as a real."""
     real(name,
          required_decimal=False,
          sign=Optional(oneOf("- +")), 
-         parseAct=toFloat)
+         parseAct=toFloat(missing=missing))
     
 def number_as_integer(name,
                     minimum=1, 

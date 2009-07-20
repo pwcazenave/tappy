@@ -192,14 +192,28 @@ class tappy:
                 'month' in line.parsed_dict.keys() and
                 'day' in line.parsed_dict.keys() and
                 'hour' in line.parsed_dict.keys()):
-                    line.parsed_dict.setdefault('minute', 0)
-                    line.parsed_dict.setdefault('second', 0)
-                    self.dates.append(datetime.datetime(line.parsed_dict['year'],
-                                                line.parsed_dict['month'],
-                                                line.parsed_dict['day'],
-                                                line.parsed_dict['hour'],
-                                                line.parsed_dict['minute'],
-                                                line.parsed_dict['second']))
+                line.parsed_dict.setdefault('minute', 0)
+                line.parsed_dict.setdefault('second', 0)
+
+                # Accomodate midnight when identified as 24th hour of 
+                # previous day
+                try:
+                    self.dates.append(datetime.datetime(
+                                    line.parsed_dict['year'],
+                                    line.parsed_dict['month'],
+                                    line.parsed_dict['day'],
+                                    line.parsed_dict['hour'],
+                                    line.parsed_dict['minute'],
+                                    line.parsed_dict['second']))
+                except ValueError:
+                    self.dates.append(datetime.datetime(
+                                    line.parsed_dict['year'],
+                                    line.parsed_dict['month'],
+                                    line.parsed_dict['day'],
+                                    0,
+                                    line.parsed_dict['minute'],
+                                    line.parsed_dict['second']) +
+                                    datetime.timedelta(days=1))
             else:
                 print 'Warning: record %i did not parse the date and time according to the supplied definition file' % line.line_number
                 print 'Requires "year", "month", "day", and "hour" ("minute" and "second" are optional and default to zero) OR a Julian date/time'
