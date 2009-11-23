@@ -139,7 +139,7 @@ def integer(name,
             parseAct=toInteger):
     """Appends a skip/integer combination to the parse constructs."""
     lint = Combine(sign + 
-                   Word(nums, 
+                   Word(nums + " ", 
                         min=minimum, 
                         max=maximum, 
                         exact=exact))
