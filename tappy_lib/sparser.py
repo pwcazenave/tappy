@@ -51,7 +51,7 @@ import re
 import gzip
 import datetime
 
-from pyparsing import *
+from tappy_lib.pyparsing.pyparsing import *
 
 
 #===globals======================
