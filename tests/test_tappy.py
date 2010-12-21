@@ -20,8 +20,8 @@ import difflib
 class TappyTest(unittest.TestCase):
     def setUp(self):
         os.chdir(cur_path + os.sep + 'tmp')
-        options, args = tappy.process_options('-o --filter transform ../../example/mayport_florida_8720220_data.txt')
-        self.con_output = tappy.main(options, args)
+        #options, args = tappy.process_options('-o --filter transform ../../example/mayport_florida_8720220_data.txt')
+        self.con_output = tappy.analysis('../../example/mayport_florida_8720220_data.txt', output=True, filter='transform')
         os.chdir(cur_path)
 
     def test_constituents(self):

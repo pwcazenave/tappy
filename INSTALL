@@ -8,7 +8,7 @@ cd tappy-0.8.3
 
 # At this point you can try TAPPY out without installing.
 cd example
-../tappy.py mayport_florida_8720220_data.txt
+../tappy.py analysis mayport_florida_8720220_data.txt
 cd ..
 
 # If you want to install...

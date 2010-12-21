@@ -13,12 +13,6 @@ DESCRIPTION:
     Uses least squares fit to estimate tidal amplitude and phase.
     Specific to tides generated on Earth by the Moon and Sun.
 
-OPTIONS:
-    -h,--help        this message
-    -v,--version     version
-    -d,--debug       turn on debug messages
-    --bb=xyz         set option bb to xyz
-
 EXAMPLES:
     1. As standalone
         tappy.py -d myfile
@@ -59,6 +53,7 @@ import astronomia.calendar as cal
 import astronomia.util as uti
 import pad.pad as pad
 from parameter_database import _master_speed_dict, letter_to_factor_map
+import baker
 
 #===globals======================
 modname = "tappy"
@@ -163,15 +158,29 @@ def node_factor_235(ii, nu):
 
 #====================================
 class tappy:
-    def __init__(self, options = None):
+    def __init__(self, **kwds):
         """ 
         The initialization of the Tappy class.
         """
 
         ftn = "tappy.__init__"
+
+        self.quiet = kwds.pop('quiet')
+        self.debug = kwds.pop('debug')
+        self.output = kwds.pop('output')
+        self.ephemeris = kwds.pop('ephemeris')
+        self.rayleigh = kwds.pop('rayleigh')
+        self.print_vau_table = kwds.pop('print_vau_table')
+        self.missing_data= kwds.pop('missing_data')
+        self.linear_trend = kwds.pop('linear_trend')
+        self.remove_extreme = kwds.pop('remove_extreme')
+        self.zero_ts = kwds.pop('zero_ts')
+        self.filter = kwds.pop('filter')
+        self.pad_filters = kwds.pop('pad_filters')
+        self.no_inferred = kwds.pop('no_inferred')
+
         #---instance variables---
         self.speed_dict = {}
-        self.options = options
         self.elevation = []
         self.dates = []
 
@@ -955,7 +964,7 @@ class tappy:
         self.inferred_key_list = []
         self.inferred_r = {}
         self.inferred_phase = {}
-        if not self.options.no_inferred:
+        if not self.no_inferred:
             if 'O1' in key_list and 'K1' in key_list:
                 if 'J1' not in key_list:
                     self.inferred_key_list.append('J1')
@@ -1038,7 +1047,7 @@ class tappy:
         for i in key_list + self.inferred_key_list:
             sumterm = sumterm + H[i]*ff[i]['FF']*np.cos(self.tidal_dict[i]['speed']*t - phase[i])
 
-        if self.options.linear_trend:
+        if self.linear_trend:
             self.err = ht - (p[-2]*t + p[-1] + sumterm)
         else:
             self.err = ht - (p[-1] + sumterm)
@@ -1117,7 +1126,7 @@ class tappy:
         nslice = slice(half_kern, -half_kern)
         cndates = self.cat_dates(ndates, half_kern)
 
-        if self.options.pad_filters == "tide":
+        if self.pad_filters == "tide":
             tnelevation = np.concatenate((np.array([np.average(nelevation[0:half_kern])]), nelevation, np.array([np.average(nelevation[-half_kern:])])))
             interval = ndates[1:] - ndates[:-1]
             interval.sort()
@@ -1126,17 +1135,17 @@ class tappy:
             tndates = np.concatenate((np.array([ndates[0] - blen*deltat]), ndates, np.array([ndates[-1] + alen*deltat])))
             (cndates, nelevation) = self.missing('fill', tndates, tnelevation)
 
-        if self.options.pad_filters == "minimum":
+        if self.pad_filters == "minimum":
             nelevation = pad.minimum(nelevation, (blen, alen))
-        if self.options.pad_filters == "maximum":
+        if self.pad_filters == "maximum":
             nelevation = pad.maximum(nelevation, (blen, alen))
-        if self.options.pad_filters == "mean":
+        if self.pad_filters == "mean":
             nelevation = pad.mean(nelevation, (blen, alen))
-        if self.options.pad_filters == "median":
+        if self.pad_filters == "median":
             nelevation = pad.median(nelevation, (blen, alen))
-        if self.options.pad_filters == "reflect":
+        if self.pad_filters == "reflect":
             nelevation = pad.reflect(nelevation, (blen, alen))
-        if self.options.pad_filters == "wrap":
+        if self.pad_filters == "wrap":
             nelevation = pad.wrap(nelevation, (blen, alen))
 
         return nelevation, cndates, nslice
@@ -1262,7 +1271,7 @@ class tappy:
 
             nslice = slice(half_kern, -half_kern)
 
-            if self.options.pad_filters:
+            if self.pad_filters:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
     
             relevation = 1.0/16.0*(self.delta_diff(nelevation, 24, 25)[25:]*self.delta_diff(nelevation, 25, 25)[25:])**2
@@ -1302,7 +1311,7 @@ class tappy:
 
             nslice = slice(half_kern, -half_kern)
 
-            if self.options.pad_filters:
+            if self.pad_filters:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
 
             kern = [i/30.0 for i in kern]
@@ -1327,7 +1336,7 @@ class tappy:
 
             nslice = slice(half_kern, -half_kern)
 
-            if self.options.pad_filters:
+            if self.pad_filters:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
     
             relevation = np.convolve(nelevation, kern, mode = 1)
@@ -1339,7 +1348,7 @@ class tappy:
 
             nslice = slice(half_kern, -half_kern)
 
-            if self.options.pad_filters:
+            if self.pad_filters:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
 
             relevation = np.convolve(nelevation, kern, mode = 1)
@@ -1477,7 +1486,7 @@ class tappy:
                                                 self.inferred_phase[i])
 
         print "\n# AVERAGE (Z0) = ", self.fitted_average
-        if self.options.linear_trend:
+        if self.linear_trend:
             print "# SLOPE OF REMOVED LINEAR TREND = ", self.slope
 
 
@@ -1581,46 +1590,83 @@ class tappy:
         pass
 
 #=============================
-def main(options, args):
+@baker.command(default=True)
+def analysis(
+        data_filename, 
+        def_filename=None, 
+        quiet=False,
+        debug=False,
+        output=False,
+        ephemeris=False,
+        rayleigh=1.0,
+        print_vau_table=False,
+        missing_data='ignore',
+        linear_trend=False,
+        remove_extreme=False,
+        zero_ts=None,
+        filter=None,
+        pad_filters=None,
+        no_inferred=False):
+    '''Analysis
+
+       :param quiet: Print nothing to the screen.
+       :param debug: Print debug messages.
+       :param output: Write output time-series.
+       :param ephemeris: Print out ephemeris tables.
+       :param rayleigh: The Rayleigh coefficient is used to compare against to determine time series length to differentiate between two frequencies. [default: default]
+       :param missing_data: What should be done if there is missing data.  One of: fail, ignore, or fill. [default: default]
+       :param linear_trend: Include a linear trend in the least squares fit.
+       :param remove_extreme: Remove values outside of 2 standard deviations before analysis.
+       :param zero_ts: Zero the input time series before constituent analysis by subtracting filtered data. One of: transform,usgs,doodson,boxcar
+       :param filter:  Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: transform,usgs,doodson,boxcar
+       :param pad_filters: Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["tide", "minimum", "maximum", "mean", "median", "reflect", "wrap"]
+       :param no_inferred: Do not incorporate any inferred constituents into the least squares fit.
+    '''
 
 
-    x = tappy(options = options)
+    x = tappy(
+        quiet=quiet,
+        debug=debug,
+        output=output,
+        ephemeris=ephemeris,
+        rayleigh=rayleigh,
+        print_vau_table=print_vau_table,
+        missing_data=missing_data,
+        linear_trend=linear_trend,
+        remove_extreme=remove_extreme,
+        zero_ts=zero_ts,
+        filter=filter,
+        pad_filters=pad_filters,
+        no_inferred=no_inferred, 
+        )
 
-    if options.ephemeris:
+    if ephemeris:
         x.print_ephemeris_table()
-    if options.print_vau_table:
+    if print_vau_table:
         x.print_v_u_table()
 
-    if len(args) == 1:
-        def_filename = None
-    elif len(args) == 2:
-        def_filename = args[1]
-    else:
-        fatal('main', 'Need to pass input file name and optional definition file name')
+    x.open(data_filename, def_filename = def_filename)
 
-    x.open(args[0], def_filename = def_filename)
-
-#    x.options = options
-    if x.options.missing_data == 'fail':
-        x.dates_filled, x.elevation_filled = x.missing(x.options.missing_data, 
+    if x.missing_data == 'fail':
+        x.dates_filled, x.elevation_filled = x.missing(x.missing_data, 
                                                        x.dates, 
                                                        x.elevation)
 
-    if x.options.remove_extreme:
+    if x.remove_extreme:
         x.remove_extreme_values()
 
     package = x.astronomic(x.dates)
     (x.zeta, x.nu, x.nup, x.nupp, x.kap_p, x.ii, x.R, x.Q, x.T, x.jd, x.s, x.h, x.N, x.p, x.p1) = package
 
-    if options.rayleigh:
-        ray = float(options.rayleigh)
+    if rayleigh:
+        ray = float(rayleigh)
     else:
         ray = 1.0
     (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates), 
                                                       package, 
                                                       rayleigh_comp = ray)
-    if x.options.zero_ts:
-        x.elevation = x.elevation - x.filters(options.zero_ts, 
+    if x.zero_ts:
+        x.elevation = x.elevation - x.filters(zero_ts, 
                                               x.dates, 
                                               x.elevation)
         package = x.astronomic(x.dates)
@@ -1628,20 +1674,20 @@ def main(options, args):
 
     x.constituents()
 
-    if x.options.missing_data == 'fill':
-        x.dates_filled, x.elevation_filled = x.missing(x.options.missing_data, x.dates, x.elevation)
+    if x.missing_data == 'fill':
+        x.dates_filled, x.elevation_filled = x.missing(x.missing_data, x.dates, x.elevation)
         x.write_file('outts_filled.dat', x.dates_filled, x.elevation_filled)
 
-    if x.options.filter:
-        for item in x.options.filter.split(','):
+    if x.filter:
+        for item in x.filter.split(','):
             if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs', 'doodson', 'lecolazet1', 'kalman', 'transform']:# 'lecolazet', 'godin', 'sfa']:
                 filtered_dates, result = x.filters(item, x.dates, x.elevation)
                 x.write_file('outts_filtered_%s.dat' % (item,), filtered_dates, result)
 
-    if not x.options.quiet:
+    if not x.quiet:
         x.print_con()
 
-    if x.options.output:
+    if x.output:
         package = x.astronomic(x.dates)
         (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates), package)
         (x.zeta, x.nu, x.nup, x.nupp, x.kap_p, x.ii, x.R, x.Q, x.T, x.jd, x.s, x.h, x.N, x.p, x.p1) = package
@@ -1657,115 +1703,4 @@ def main(options, args):
                      x.sum_signals(x.key_list, x.dates, x.speed_dict))
         x.write_file("outts_original.dat", x.dates, x.elevation)
 
-
-def process_options(cmdargstr):
-
-    from optparse import OptionParser
-
-    if isinstance(cmdargstr, str):
-        cmdargstr = cmdargstr.split()
-
-    parser = OptionParser(usage = '%prog [options] input_file [optional_definition_file]', version = __version__)
-    parser.add_option(
-                   '-q', 
-                   '--quiet', 
-                   help = 'Print nothing to the screen.', 
-                   action = 'store_true',
-                   default = False,
-                     )
-    parser.add_option(
-                   '-d',
-                   '--debug',
-                   help = 'Print debug messages.',
-                   action = 'store_true',
-                   default = False,
-                     )
-    parser.add_option(
-                   '-o',
-                   '--output',
-                   help = 'Write output time-series.',
-                   action = 'store_true',
-                   default = False,
-                     )
-    parser.add_option(
-                   '-e',
-                   '--ephemeris',
-                   help = 'Print out ephemeris tables.',
-                   action = 'store_true',
-                   default = False,
-                     )
-    parser.add_option(
-                   '-y',
-                   '--rayleigh',
-                   help = 'The Rayleigh coefficient is used to compare against to determine time series length to differentiate between two frequencies. [default: %default]',
-                   metavar = 'FACTOR',
-                   default = 1.0,
-                     )
-    parser.add_option(
-                   '-u',
-                   '--print-vau_table',
-                   help = 'Print out VAU table.',
-                   action = 'store_true',
-                   default = False,
-                     )
-    parser.add_option(
-                   '-m',
-                   '--missing-data',
-                   help = 'What should be done if there is missing data.  One of: fail, ignore, or fill. [default: %default]',
-                   default = 'ignore',
-                     )
-    parser.add_option(
-                   '-l',
-                   '--linear-trend',
-                   help = 'Include a linear trend in the least squares fit.',
-                   action = 'store_true',
-                     )
-    parser.add_option(
-                   '-r',
-                   '--remove-extreme',
-                   help = 'Remove values outside of 2 standard deviations before analysis.',
-                   action = 'store_true',
-                     )
-    parser.add_option(
-                   '-z',
-                   '--zero-ts',
-                   help = 'Zero the input time series before constituent analysis by subtracting filtered data. One of: transform,usgs,doodson,boxcar',
-                   metavar = 'FILTER',
-                     )
-    parser.add_option(
-                   '-f',
-                   '--filter',
-                   help = 'Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: transform,usgs,doodson,boxcar',
-                   metavar = 'FILTER',
-                     )
-    parser.add_option(
-                   '-p',
-                   '--pad-filters',
-                   help = 'Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["tide", "minimum", "maximum", "mean", "median", "reflect", "wrap"]',
-                   metavar = 'PAD_TYPE',
-                     )
-    parser.add_option(
-                   '-n',
-                   '--no-inferred',
-                   help = 'Do not incorporate any inferred constituents into the least squares fit.',
-                   action = 'store_true',
-                     )
-    
-    return parser.parse_args(cmdargstr)
-
-
-#-------------------------
-if __name__ == '__main__':
-    ftn = "main"
-
-    # Process the command line arguments
-    options, args = process_options(sys.argv[1:])
-
-    #---make the object and run it---
-    main(options, args)
-
-
-#===Revision Log===
-#Created by mkpythonproj:
-#2005-06-13  Tim Cera  
-#
+baker.run()
