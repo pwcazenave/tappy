@@ -197,12 +197,26 @@ class tappy:
             self.elevation.append(line.parsed_dict['water_level'])
             line.parsed_dict.setdefault('minute', 0)
             line.parsed_dict.setdefault('second', 0)
-            self.dates.append(datetime.datetime(line.parsed_dict['year'],
-                                                line.parsed_dict['month'],
-                                                line.parsed_dict['day'],
-                                                line.parsed_dict['hour'],
-                                                line.parsed_dict['minute'],
-                                                line.parsed_dict['second']))
+
+            # Accomodate midnight when identified as 24th hour of 
+            # previous day
+            try:
+                self.dates.append(datetime.datetime(
+                                line.parsed_dict['year'],
+                                line.parsed_dict['month'],
+                                line.parsed_dict['day'],
+                                line.parsed_dict['hour'],
+                                line.parsed_dict['minute'],
+                                line.parsed_dict['second']))
+            except ValueError:
+                self.dates.append(datetime.datetime(
+                                line.parsed_dict['year'],
+                                line.parsed_dict['month'],
+                                line.parsed_dict['day'],
+                                0,
+                                line.parsed_dict['minute'],
+                                line.parsed_dict['second']) +
+                                datetime.timedelta(days=1))
         if len(self.elevation) == 0:
             print 'No data was found in the input file.'
             sys.exit()
