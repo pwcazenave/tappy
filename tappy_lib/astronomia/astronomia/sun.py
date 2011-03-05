@@ -65,6 +65,28 @@ class Sun:
         return X
 
 
+    def mean_longitude_perigee(self, jd):
+        """Return mean longitude of solar perigee.
+        
+        Parameters:
+            jd : Julian Day in dynamical time
+
+        Returns:
+            Longitude of solar perigee in radians
+                
+        """
+        T = jd_to_jcent(jd)
+
+        X = polynomial((1012395.0, 
+                        6189.03  ,
+                        1.63     , 
+                        0.012    ), (T + 1))/3600.0
+        X = d_to_r(X)
+
+
+        X = modpi2(X)
+        return X
+
     def dimension(self, jd, dim):
         """Return one of geocentric ecliptic longitude, latitude and radius.
         
