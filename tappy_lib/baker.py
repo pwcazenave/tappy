@@ -308,10 +308,8 @@ class Baker(object):
                 # This is a positional argument
                 file.write(" <%s>" % name)
             else:
-                # This is a keyword argument, so skip it unless the default is
-                # None, in which case treat it like an optional argument.
-                if cmd.keywords[name] is None:
-                    file.write(" [<%s>]" % name)
+                # This is a keyword/optional argument
+                file.write(" [<%s>]" % name)
         
         if cmd.has_varargs:
             # This command accepts a variable number of positional arguments
@@ -331,36 +329,62 @@ class Baker(object):
                 file.write(format_paras(paras[1:], 76, indent=4))
             file.write("\n")
         
+        # Added by abhikshah@gmail.com, 5/6/2010
+        # Print documentation for required arguments
+        if cmd.argnames:
+            file.write("Required Arguments:\n\n")
+
+            # Get a sorted list of argument names
+            argnames = [a for a in cmd.argnames if a not in cmd.keywords]
+            
+            if argnames:
+                # Find the length of the longest formatted heading
+                rindent = max(len(argname) + 5 for argname in argnames)
+                # Pad the headings so they're all as long as the longest one
+                heads = [(head, head + (" " * (rindent - len(head))) )for head in argnames]
+                
+                # Print the arg docs
+                for keyname, head in heads:
+                    file.write('  ' + head)
+
+                    # If the argument has documentation, print it after the
+                    # heading
+                    if keyname in cmd.paramdocs:
+                        paras = process_docstring(cmd.paramdocs.get(keyname, ""))
+                        file.write(format_paras(paras, 76))
+                    else:
+                        file.write("\n")
+        file.write("\n")
+
         # Print documentation for keyword options
         if cmd.keywords:
             file.write("Options:\n\n")
             
-            # Get a sorted list of keyword argument names
-            keynames = sorted(cmd.keywords.keys())
+            # Get a list of keyword argument names
+            keynames = cmd.keywords.keys()
             
             # Make formatted headings, e.g. " -k --keyword  ", and put them in
             # a list like [(name, heading), ...]
             heads = []
             for keyname in keynames:
                 head = keyname
-                if cmd.keywords[keyname] is not None:
-                    head = " --" + head
-                    if keyname in cmd.shortopts:
-                        head = " -" + cmd.shortopts[keyname] + head
+                head = " --" + head
+                if keyname in cmd.shortopts:
+                    head = " -" + cmd.shortopts[keyname] + head
                 head += "  "
                 heads.append((keyname, head))
             
             if heads:
                 # Find the length of the longest formatted heading
-                rindent = max(len(head) for keyname, head in heads)
+                rindent = max(len(head) + 2 for keyname, head in heads)
                 # Pad the headings so they're all as long as the longest one
-                heads = [(keyname, head + (" " * (rindent - len(head))))
+                heads = [(keyname, head + (" " * (rindent - len(head) - 2)))
                          for keyname, head in heads]
             
                 # Print the option docs
                 for keyname, head in heads:
                     # Print the heading
-                    file.write(head)
+                    file.write('  ' + head)
     
                     # If this parameter has documentation, print it after the
                     # heading
@@ -539,7 +563,7 @@ class Baker(object):
         args, kwargs = self.parse_args(scriptname, cmd, options)
         return (scriptname, cmd, args, kwargs)
     
-    def apply(self, scriptname, cmd, args, kwargs):
+    def apply(self, scriptname, cmd, args, kwargs, help_on_error=False):
         """Calls the command function.
         """
         
