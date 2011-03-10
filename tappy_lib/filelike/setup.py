@@ -1,39 +1,49 @@
-#
-#  This is the filelike setuptools script.
-#  Originally developed by Ryan Kelly, 2006.
-#
-#  This script is placed in the public domain.
-#
 
-import ez_setup
-ez_setup.use_setuptools()
+import sys
+import distribute_setup
+distribute_setup.use_setuptools()
+from setuptools import setup, find_packages
 
-from setuptools import setup, find_packages, Extension
 
-#  Import to allow pertinent info to be extracted
-import filelike
+setup_kwds = {}
+setup_kwds["test_suite"] = "filelike.tests.build_test_suite"
+if sys.version_info > (3,):
+    setup_kwds["use_2to3"] = True
 
-VERSION = filelike.__version__
 
-# Package MetaData
+info = {}
+try:
+    next = next
+except NameError:
+    def next(i):
+        return i.next()
+src = open("filelike/__init__.py")
+lines = []
+ln = next(src)
+while "__version__" not in ln:
+    lines.append(ln)
+    ln = next(src)
+while "__version__" in ln:
+    lines.append(ln)
+    ln = next(src)
+exec("".join(lines),info)
+
+
 NAME = "filelike"
+VERSION = info["__version__"]
 DESCRIPTION = "Classes for creating and wrapping file-like objects"
 AUTHOR = "Ryan Kelly"
 AUTHOR_EMAIL = "ryan@rfk.id.au"
-URL = "http://www.rfk.id.au/software/projects/filelike/"
-# TODO: determine proper license
+URL = "http://www.rfk.id.au/software/filelike/"
 LICENSE = "LGPL"
 KEYWORDS = "file filelike file-like filter crypt compress"
-LONG_DESC = filelike.__doc__
+LONG_DESC = info["__doc__"]
 
-#  Module Lists
+
 PACKAGES = find_packages()
 EXT_MODULES = []
 PKG_DATA = {}
 
-##
-##  Main call to setup() function
-##
 
 setup(name=NAME,
       version=VERSION,
@@ -47,6 +57,6 @@ setup(name=NAME,
       ext_modules=EXT_MODULES,
       package_data=PKG_DATA,
       license=LICENSE,
-      test_suite="filelike.testsuite",
+      **setup_kwds
      )
 
