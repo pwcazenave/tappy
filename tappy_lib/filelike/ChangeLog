@@ -1,0 +1,92 @@
+
+Version 0.4.1
+
+   * Buffer wrapper: support for truncating the underlying file on write-back
+   * Translate wrapper: allow truncating to zero size
+
+Version 0.4.0
+
+   * Add support for truncate() via a primitive _truncate() method
+   * Increase default buffer size to 64K (was previously a measly 1K)
+   * Remove old class names, along with their deprecation warnings
+
+Version 0.3.7
+
+   * Make __del__ more robust in the case of incomplete initialisation
+     (e.g. errors in a subclass constructor)
+   * filelike.wrappers.Buffer: explicitly pass a max_size argument to
+     SpooledTemporaryFile, with a sensible default value (currently 8KB)
+
+Version 0.3.6
+
+   * More robust __del__ method for FileWrapper subclasses
+
+Version 0.3.5
+
+   * More robust flushing of Buffer and FlushableBuffer
+
+Version 0.3.4
+
+   * More robust mode determination in crypto wrapper
+
+Version 0.3.3
+
+   * Windows compatability and testcases
+
+Version 0.3.2
+
+   * Various bugfixes and performance improvements
+
+Version 0.3.1
+
+   * made Encrypt/Decrypt wrappers work correctly for feedback cipher modes
+       * removed 'setCipher' method in order to achieve this
+
+Version 0.3.0
+
+   * Added support for seek() and tell()
+   * Added filelike.join() for concatenating several files
+     into one file-like object
+   * Added filelike.slice() for accessing a portion of a file
+   * Added support for context-manager protocol
+   * Much better support for intermingled reads and writes
+   * Restructured the 'wrappers' module to provide a consistent
+     naming scheme
+      * all wrapper classes are now read-wise verbs, e.g.
+        Decrypt(f) will decrypt all reads from f, and encrypt
+        all writes.
+      * removed 'Cat' in favour of filelike.join
+   * Switched to new-style classes throughout
+
+Version 0.2.2
+
+   * Several patches to Cat thanks to Alan Fairless
+
+Version 0.2.1
+
+   * Added filelike.open() function, which tries to open files in
+     a smart manner (e.g. fetching URLs, transparent unzipping, etc)
+
+
+Version 0.2.0:
+
+  Architectural Changes:
+
+    * Moved wrapper classes into filelike.wrappers
+    * Created filelike.pipeline, which employs operator abuse to compose
+      file wrappers using a unix pipeline style
+  
+  Functional Changes:
+
+    * Allow _write() to return any unwritten data, which will be cached
+      for later writing.  None may be returned if all data is written.
+      Also give it a <flushing> argument to indicate when no more data
+      will be forthcoming
+    * Validate access mode before reading/writing in FileLikeBase
+    * Permit seperate reading and writing translation functions for TransFile
+    * Added the following FileWrapper subclasses:
+        * PaddedToBlockSizeFile: ensure file's contents meet a blocksize
+        * Head: similar to unix `head` command
+        * Cat: similar to unix `cat` command
+        * BZ2File: similar to that found in the std lib
+
