@@ -246,16 +246,19 @@ class tappy:
         self.tidal_dict["M2"] = {
             'ospeed': 28.984104252*deg2rad, 
             'VAU': 2*(T - s + h + zeta - nu),
+            'u':   2*(zeta - nu), 
             'FF': node_factor_78(ii)
         }
         self.tidal_dict["K1"] = {
             'ospeed': 15.041068632*deg2rad,
             'VAU': T + h - 90*deg2rad - nup,
+            'u':   -nup, 
             'FF': node_factor_227(ii, nu)
         }
         self.tidal_dict["M3"] = {
             'ospeed': 43.476156360*deg2rad,
             'VAU': 3*(T - s + h + zeta - nu),
+            'u': 3*(zeta - nu), 
             'FF': node_factor_149(ii)
         }
         self.tidal_dict["M4"] = {
@@ -266,8 +269,9 @@ class tappy:
         self.tidal_dict["M6"] = {
             'ospeed': 86.952312720*deg2rad,
             'VAU': 3.*self.tidal_dict['M2']['VAU'],
-            # From Parker, et. al node factor for M6 is square of M2
-            'FF': self.tidal_dict['M2']['FF']**2
+            # Parker, et. al node factor for M6 is square of M2.  This is
+            # inconsistent with IHOTC, Schureman, and FF of M4 and M8.
+            'FF': self.tidal_dict['M2']['FF']**3
         }
         self.tidal_dict["M8"] = {
             'ospeed': 115.936416972*deg2rad,
@@ -282,6 +286,7 @@ class tappy:
         self.tidal_dict["O1"] = {
             'ospeed': 13.943035584*deg2rad,
             'VAU': T - 2*s + h + 90*deg2rad + 2*zeta - nu,
+            'u': 2*zeta - nu, 
             'FF': node_factor_75(ii)
         }
         self.tidal_dict["S2"] = {
@@ -610,21 +615,21 @@ class tappy:
 #'psi1': [1, 'AAAZZYA', [1, 1, 1, 0, 0, -1, 1]], 
         }
 
-        # p is 3232.575 days
-        # N is 6793.391 days
-        w = [360 + 360/365.24219264 - 360/27.321582, 
-             360/27.321582, 
-             360/365.24219264, 
-             360/3232.575, 
-             -360/6793.391, 
-             360/(365.25*20942), 
-             0 ]
-        w = np.array(w)/24
-      
-        # Need to find out about the 6th item.  Right now a placeholder of 0
-        # Also need to figure out about p1
-        w1 = [T - s + h, s, h, p, 0.0, p1[0], -90*deg2rad]
-        w1 = np.array(w1)
+        # Can calculate the speed at the begining of the time series.  
+        # Doesn't really matter unless analyzing tides in 5000 C.E.,  because the speeds do change.
+        (zetatoss, nutoss, nuptoss, nupptoss, kap_ptoss, itoss, Rtoss, Qtoss, Tbeg, jdtoss, sbeg, hbeg, Nvbeg, pbeg, p1beg) = self.astronomic([self.dates[0], self.dates[0] + datetime.timedelta(hours = 1)])
+        Tspeed = 15.0*deg2rad
+        sspeed = (sbeg[1] - sbeg[0])
+        hspeed = (hbeg[1] - hbeg[0])
+        Nvspeed = (Nvbeg[1] - Nvbeg[0])
+        pspeed = (pbeg[1] - pbeg[0])
+        ppspeed = (p1beg[1] - p1beg[0])
+        w = np.array([(Tspeed - sspeed + hspeed), sspeed, hspeed, pspeed, Nvspeed, ppspeed, 0.0])*rad2deg
+
+        # The equilibrium arguments can be for the first time only since the
+        # VAU argument as it progresses will be at the same speed.
+        vw1 = [(15.0*deg2rad + h[0] - s[0]), s[0], h[0], p[0], Nv[0], p1[0], 90*deg2rad]
+        vw1 = np.array(vw1)
 
         for key in self.tidal_dict:
             # Calculate speeds
@@ -633,13 +638,18 @@ class tappy:
             self.tidal_dict[key]['speed'] = np.sum(np.array(constituent_factors)*w)
             self.tidal_dict[key]['speed'] = np.mod(self.tidal_dict[key]['speed'], 360)
             self.tidal_dict[key]['speed'] = self.tidal_dict[key]['speed']*deg2rad
-            self.tidal_dict[key]['V'] = np.sum(np.array(constituent_factors)*w1)
+
+            self.tidal_dict[key]['V'] = np.sum(np.array(constituent_factors)*vw1)
             self.tidal_dict[key]['V'] = self.tidal_dict[key]['V']*rad2deg
             self.tidal_dict[key]['V'] = np.mod(self.tidal_dict[key]['V'], 360)
 
             # Change VAU to degree and between 0 and 360
             self.tidal_dict[key]['VAU'] = self.tidal_dict[key]['VAU']*rad2deg
-            self.tidal_dict[key]['VAU'] = np.mod(self.tidal_dict[key]['VAU'], 360)
+            try:
+                self.tidal_dict[key]['VAU'] = np.mod(self.tidal_dict[key]['VAU'], 360)[0]
+            except IndexError:
+                self.tidal_dict[key]['VAU'] = np.mod(self.tidal_dict[key]['VAU'], 360)
+
 
         num_hours = (jd[-1] - jd[0]) * 24
         numpoint = len(jd) * 0.5 * rayleigh_comp
@@ -817,16 +827,11 @@ class tappy:
         solar_eph = sun.Sun()
 
         jd = self.dates2jd(dates)
-        jdc = cal.jd_to_jcent(jd)
         Nv = lunar_eph.mean_longitude_ascending_node(jd)
-        p = lunar_eph.mean_longitude_perigee(jd[0])
-        s = lunar_eph.mean_longitude(jd[0])
-        h = solar_eph.mean_longitude(jd[0])
-
-        p1 = np.mod((1012395.0 + 
-                     6189.03*(jdc + 1) + 
-                     1.63*(jdc + 1)**2 + 
-                     0.012*(jdc + 1)**3)/3600.0, 360)*deg2rad
+        p = lunar_eph.mean_longitude_perigee(jd)
+        s = lunar_eph.mean_longitude(jd)
+        h = solar_eph.mean_longitude(jd)
+        p1 = solar_eph.mean_longitude_perigee(jd)
 
         # Calculate constants for V+u
         # I, inclination of Moon's orbit, pg 156, Schureman
@@ -963,7 +968,9 @@ class tappy:
         for index, key in enumerate(key_list):
             H[key] = p[index]
             phase[key] = p[index + len(key_list)]
-
+            #print '---'
+            #print key
+            #print self.speed_dict[key]['FF'][:3]
         if len(self.speed_dict[key_list[0]]['FF']) == len(t):
             ff = self.tidal_dict
         else:
@@ -1564,7 +1571,21 @@ class tappy:
             print " log(Q) = ", np.log(Q)
             print " T = ", T*rad2deg
 
-        t = tappy()
+        t = tappy(
+            def_filename=None, 
+            quiet=False,
+            debug=False,
+            output=False,
+            ephemeris=False,
+            rayleigh=1.0,
+            print_vau_table=False,
+            missing_data='ignore',
+            linear_trend=False,
+            remove_extreme=False,
+            zero_ts=None,
+            filter=None,
+            pad_filters=None,
+            no_inferred=False)
         t.dates = [datetime.datetime(i, 1, 1, 0, 0) + 
                    (datetime.datetime(i+1, 1, 1, 0, 0) - 
                     datetime.datetime(i, 1, 1, 0, 0))/2
@@ -1572,7 +1593,7 @@ class tappy:
                   ]
         package = self.astronomic(t.dates)
         (zeta, nu, nup, nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
-        (speed_dict, key_list) = t.which_constituents(len(dates), package)
+        (speed_dict, key_list) = t.which_constituents(len(t.dates), package)
         for k in ['J1', 'K1', 'K2', 'L2', 'M1', 'M2', 'M3', 'M6', 'M8', 'O1', 'OO1', 'MO3', 'MO3', 'Mf', 'Mm']:
             for i in [1900, 1930]:
                 print i, k, speed_dict[k]['FF'][i-1900]
@@ -1583,14 +1604,28 @@ class tappy:
 
 
     def print_v_u_table(self):
-        dates = []
+        t = tappy(
+            def_filename=None, 
+            quiet=False,
+            debug=False,
+            output=False,
+            ephemeris=False,
+            rayleigh=1.0,
+            print_vau_table=False,
+            missing_data='ignore',
+            linear_trend=False,
+            remove_extreme=False,
+            zero_ts=None,
+            filter=None,
+            pad_filters=None,
+            no_inferred=False)
+        t.dates = []
         for d in range(1851, 2001):
-            dates.append(datetime.datetime(d, 1, 1, 0, 0))
-        dates = np.array(dates)
+            t.dates.append(datetime.datetime(d, 1, 1, 0, 0))
 
-        package = self.astronomic(dates)
+        package = self.astronomic(t.dates)
         (zeta, nu, nup, nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
-        (speed_dict, key_list) = self.which_constituents(len(dates), package)
+        (speed_dict, key_list) = self.which_constituents(len(t.dates), package)
 
         key_list.sort()
         for key in key_list:
