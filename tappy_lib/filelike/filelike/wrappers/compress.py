@@ -195,13 +195,13 @@ class GZipMixin(object):
         compress.reset = c_reset
         self.compress = compress
         # Decompression funtion with reset
-        d = [zlib.decompressobj(16+zlib.MAX_WBITS)]
+        d = [zlib.decompressobj(32+zlib.MAX_WBITS)]
         def decompress(data):
             if data == "":
                 return ""
             return d[0].decompress(data)
         def d_reset():
-            d[0] = zlib.compressobj(16+zlib.MAX_WBITS)
+            d[0] = zlib.compressobj(32+zlib.MAX_WBITS)
         decompress.reset = d_reset
         self.decompress = decompress
         # These can now be used by superclass constructors
