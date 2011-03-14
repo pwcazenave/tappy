@@ -1635,11 +1635,21 @@ class tappy:
     def print_node_factor_table(self):
         pass
 
+@baker.command()
+def writeconfig(iniconffile = sys.argv[0] + '.ini'):
+    """OVERWRITES an ini style config file that holds all of default the command line options.
+
+    :param iniconffile: the file name of the ini file, defaults to 'script.ini'.
+    """
+
+    baker.writeconfig(iniconffile = iniconffile)
+
 #=============================
 @baker.command(default=True)
 def analysis(
         data_filename, 
         def_filename=None, 
+        config=None,
         quiet=False,
         debug=False,
         output=False,
@@ -1653,8 +1663,11 @@ def analysis(
         filter=None,
         pad_filters=None,
         no_inferred=False):
-    '''Analysis
+    '''Traditional analysis with separately calculated nodal factors.
 
+       :param data_filename: The time-series of elevations to be analyzed.
+       :param def_filename: Containes the definition string to parse the input data.
+       :param config: Read command line options from config file, override config file entries on the command line.
        :param quiet: Print nothing to the screen.
        :param debug: Print debug messages.
        :param output: Write output time-series.
@@ -1667,8 +1680,11 @@ def analysis(
        :param filter:  Filter input data set with tide elimination filters. The -o output option is implied. Any mix separated by commas and no spaces: transform,usgs,doodson,boxcar
        :param pad_filters: Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["tide", "minimum", "maximum", "mean", "median", "reflect", "wrap"]
        :param no_inferred: Do not incorporate any inferred constituents into the least squares fit.
+       :param print_vau_table: For debugging - will print a table of V and u values to compare against Schureman.
     '''
 
+    if config:
+        baker.readconfig(config)
 
     x = tappy(
         quiet=quiet,
