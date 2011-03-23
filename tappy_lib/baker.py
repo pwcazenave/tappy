@@ -253,6 +253,18 @@ class Baker(object):
             
             self.print_command_help(scriptname, cmd, file=file)
 
+    def openinput(self, filein):
+        if filein == '-':
+            return sys.stdin
+        import os.path
+        ext = os.path.splitext(filein)[1]
+        if ext in ['.gz', '.GZ']:
+            import gzip
+            return gzip.open(filein, 'rb')
+        if ext in ['.bz', '.bz2']:
+            import bz2
+            return bz2.BZ2File(filein, 'rb')
+        return open(filein, 'rb')
 
     def writeconfig(self, iniconffile=sys.argv[0] + ".ini"):
         """OVERWRITES an ini style config file that holds all of the default command line options.
@@ -466,20 +478,26 @@ class Baker(object):
         # arguments
         vargs = []
         kwargs = {}
-        
+       
+        doubledashcnt = 0
+        singledashcnt = 0
         while argv:
             # Take the next argument
             arg = argv.pop(0)
             
-            if arg == "-":
+            if arg == "--":
+                doubledashcnt = doubledashcnt + 1
+                assert doubledashcnt == 1
                 # All arguments following a single hyphen are treated as
                 # positional arguments
                 vargs.extend(argv)
                 break
             
-            elif arg == "--":
-                # What to do with a bare --? Right now, it's ignored.
-                continue
+            elif arg == "-":
+                # sys.stdin
+                singledashcnt = singledashcnt + 1
+                assert singledashcnt == 1
+                vargs.append('-')
             
             elif arg.startswith("--"):
                 # Process long option
@@ -488,6 +506,9 @@ class Baker(object):
                 if "=" in arg:
                     # The argument was specified like --keyword=value
                     name, value = arg[2:].split("=", 1)
+                    # strip quotes if value is quoted (--keyword='multiple words')
+                    value = value.strip('\'"')
+
                     default = keywords.get(name)
                     try:
                         value = totype(value, default)
@@ -621,39 +642,52 @@ class Baker(object):
         # an optional positional argument). This is different from the Python
         # calling convention, which will fill in keyword arguments with extra
         # positional arguments.
-        posargs = [a for a in cmd.argnames if cmd.keywords.get(a) is None]
-        
-        if len(args) > len(posargs) and not cmd.has_varargs:
-            raise CommandError("Too many arguments to %s: %s" % (cmd.name, " ".join(args)),
-                               scriptname, cmd)
-        
-        if not cmd.has_kwargs:
-            for k in sorted(kwargs.iterkeys()):
-                if k not in cmd.keywords:
-                    raise CommandError("Unknown option --%s" % k,
-                                       scriptname, cmd)
         
         # Rearrange the arguments into the order Python expects
         newargs = []
         newkwargs = kwargs.copy()
         for name in cmd.argnames:
-            if args and cmd.keywords.get(name) is None:
-                # This argument is required or optional and we have a bare arg
-                # to fill it
-                value = args.pop(0)
-                if name in cmd.keywords:
-                    newkwargs[name] = value
-                else:
+            if name in cmd.keywords:
+                if not args:
+                    break
+                #keyword arg
+                if cmd.has_varargs:
+                    #keyword params are not replaced by bare args if the func also has varags
+                    #but they must be specified as positional args for proper processing of varargs
+                    value = cmd.keywords[name]
+                    if name in newkwargs:
+                        value = newkwargs[name]
+                        del newkwargs[name]
                     newargs.append(value)
-            elif name not in cmd.keywords and not args:
-                # This argument is required but we don't have a bare arg to
-                # fill it
-                raise CommandError("Required argument '%s' not given" % name,
-                                   scriptname, cmd)
+                elif not name in newkwargs:
+                    newkwargs[name] = args.pop(0)
+                
             else:
-                # This is a keyword argument
-                newkwargs[name] = kwargs.get(name, cmd.keywords[name])
-        newargs.extend(args)
+                #positional arg
+                if name in newkwargs:
+                    newargs.append(newkwargs[name])
+                    del newkwargs[name]
+                else:
+                    if args:
+                        newargs.append(args.pop(0))
+                    else:
+                        # This argument is required but we don't have a bare arg to
+                        # fill it
+                        raise CommandError("Required argument '%s' not given" % name,
+                                           scriptname, cmd)
+        if args:
+            if cmd.has_varargs:
+                newargs.extend(args)
+            else:
+                raise CommandError("Too many arguments to %s: %s" % (cmd.name, " ".join(args)),
+                               scriptname, cmd)
+                
+        if not cmd.has_kwargs:
+            for k in newkwargs:
+                if k not in cmd.keywords:
+                    raise CommandError("Unknown option --%s" % k,
+                                       scriptname, cmd)
+        
         
         return cmd.fn(*newargs, **newkwargs)
     
@@ -724,6 +758,7 @@ run = _baker.run
 test = _baker.test
 usage = _baker.usage
 writeconfig = _baker.writeconfig
+openinput = _baker.openinput
 
 
 if __name__ == "__main__":
