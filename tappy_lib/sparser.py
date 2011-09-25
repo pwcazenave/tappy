@@ -56,7 +56,7 @@ from tappy_lib.pyparsing.pyparsing import *
 
 #===globals======================
 modname = "sparser"
-__version__ = "0.4"
+__version__ = "0.3"
 
 
 #--option args--
@@ -104,20 +104,13 @@ extra_dict = {}
 
 #====================================
 
-def toInteger(s, l, t):
+def toInteger(instring, loc, tokenlist):
     """Converts parsed integer string to an integer."""
-    try:
-        return int(t[0])
-    except ValueError:
-        raise ParseException(s, l, t)
+    return int(tokenlist[0])
 
-def toFloat(missing=""):
+def toFloat(instring, loc, tokenlist):
     """Converts parsed real string to a real."""
-    def InsidetoFloat(s, l, t):
-        if t[0] == missing:
-            raise ParseException(s, l, t)
-        return float(t[0])
-    return InsidetoFloat
+    return float(tokenlist[0])
 
 def toString(instring, loc, tokenlist):
     """Returns an integer or real as a string."""
@@ -136,16 +129,13 @@ def integer(name,
             maximum=None, 
             exact=None, 
             sign=Optional(oneOf("- +")), 
-            parseAct=toInteger,
-            ret=False):
+            parseAct=toInteger):
     """Appends a skip/integer combination to the parse constructs."""
     lint = Combine(sign + 
                    Word(nums, 
                         min=minimum, 
                         max=maximum, 
                         exact=exact))
-    if ret:
-        return lint
     grammar.append(SkipTo(lint))
     grammar.append(lint
                    .setResultsName(name)
@@ -154,15 +144,13 @@ def integer(name,
 def positive_integer(name, 
                      minimum=1, 
                      maximum=None, 
-                     exact=None,
-                     parseAct=toInteger):
+                     exact=None):
     """Will only parse a positive integer."""
     integer(name, 
             minimum=minimum, 
             maximum=maximum, 
             exact=exact, 
-            sign=Optional("+"),
-            parseAct=parseAct)
+            sign=Optional("+"))
 
 def negative_integer(name, 
                      minimum=1, 
@@ -178,8 +166,7 @@ def negative_integer(name,
 def real(name, 
          required_decimal=True,
          sign=Optional(oneOf("- +")), 
-         missing="",
-         ret=False):
+         parseAct=toFloat):
     """Appends a skip/real pair to the parse constructs."""
     if required_decimal:
         lword = Combine(sign +
@@ -189,12 +176,10 @@ def real(name,
         lword = Combine(sign +
                     Word(nums + decimal_sep) + 
                     Optional(oneOf("E e D d") + Optional(oneOf("- +")) + Word(nums)))
-    if ret:
-        return lword
     grammar.append(SkipTo(lword))
     grammar.append(lword
                    .setResultsName(name)
-                   .setParseAction(toFloat(missing=missing)))
+                   .setParseAction(parseAct))
 
 def positive_real(name, 
                   minimum=1, 
@@ -247,9 +232,6 @@ def integer_as_string(name,
             parseAct=parseAct)
 
 def real_as_datetime(name,
-                     minimum=1, 
-                     maximum=None, 
-                     exact=None, 
                      sign=Optional(oneOf("- +")), 
                      origin=datetime.datetime(1900,1,1),
                      unit='days',
@@ -259,9 +241,6 @@ def real_as_datetime(name,
     _origin = origin
     _unit = unit
     real(name, 
-         minimum=minimum, 
-         maximum=maximum, 
-         exact=exact, 
          sign=Optional("- +"), 
          parseAct=toDatetime)
 
@@ -296,28 +275,14 @@ def delimited_as_string(name):
     grammar.append(SkipTo(wrd))
     grammar.append(wrd.setResultsName(name))
 
-def string(name,
-           exact=None):
-    """Parses out any delimited group as a string."""
-    wrd = Word(printables + ' ', exact=exact)
-    grammar.append(SkipTo(wrd))
-    grammar.append(wrd.setResultsName(name))
-
-def number(name,
-           exact=None):
-    """ Parses integer or real number """
-    wrd = Or([real(name, ret=True), integer(name, ret=True)])
-    grammar.append(SkipTo(wrd))
-    grammar.append(wrd.setResultsName(name))
-
 def number_as_real(name,
                     sign=Optional(oneOf("- +")), 
-                    missing=""):
+                    parseAct=toFloat):
     """Parses any number as a real."""
     real(name,
          required_decimal=False,
          sign=Optional(oneOf("- +")), 
-         parseAct=toFloat(missing=missing))
+         parseAct=toFloat)
     
 def number_as_integer(name,
                     minimum=1, 
@@ -513,31 +478,6 @@ class ParseFileLineByLine:
     def flush(self):
         """Flush in memory contents to file."""
         self.file.flush()
-
-
-class ParseLine(ParseFileLineByLine):
-    def __init__(self, parse_functions):
-        global grammar
-        exec(str(parse_functions))
-        self.grammar = And(grammar[1:] + [restOfLine])
-        grammar = []
-        self.file = None
-
-    def __del__(self):
-        pass
-
-    # Might work to make this inheritable...
-    def parseline(self, inputstr):
-        """Reads (and optionally parses) a single line."""
-        line = ParsedString(inputstr)
-        if self.grammar and line:
-            try:
-                line.parsed_dict = self.grammar.parseString(line).asDict()
-                for key in extra_dict.keys():
-                    line.parsed_dict[key] = extra_dict[key]
-            except ParseException:
-                line.parsed_dict = {}
-        return line
 
 
 #=============================
