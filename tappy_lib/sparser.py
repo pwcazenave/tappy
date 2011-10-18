@@ -103,6 +103,11 @@ decimal_sep = "."
 extra_dict = {}
 
 #====================================
+class DefinitionFileNotFoundError(Exception):
+    def __init__(self, def_filename):
+        self.value = def_filename
+    def __str__(self):
+        return repr(self.value)
 
 def toInteger(instring, loc, tokenlist):
     """Converts parsed integer string to an integer."""
@@ -120,8 +125,14 @@ def toDatetime(instring, loc, tokenlist):
     """Returns a datetime object."""
     global _origin
     global _unit
-    
+
     exec('rvar = _origin + datetime.timedelta({0}={1})'.format(_unit, float(tokenlist[0])))
+    return rvar
+
+def isotoDate(instring, loc, tokenlist):
+    """Returns a datetime object."""
+    rvar = [int(i) for i in tokenlist[::2]]
+    rvar = datetime.datetime(*rvar)
     return rvar
 
 def integer(name, 
@@ -230,6 +241,21 @@ def integer_as_string(name,
             exact=exact, 
             sign=Optional("+"), 
             parseAct=parseAct)
+
+def isoformat_as_datetime(name,
+         parseAct=isotoDate):
+    """Appends a skip/real pair to the parse constructs."""
+    lword = (Word(nums) + '-' +
+             Word(nums) + '-' +
+             Word(nums) + oneOf('T  ') +
+             Word(nums) + ':' +
+             Word(nums) + ':' +
+             Word(nums)
+             )
+    grammar.append(SkipTo(lword))
+    grammar.append(lword
+                   .setResultsName(name)
+                   .setParseAction(parseAct))
 
 def real_as_datetime(name,
                      sign=Optional(oneOf("- +")), 
@@ -401,7 +427,7 @@ class ParseFileLineByLine:
         #         ]
 
         self.line_number = 0
-        
+
         definition_file_one = filen + ".def"
         if os.path.dirname(filen):
             definition_file_two = os.path.dirname(filen) + os.sep + "sparse.def"
@@ -415,6 +441,8 @@ class ParseFileLineByLine:
         if def_filename:
             if os.path.exists(def_filename):
                 self.parsedef = def_filename
+            else:
+                raise DefinitionFileNotFoundError(def_filename)
         if self.parsedef:
             execfile(self.parsedef)
             self.grammar = And(grammar[1:] + [restOfLine])

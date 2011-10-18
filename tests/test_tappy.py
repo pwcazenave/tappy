@@ -3,7 +3,8 @@
 import sys
 import unittest
 import glob
-
+import subprocess
+import difflib
 import os
 import os.path
 
@@ -14,32 +15,68 @@ cur_path = os.path.dirname(file_loc)
 tappy_loc = os.path.dirname(cur_path)
 
 sys.path.insert(0, tappy_loc)
-import tappy
-import difflib
 
 class TappyTest(unittest.TestCase):
     def setUp(self):
-        os.chdir(cur_path + os.sep + 'tmp')
-        #options, args = tappy.process_options('-o --filter transform ../../example/mayport_florida_8720220_data.txt')
-        self.con_output = tappy.analysis('../../example/mayport_florida_8720220_data.txt', output=True, filter='transform')
-        os.chdir(cur_path)
+        os.chdir(os.path.join(cur_path, 'tmp'))
+        for files in ['*.dat', '*.xml']:
+            for f in glob.glob(files):
+                os.remove(f)
+        self.con_output1 = subprocess.Popen([
+                os.path.join(os.path.pardir,os.path.pardir,'tappy.py'),
+                'analysis',
+                os.path.join(os.path.pardir,os.path.pardir,'example','mayport_florida_8720220_data.txt'), 
+                os.path.join(os.path.pardir,os.path.pardir,'example','mayport_florida_8720220_data_def.txt'), 
+        #        '--zero_ts="transform"',
+                '--outputts=True', 
+                '--outputxml="testout.xml"', 
+        #        '--filter="transform"',
+                '--include_inferred=False'
+                ],
+                stdout = subprocess.PIPE)
+        sts = os.waitpid(self.con_output1.pid, 0)[1]
 
     def test_constituents(self):
         for i in ['M2', 'M8']:
-            alines = open(os.sep.join(['output_ts','outts_%s.dat' % i])).readlines()
-            blines = open(os.sep.join(['tmp','outts_%s.dat' % i])).readlines()
+            alines = open(os.path.join(os.path.pardir,'output_ts','outts_%s.dat' % i)).readlines()
+            blines = open(os.path.join('outts_%s.dat' % i)).readlines()
+            d = difflib.Differ()
+            result = list(d.compare(alines, blines))
+            result = [i for i in result if i[0] in ['+', '-', '?']]
+            print ''.join(result),
+            self.assertEqual(result, [])
+
+    def test_closure(self):
+        self.con_output2 = subprocess.call([
+                os.path.join(os.path.pardir,os.path.pardir,'tappy.py'),
+                'prediction',
+                'testout.xml', 
+                '2000-01-01T00:00:00', 
+                '2000-02-01T00:00:00', 
+                '60', 
+                '--fname="predict.out"'
+                ])
+        self.con_output3 = subprocess.Popen([
+                os.path.join(os.path.pardir,os.path.pardir,'tappy.py'),
+                'analysis',
+                'predict.out', 
+                os.path.join(os.path.pardir,'predict_def.out'), 
+        #        '--zero_ts="transform"',
+                '--outputxml="testoutclosure.xml"', 
+        #        '--filter="transform"',
+                '--include_inferred=False'
+                ],
+                stdout = subprocess.PIPE)
+        sts = os.waitpid(self.con_output3.pid, 0)[1]
+        alines = open(os.path.join('testout.xml')).readlines()
+        blines = open(os.path.join('testoutclosure.xml')).readlines()
         d = difflib.Differ()
-        a = []
         result = list(d.compare(alines, blines))
+        result = [i for i in result if i[0] in ['+', '-', '?']]
         print ''.join(result),
-        self.assertEqual(a, [])
+        self.assertEqual(result, [])
 
-    def tearDown(self):
-        os.chdir(cur_path + os.sep + 'tmp')
-        for file in glob.glob('*.dat'):
-            os.remove(file)
-        os.chdir(cur_path)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
 

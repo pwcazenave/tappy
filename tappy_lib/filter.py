@@ -69,9 +69,11 @@ def fft_lowpass(nelevation, low_bound, high_bound):
     """ Performs a low pass filer on the nelevation series.
     low_bound and high_bound specifes the boundary of the filter.
     """
-    import numpy.fft
-    F = numpy.fft
-    result = F.rfft(nelevation)
+    import numpy.fft as F
+    if len(nelevation) % 2:
+        result = F.rfft(nelevation, len(nelevation))
+    else:
+        result = F.rfft(nelevation)
     freq = F.fftfreq(len(nelevation))[:len(nelevation)/2]
     factor = np.ones_like(result)
     factor[freq > low_bound] = 0.0
@@ -89,6 +91,7 @@ def fft_lowpass(nelevation, low_bound, high_bound):
     factor[sl] = a
 
     result = result * factor
-
-    relevation = F.irfft(result)
+    print 'result=', len(result)
+    relevation = F.irfft(result, len(nelevation))
+    print 'result=', len(relevation)
     return relevation
