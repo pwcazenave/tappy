@@ -1,0 +1,14 @@
+
+
+# You need to specify the separator between the integer part and the decimal
+# part of real numbers, even if you only have integers in your data file.
+decimal_sep = "."
+
+
+# TAPPy needs the variables 'year', 'month', 'day', 'hour', 'minute', 'water_level'.
+# Any other variable name can be used as a placeholder.
+parse = [ 
+          isoformat_as_datetime('datetime'),
+          real('water_level')
+         ]
+
