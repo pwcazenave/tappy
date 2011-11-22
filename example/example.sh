@@ -10,7 +10,7 @@
 ../tappy.py tridentpier_florida_8721604_data.txt.gz
 
 # Output
-../tappy.py --output mayport_florida_8720220_data.txt mayport_florida_8720220_data_def.txt
+../tappy.py --outputts mayport_florida_8720220_data.txt mayport_florida_8720220_data_def.txt
 
 # Test defining date as a single value.  Look at 
 # tridentpier_florida_8721604_datetime.txt.def for an explanation of what 
