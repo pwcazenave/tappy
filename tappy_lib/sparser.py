@@ -2,7 +2,7 @@
 
 """
 NAME:
-    sparser.py  
+    sparser.py
 
 SYNOPSIS:
     sparser.py [options] filename
@@ -51,7 +51,7 @@ import re
 import gzip
 import datetime
 
-from tappy_lib.pyparsing.pyparsing import *
+from pyparsing import *
 
 
 #===globals======================
@@ -65,7 +65,7 @@ debug_p = 0
 
 
 #---positional args, default is empty---
-pargs = []    
+pargs = []
 
 
 #---other---
@@ -87,7 +87,7 @@ def fatal(ftn, txt):
     """If can't continue."""
     msg = "%s.%s:FATAL:%s\n" % (modname, ftn, txt)
     raise SystemExit, msg
- 
+
 def usage():
     """Prints the docstring."""
     print __doc__
@@ -135,111 +135,111 @@ def isotoDate(instring, loc, tokenlist):
     rvar = datetime.datetime(*rvar)
     return rvar
 
-def integer(name, 
-            minimum=1, 
-            maximum=None, 
-            exact=None, 
-            sign=Optional(oneOf("- +")), 
+def integer(name,
+            minimum=1,
+            maximum=None,
+            exact=None,
+            sign=Optional(oneOf("- +")),
             parseAct=toInteger):
     """Appends a skip/integer combination to the parse constructs."""
-    lint = Combine(sign + 
-                   Word(nums, 
-                        min=minimum, 
-                        max=maximum, 
+    lint = Combine(sign +
+                   Word(nums,
+                        min=minimum,
+                        max=maximum,
                         exact=exact))
     grammar.append(SkipTo(lint))
     grammar.append(lint
                    .setResultsName(name)
                    .setParseAction(parseAct))
 
-def positive_integer(name, 
-                     minimum=1, 
-                     maximum=None, 
+def positive_integer(name,
+                     minimum=1,
+                     maximum=None,
                      exact=None):
     """Will only parse a positive integer."""
-    integer(name, 
-            minimum=minimum, 
-            maximum=maximum, 
-            exact=exact, 
+    integer(name,
+            minimum=minimum,
+            maximum=maximum,
+            exact=exact,
             sign=Optional("+"))
 
-def negative_integer(name, 
-                     minimum=1, 
-                     maximum=None, 
+def negative_integer(name,
+                     minimum=1,
+                     maximum=None,
                      exact=None):
     """Will only parse a negative integer."""
-    integer(name, 
-            minimum=minimum, 
-            maximum=maximum, 
-            exact=exact, 
+    integer(name,
+            minimum=minimum,
+            maximum=maximum,
+            exact=exact,
             sign="-")
 
-def real(name, 
+def real(name,
          required_decimal=True,
-         sign=Optional(oneOf("- +")), 
+         sign=Optional(oneOf("- +")),
          parseAct=toFloat):
     """Appends a skip/real pair to the parse constructs."""
     if required_decimal:
         lword = Combine(sign +
                     Regex('[0-9]*\.[0-9]*') +
                     Optional(oneOf("E e D d") + Optional(oneOf("- +")) + Word(nums)))
-    else: 
+    else:
         lword = Combine(sign +
-                    Word(nums + decimal_sep) + 
+                    Word(nums + decimal_sep) +
                     Optional(oneOf("E e D d") + Optional(oneOf("- +")) + Word(nums)))
     grammar.append(SkipTo(lword))
     grammar.append(lword
                    .setResultsName(name)
                    .setParseAction(parseAct))
 
-def positive_real(name, 
-                  minimum=1, 
-                  maximum=None, 
+def positive_real(name,
+                  minimum=1,
+                  maximum=None,
                   exact=None):
     """Will only parse a positive real."""
-    real(name, 
-         minimum=minimum, 
-         maximum=maximum, 
-         exact=exact, 
+    real(name,
+         minimum=minimum,
+         maximum=maximum,
+         exact=exact,
          sign=Optional("+"))
 
-def negative_real(name, 
-                  minimum=1, 
-                  maximum=None, 
+def negative_real(name,
+                  minimum=1,
+                  maximum=None,
                   exact=None):
     """Will only parse a negative real."""
-    real(name, 
-         minimum=minimum, 
-         maximum=maximum, 
-         exact=exact, 
+    real(name,
+         minimum=minimum,
+         maximum=maximum,
+         exact=exact,
          sign="-")
 
-def real_as_string(name, 
-                   minimum=1, 
-                   maximum=None, 
-                   exact=None, 
-                   sign=Optional(oneOf("- +")), 
+def real_as_string(name,
+                   minimum=1,
+                   maximum=None,
+                   exact=None,
+                   sign=Optional(oneOf("- +")),
                    parseAct=toString):
     """Parses a real number, but returns it as a string."""
-    real(name, 
-         minimum=minimum, 
-         maximum=maximum, 
-         exact=exact, 
-         sign=Optional("- +"), 
+    real(name,
+         minimum=minimum,
+         maximum=maximum,
+         exact=exact,
+         sign=Optional("- +"),
          parseAct=parseAct)
 
-def integer_as_string(name, 
-                      minimum=1, 
-                      maximum=None, 
-                      exact=None, 
-                      sign=Optional(oneOf("- +")), 
+def integer_as_string(name,
+                      minimum=1,
+                      maximum=None,
+                      exact=None,
+                      sign=Optional(oneOf("- +")),
                       parseAct=toString):
     """Parses an integer, but returns it as a string."""
-    integer(name, 
-            minimum=minimum, 
-            maximum=maximum, 
-            exact=exact, 
-            sign=Optional("+"), 
+    integer(name,
+            minimum=minimum,
+            maximum=maximum,
+            exact=exact,
+            sign=Optional("+"),
             parseAct=parseAct)
 
 def isoformat_as_datetime(name,
@@ -258,7 +258,7 @@ def isoformat_as_datetime(name,
                    .setParseAction(parseAct))
 
 def real_as_datetime(name,
-                     sign=Optional(oneOf("- +")), 
+                     sign=Optional(oneOf("- +")),
                      origin=datetime.datetime(1900,1,1),
                      unit='days',
                      parseAct=toDatetime):
@@ -266,15 +266,15 @@ def real_as_datetime(name,
     global _unit
     _origin = origin
     _unit = unit
-    real(name, 
-         sign=Optional("- +"), 
+    real(name,
+         sign=Optional("- +"),
          parseAct=toDatetime)
 
 def integer_as_datetime(name,
-                      minimum=1, 
-                      maximum=None, 
-                      exact=None, 
-                      sign=Optional(oneOf("- +")), 
+                      minimum=1,
+                      maximum=None,
+                      exact=None,
+                      sign=Optional(oneOf("- +")),
                       origin=datetime.datetime(1900,1,1),
                       unit='days',
                       parseAct=toDatetime):
@@ -282,11 +282,11 @@ def integer_as_datetime(name,
     global _unit
     _origin = origin
     _unit = unit
-    integer(name, 
-         minimum=minimum, 
-         maximum=maximum, 
-         exact=exact, 
-         sign=Optional("- +"), 
+    integer(name,
+         minimum=minimum,
+         maximum=maximum,
+         exact=exact,
+         sign=Optional("- +"),
          parseAct=toDatetime)
 
 def qstring(name):
@@ -302,40 +302,40 @@ def delimited_as_string(name):
     grammar.append(wrd.setResultsName(name))
 
 def number_as_real(name,
-                    sign=Optional(oneOf("- +")), 
+                    sign=Optional(oneOf("- +")),
                     parseAct=toFloat):
     """Parses any number as a real."""
     real(name,
          required_decimal=False,
-         sign=Optional(oneOf("- +")), 
+         sign=Optional(oneOf("- +")),
          parseAct=toFloat)
-    
+
 def number_as_integer(name,
-                    minimum=1, 
-                    maximum=None, 
-                    exact=None, 
-                    sign=Optional(oneOf("- +")), 
+                    minimum=1,
+                    maximum=None,
+                    exact=None,
+                    sign=Optional(oneOf("- +")),
                     parseAct=toInteger):
     """Parses any number as a integer."""
     integer(name,
-         minimum=1, 
-         maximum=None, 
-         exact=None, 
-         sign=Optional(oneOf("- +")), 
+         minimum=1,
+         maximum=None,
+         exact=None,
+         sign=Optional(oneOf("- +")),
          parseAct=toInteger)
-    
+
 def number_as_string(name,
-                    minimum=1, 
-                    maximum=None, 
-                    exact=None, 
-                    sign=Optional(oneOf("- +")), 
+                    minimum=1,
+                    maximum=None,
+                    exact=None,
+                    sign=Optional(oneOf("- +")),
                     parseAct=toString):
     """Parses any number as a string."""
     real(name,
-         minimum=1, 
-         maximum=None, 
-         exact=None, 
-         sign=Optional(oneOf("- +")), 
+         minimum=1,
+         maximum=None,
+         exact=None,
+         sign=Optional(oneOf("- +")),
          parseAct=toString)
 
 def insert(name, value):
@@ -343,7 +343,7 @@ def insert(name, value):
 
 
 class ParsedString(str):
-    """ 
+    """
     String class inherited from 'str' plus a dictionary of parsed
     values and a line number.
     """
@@ -376,11 +376,11 @@ class ParseFileLineByLine:
     the definition file for all files in that directory without a file specific
     definition file.
 
-    Constructor: 
+    Constructor:
     ParseFileLineByLine(|filename|, |mode|='"r"'), where |filename| is the name
     of the file (compressed or a URL if 'filelike' module is available) and
     |mode| is one of '"r"' (read), '"w"' (write) or '"a"' (append, not
-    supported for .Z files).  
+    supported for .Z files).
     """
 
     def __init__(self, filename, def_filename=None, mode = 'r'):
@@ -518,7 +518,7 @@ def main(pargs):
     for i in fp:
         print i
 
-    
+
 #-------------------------
 if __name__ == '__main__':
     ftn = "main"
@@ -542,5 +542,5 @@ if __name__ == '__main__':
 
 #===Revision Log===
 #Created by mkpythonproj:
-#2006-02-06  Tim Cera  
+#2006-02-06  Tim Cera
 #

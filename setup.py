@@ -1,20 +1,20 @@
 """
 NAME:
     setup.py
-  
+
 SYNOPSIS:
     python setup.py [options] [command]
-    
+
 DESCRIPTION:
     Using distutils "setup", build, install, or make tarball of the package.
-    
+
 OPTIONS:
     See Distutils documentation for details on options and commands.
     Common commands:
     build               build the package, in preparation for install
     install             install module(s)/package(s) [runs build if needed]
-    install_data        install datafiles (e.g., in a share dir)   
-    install_scripts     install executable scripts (e.g., in a bin dir)   
+    install_data        install datafiles (e.g., in a share dir)
+    install_scripts     install executable scripts (e.g., in a bin dir)
     sdist               make a source distribution
     bdist               make a binary distribution
     clean               remove build temporaries
@@ -55,12 +55,16 @@ license = "GPL-2"
 
 scripts=['tappy.py']
 packages=[
-    'tappy_lib', 
-    'tappy_lib/astronomia/astronomia', 
-    'tappy_lib/filelike/filelike', 
-    'tappy_lib/pyparsing',
+    'tappy_lib',
+    'tappy_lib/astronomia/astronomia',
+    'tappy_lib/filelike/filelike',
     'tappy_lib/pad',
     ]
+
+install_requires=[
+        'Baker>=1.3',
+        'pyparsing'
+        ]
 
 #===utilities==========================
 def debug(ftn,txt):
@@ -71,7 +75,7 @@ def debug(ftn,txt):
 def fatal(ftn,txt):
     msg="%s.%s:FATAL:%s\n" % (modname,ftn,txt)
     raise SystemExit, msg
-    
+
 def usage():
     print __doc__
 
@@ -97,4 +101,6 @@ setup (#---meta-data---
        #---scripts,modules and packages---
        scripts=scripts,
        packages = packages,
+
+       install_requires = install_requires,
        )

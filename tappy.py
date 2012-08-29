@@ -47,13 +47,14 @@ import numpy as np
 from scipy.optimize import leastsq
 import datetime
 
+
 import tappy_lib
 import sparser
 import astronomia.calendar as cal
 import astronomia.util as uti
 import pad.pad as pad
-from parameter_database import _master_speed_dict, letter_to_factor_map
 import baker
+from parameter_database import _master_speed_dict, letter_to_factor_map
 
 #===globals======================
 modname = "tappy"
