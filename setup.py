@@ -56,14 +56,14 @@ license = "GPL-2"
 scripts=['tappy.py']
 packages=[
     'tappy_lib',
-    'tappy_lib/astronomia/astronomia',
-    'tappy_lib/filelike/filelike',
     'tappy_lib/pad',
     ]
 
 install_requires=[
         'Baker>=1.3',
-        'pyparsing'
+        'pyparsing',
+        'astronomia',
+        'filelike'
         ]
 
 #===utilities==========================
