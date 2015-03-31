@@ -46,9 +46,8 @@ import sys
 import os
 import os.path
 import numpy as np
-from scipy.optimize import leastsq
 import datetime
-
+from scipy.optimize import leastsq
 
 import tappy_lib
 import sparser
@@ -83,7 +82,7 @@ def debug(ftn, txt):
 
 def fatal(ftn, txt):
     msg = "%s.%s:FATAL:%s\n" % (modname, ftn, txt)
-    raise SystemExit, msg
+    raise SystemExit(msg)
 
 def usage():
     print(__doc__)
@@ -199,7 +198,7 @@ class Util():
 
     def write_file(self, x, y, fname='-'):
         if isinstance(y, dict):
-            for key in y.keys():
+            for key in list(y.keys()):
                 nfname = "%s_%s.dat" % (os.path.splitext(fname)[-2], key)
                 self.write_file(x, y[key], fname=nfname)
         else:
@@ -843,7 +842,7 @@ class Util():
         if num_hours >= 77554 * rayleigh_comp:
             speed_dict["M1"] = self.tidal_dict["M1"]
 
-        key_list = speed_dict.keys()
+        key_list = list(speed_dict.keys())
         key_list.sort()
 
         return (speed_dict, key_list)
@@ -884,16 +883,16 @@ class tappy(Util):
                                          def_filename = def_filename,
                                          mode='r')
         for line in fp:
-            if 'water_level' not in line.parsed_dict.keys():
+            if 'water_level' not in list(line.parsed_dict.keys()):
                 print('Warning: record %i did not parse according to the supplied definition file' % line.line_number)
                 continue
-            if 'datetime' in line.parsed_dict.keys():
+            if 'datetime' in list(line.parsed_dict.keys()):
                 self.dates.append(line.parsed_dict['datetime'])
             elif (
-                'year' in line.parsed_dict.keys() and
-                'month' in line.parsed_dict.keys() and
-                'day' in line.parsed_dict.keys() and
-                'hour' in line.parsed_dict.keys()):
+                'year' in list(line.parsed_dict.keys()) and
+                'month' in list(line.parsed_dict.keys()) and
+                'day' in list(line.parsed_dict.keys()) and
+                'hour' in list(line.parsed_dict.keys())):
                     line.parsed_dict.setdefault('minute', 0)
                     line.parsed_dict.setdefault('second', 0)
                     self.dates.append(datetime.datetime(line.parsed_dict['year'],
@@ -1478,10 +1477,10 @@ class tappy(Util):
 
     def sortbyvalue(self, dict):
         """ Return a list of (key, value) pairs, sorted by value. """
-        _swap2 = lambda (x, y): (y, x)
-        mdict = map(_swap2, dict.items())
+        _swap2 = lambda x_y: (x_y[1], x_y[0])
+        mdict = list(map(_swap2, list(dict.items())))
         mdict.sort()
-        mdict = map(_swap2, mdict)
+        mdict = list(map(_swap2, mdict))
         return mdict
 
 
@@ -1666,12 +1665,12 @@ if __name__ == '__main__':
             fname='-'):
         '''Prediction based upon earlier constituent analysis saved in IHOTC XML transfer format.
 
-        :param xml_filename: The tidal constituents in IHOTC XML transfer format.
-        :param start_date: The start date as a ISO 8601 string. '2010-01-01T00:00:00'
-        :param end_date: The end date as a ISO 8601 string. '2011-01-01T00:00:00:00'
-        :param interval: The interval as the number of minutes.
-        :param include_inferred: Include the inferred constituents.
-        :param fname: Output filename, default is '-' to print to screen.
+           :param xml_filename: The tidal constituents in IHOTC XML transfer format.
+           :param start_date: The start date as a ISO 8601 string. '2010-01-01T00:00:00'
+           :param end_date: The end date as a ISO 8601 string. '2011-01-01T00:00:00:00'
+           :param interval: The interval as the number of minutes.
+           :param include_inferred: Include the inferred constituents.
+           :param fname: Output filename, default is '-' to print to screen.
         '''
         import xml.etree.ElementTree as et
         tree = et.parse(xml_filename)
@@ -1753,31 +1752,31 @@ if __name__ == '__main__':
             Constituent amplitude units are the same as the input heights.
             Constituent phases are based in the same time zone as the dates.
 
-        :param data_filename: The time-series of elevations to be analyzed.
-        :param def_filename: Containes the definition string to parse the input data.
-        :param config: Read command line options from config file, override config file entries on the command line.
-        :param quiet: Print nothing to the screen.
-        :param debug: Print debug messages.
-        :param outputts: Output time series for each constituent.
-        :param ephemeris: Print out ephemeris tables.
-        :param rayleigh: The Rayleigh coefficient is used to compare against to determine time series length to differentiate between two frequencies. [default: default]
-        :param missing_data: What should be done if there is missing data.  One of: fail, ignore, or fill. [default: default]
-        :param linear_trend: Include a linear trend in the least squares fit.
-        :param remove_extreme: Remove values outside of 2 standard deviations before analysis.
-        :param zero_ts: Zero the input time series before constituent analysis by subtracting filtered data. One of: transform,usgs,doodson,boxcar
-        :param filter:  Filter input data set with tide elimination filters. The -o outputts option is implied. Any mix separated by commas and no spaces: transform,usgs,doodson,boxcar
-        :param pad_filters: Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["tide", "minimum", "maximum", "mean", "median", "reflect", "wrap"]
-        :param include_inferred: Do not incorporate any inferred constituents into the least squares fit.
-        :param print_vau_table: For debugging - will print a table of V and u values to compare against Schureman.
-        :param outputxml: File name to output constituents as IHOTC XML format.
-        :param xmlname: Not used in analysis. Used ONLY to complete the XML file. Name of the station supplying the observations. Defaults to 'A port in a storm'.
-        :param xmlcountry: Not used in analysis. Used ONLY to complete the XML file. Name of the country containing the station. Defaults to 'A man without a country'.
-        :param xmllatitude: Not used in analysis. Used ONLY to complete the XML file. Latitude of the station. Defaults to 0.0.
-        :param xmllongitude: Not used in analysis. Used ONLY to complete the XML file. Longitude of the station. Defaults to 0.0.
-        :param xmltimezone: Not used in analysis. Used ONLY to complete the XML file. Time zone of the station. Defaults to '0000'.
-        :param xmlcomments: Not used in analysis. Used ONLY to complete the XML file. Station comments. Defaults to 'No comment'.
-        :param xmlunits: Not used in analysis. Used ONLY to complete the XML file. Units of the observed water level. Defaults to 'm'.
-        :param xmldecimalplaces: Not used in analysis. Used ONLY to complete the XML file. Format of the observed amplitude and phase. Default depends on length of analysis record.
+           :param data_filename: The time-series of elevations to be analyzed.
+           :param def_filename: Containes the definition string to parse the input data.
+           :param config: Read command line options from config file, override config file entries on the command line.
+           :param quiet: Print nothing to the screen.
+           :param debug: Print debug messages.
+           :param outputts: Output time series for each constituent.
+           :param ephemeris: Print out ephemeris tables.
+           :param rayleigh: The Rayleigh coefficient is used to compare against to determine time series length to differentiate between two frequencies. [default: default]
+           :param missing_data: What should be done if there is missing data.  One of: fail, ignore, or fill. [default: default]
+           :param linear_trend: Include a linear trend in the least squares fit.
+           :param remove_extreme: Remove values outside of 2 standard deviations before analysis.
+           :param zero_ts: Zero the input time series before constituent analysis by subtracting filtered data. One of: transform,usgs,doodson,boxcar
+           :param filter:  Filter input data set with tide elimination filters. The -o outputts option is implied. Any mix separated by commas and no spaces: transform,usgs,doodson,boxcar
+           :param pad_filters: Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["tide", "minimum", "maximum", "mean", "median", "reflect", "wrap"]
+           :param include_inferred: Do not incorporate any inferred constituents into the least squares fit.
+           :param print_vau_table: For debugging - will print a table of V and u values to compare against Schureman.
+           :param outputxml: File name to output constituents as IHOTC XML format.
+           :param xmlname: Not used in analysis. Used ONLY to complete the XML file. Name of the station supplying the observations. Defaults to 'A port in a storm'.
+           :param xmlcountry: Not used in analysis. Used ONLY to complete the XML file. Name of the country containing the station. Defaults to 'A man without a country'.
+           :param xmllatitude: Not used in analysis. Used ONLY to complete the XML file. Latitude of the station. Defaults to 0.0.
+           :param xmllongitude: Not used in analysis. Used ONLY to complete the XML file. Longitude of the station. Defaults to 0.0.
+           :param xmltimezone: Not used in analysis. Used ONLY to complete the XML file. Time zone of the station. Defaults to '0000'.
+           :param xmlcomments: Not used in analysis. Used ONLY to complete the XML file. Station comments. Defaults to 'No comment'.
+           :param xmlunits: Not used in analysis. Used ONLY to complete the XML file. Units of the observed water level. Defaults to 'm'.
+           :param xmldecimalplaces: Not used in analysis. Used ONLY to complete the XML file. Format of the observed amplitude and phase. Default depends on length of analysis record.
         '''
 
         if config:
@@ -1809,8 +1808,8 @@ if __name__ == '__main__':
 
         if x.missing_data == 'fail':
             x.dates_filled, x.elevation_filled = x.missing(x.missing_data,
-                                                        x.dates,
-                                                        x.elevation)
+                                                           x.dates,
+                                                           x.elevation)
 
         if x.remove_extreme:
             x.remove_extreme_values()
@@ -1823,8 +1822,8 @@ if __name__ == '__main__':
         else:
             ray = 1.0
         (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
-                                                        package,
-                                                        rayleigh_comp = ray)
+                                                          package,
+                                                          rayleigh_comp = ray)
         if x.zero_ts:
             # FIX - have to run the constituents package here in order to have
             # filters available , and then run AGAIN later on.
@@ -1833,15 +1832,15 @@ if __name__ == '__main__':
             x.dates_filled, x.elevation_filled = x.missing('fill', x.dates, x.elevation)
             print(len(x.dates_filled), len(x.elevation_filled))
             x.dates, filtered = x.filters(zero_ts,
-                                        x.dates_filled,
-                                        x.elevation_filled)
+                                          x.dates_filled,
+                                          x.elevation_filled)
             print(len(x.dates), len(filtered))
             x.elevation = x.elevation_filled - filtered
             package = x.astronomic(x.dates)
             (x.zeta, x.nu, x.nup, x.nupp, x.kap_p, x.ii, x.R, x.Q, x.T, x.jd, x.s, x.h, x.N, x.p, x.p1) = package
             (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
-                                                            package,
-                                                            rayleigh_comp = ray)
+                                                              package,
+                                                              rayleigh_comp = ray)
 
         x.constituents()
 
@@ -1857,8 +1856,8 @@ if __name__ == '__main__':
                     filtered_dates, result = x.filters(item, x.dates, x.elevation)
                     x.write_file(filtered_dates, result, fname='outts_filtered_%s.dat' % (item,))
             (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
-                                                            package,
-                                                            rayleigh_comp = ray)
+                                                              package,
+                                                              rayleigh_comp = ray)
 
         if not x.quiet:
             x.print_con()
@@ -1866,17 +1865,17 @@ if __name__ == '__main__':
         if x.outputts:
             for key in x.key_list:
                 x.write_file(x.dates,
-                            x.sum_signals([key], x.dates, x.speed_dict),
-                            fname="outts_%s.dat" % (key,))
+                             x.sum_signals([key], x.dates, x.speed_dict),
+                             fname="outts_%s.dat" % (key,))
                 x.write_file(x.dates,
-                            x.speed_dict[key]['FF'],
-                            fname="outts_ff_%s.dat" % (key,))
+                             x.speed_dict[key]['FF'],
+                             fname="outts_ff_%s.dat" % (key,))
             x.write_file(x.dates,
-                        x.sum_signals(x.key_list, x.dates, x.tidal_dict),
-                        fname="outts_total_tidal_components.dat")
+                         x.sum_signals(x.key_list, x.dates, x.tidal_dict),
+                         fname="outts_total_tidal_components.dat")
             x.write_file(x.dates,
-                        x.elevation,
-                        fname="outts_original.dat")
+                         x.elevation,
+                         fname="outts_original.dat")
 
         if x.outputxml:
             import xml.etree.ElementTree as et
