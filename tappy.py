@@ -58,7 +58,7 @@ from parameter_database import _master_speed_dict, letter_to_factor_map
 
 #===globals======================
 modname = "tappy"
-__version__ = "0.9.0"
+__version__ = "0.10.0"
 
 #--option args--
 debug_p = 0
