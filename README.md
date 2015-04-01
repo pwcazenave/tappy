@@ -10,8 +10,8 @@ that are calculatable according to the length of the time series.
 Authors
 -------
 
-Tim Cera (tim at cerazone.net)
-Pierre Cazenave (Plymouth Marine Laboratory)
+* Tim Cera (tim at cerazone.net)
+* Pierre Cazenave (Plymouth Marine Laboratory)
 
 Source
 ------
@@ -19,6 +19,7 @@ Source
 This repository is an import of the CVS repository found on the official site:
 
 https://sourceforge.net/p/tappy/wiki/Main_Page
+
 http://sourceforge.net/projects/tappy
 
 I (Pierre Cazenave) have made minor changes to the code to allow TAPPY to be used as a module in scripts.
@@ -30,7 +31,6 @@ The official SourceForge site contains an extensive wiki which covers the usage 
 
 ```python
 
-import numpy as nop
 import tappy
 
 if __name__ == '__main__':
