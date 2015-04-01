@@ -27,7 +27,7 @@ I (Pierre Cazenave) have made minor changes to the code to allow TAPPY to be use
 Examples
 --------
 
-The official SourceForge site contains an extensive wiki which covers the usage of TAPPY. Given the change I made to allow the code to be imported as a module, an example of its use in that manner is useful.
+The [official SourceForge wiki](http://sourceforge.net/p/tappy/wiki/Main_Page) covers the general usage of TAPPY. Given the change I made to allow the code to be imported as a module, an example of its use in that manner is useful.
 
 ```python
 
