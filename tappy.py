@@ -703,7 +703,6 @@ class Util():
 
 
         num_hours = (jd[-1] - jd[0]) * 24
-        numpoint = len(jd) * 0.5 * rayleigh_comp
         if num_hours < 13:
             print("Cannot calculate any constituents from this record length")
             sys.exit()
@@ -933,8 +932,6 @@ class tappy(Util):
                 sys.exit()
 
         if task == 'fill':
-            # Create real dates
-            start = dates[0]
             # Dominant interval
             interval.sort()
             interval = interval[len(interval)/2]
@@ -1002,7 +999,6 @@ class tappy(Util):
 
         H = {}
         phase = {}
-        slope = {}
         for index, key in enumerate(key_list):
             H[key] = p[index]
             phase[key] = p[index + len(key_list)]
@@ -1263,7 +1259,6 @@ class tappy(Util):
 
             # intial parameters
             sz = (len(nelevation),) # size of array
-            x = -0.37727 # truth value
 
             Q = (max(nelevation) - min(nelevation))/10000.0 # process variance
             Q = 1.0e-2
@@ -1418,7 +1413,6 @@ class tappy(Util):
 
         if nstype == 'wavelet':
             import pywt
-            import pylab
 
             for wl in pywt.wavelist():
 
