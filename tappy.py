@@ -39,7 +39,7 @@ EXAMPLES:
 
 
 """
-#===imports======================
+# ===imports======================
 from __future__ import print_function
 
 import sys
@@ -57,20 +57,20 @@ import pad.pad as pad
 import baker
 from parameter_database import _master_speed_dict, letter_to_factor_map
 
-#===globals======================
+# ===globals======================
 modname = "tappy"
 __version__ = "0.10.0"
 
-#--option args--
+# --option args--
 debug_p = 0
-#opt_b=None  #string arg, default is undefined
+# opt_b=None  #string arg, default is undefined
 
-#---other---
+# ---other---
 deg2rad = np.pi/180.0
 rad2deg = 180.0/np.pi
 
 
-#===utilities====================
+# ===utilities====================
 def msg(txt):
     sys.stdout.write(txt)
     sys.stdout.flush()
@@ -183,7 +183,7 @@ def node_factor_235(ii, nu):
                    0.0981)**0.5  # eq 235 schureman
 
 
-#====================================
+# ====================================
 class Util:
     def __init__(self, r, phase):
         self.r = r
@@ -896,7 +896,7 @@ class tappy(Util):
         self.pad_filters = kwds.pop('pad_filters')
         self.include_inferred = kwds.pop('include_inferred')
 
-        #---instance variables---
+        # ---instance variables---
         self.speed_dict = {}
         self.elevation = []
         self.dates = []
@@ -1027,9 +1027,9 @@ class tappy(Util):
         for index, key in enumerate(key_list):
             H[key] = p[index]
             phase[key] = p[index + len(key_list)]
-            #print('---')
-            #print(key)
-            #print(self.speed_dict[key]['FF'][:3])
+            # print('---')
+            # print(key)
+            # print(self.speed_dict[key]['FF'][:3])
         if len(self.speed_dict[key_list[0]]['FF']) == len(t):
             ff = self.tidal_dict
         else:
@@ -1132,7 +1132,7 @@ class tappy(Util):
         return self.err
 
 
-    #--------------------------
+    # --------------------------
 
     def constituents(self):
         difference = np.asarray(self.dates[1:]) - np.asarray(self.dates[:-1])
@@ -1346,7 +1346,7 @@ class tappy(Util):
             # either side of the central one. A weighted average is taken
             # with the following weights
 
-            #(1010010110201102112 0 2112011020110100101)/30.
+            # (1010010110201102112 0 2112011020110100101)/30.
 
             # In "Data Analaysis and Methods in Oceanography":
 
@@ -1423,7 +1423,7 @@ class tappy(Util):
             new_dates = self.dates2jd(new_dates)
             ntimes = np.arange(2*blen + 1)
             for d in range(len(new_dates))[blen:-blen]:
-          #      ntimes = (new_dates[d-12:d+12] - new_dates[d]) * 24
+                # ntimes = (new_dates[d-12:d+12] - new_dates[d]) * 24
                 nelev = new_elev[d-blen:d+blen+1]
                 lsfit = leastsq(self.residuals, p0, args=(nelev, ntimes, s_list))
                 slope.append(lsfit[0][-2])
@@ -1728,7 +1728,7 @@ if __name__ == '__main__':
         u.write_file(u.dates, prediction, fname=fname)
 
 
-    #=============================
+    # =============================
     @baker.command(default=True)
     def analysis(
             data_filename,
