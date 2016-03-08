@@ -135,52 +135,52 @@ def zone_calculations(zftn, data, mask, limit = 25):
 
 
 def node_factor_73(ii):
-    return ((2./3.) - np.sin(ii)**2)/0.5021
+    return ((2. / 3.) - np.sin(ii)**2) / 0.5021
 
 
 def node_factor_74(ii):
-    return np.sin(ii)**2 /0.1578
+    return np.sin(ii)**2 / 0.1578
 
 
 def node_factor_75(ii):
-    return np.sin(ii)*np.cos(0.5*ii)**2 /0.37988
+    return np.sin(ii) * np.cos(0.5 * ii)**2 / 0.37988
 
 
 def node_factor_76(ii):
-    return np.sin(2.0*ii)/0.7214
+    return np.sin(2.0 * ii)/0.7214
 
 
 def node_factor_77(ii):
-    return (np.sin(ii)*np.sin(0.5*ii)**2)/0.0164
+    return (np.sin(ii)*np.sin(0.5*ii)**2) / 0.0164
 
 
 def node_factor_78(ii):
-    return np.cos(0.5*ii)**4 /0.91544
+    return np.cos(0.5 * ii)**4 / 0.91544
 
 
 def node_factor_79(ii):
-    return np.sin(ii)**2/0.1565
+    return np.sin(ii)**2 / 0.1565
 
 
 def node_factor_149(ii):
-    return np.cos(0.5*ii)**6 /0.8758
+    return np.cos(0.5*ii)**6 / 0.8758
 
 
 def node_factor_144(ii):
-    return (1.0 - 10.0*np.sin(0.5*ii)**2 +
-                   15.0*np.sin(0.5*ii)**4)*np.cos(0.5*ii)**2/0.5873
+    return (1.0 - 10.0 * np.sin(0.5 * ii)**2 +
+            15.0 * np.sin(0.5 * ii)**4) * np.cos(0.5 * ii)**2 / 0.5873
 
 
 def node_factor_227(ii, nu):
-    return (0.8965*(np.sin(2.*ii)**2) +
-                   0.6001*np.sin(2.*ii)*np.cos(nu) +
-                   0.1006)**0.5
+    return (0.8965 * (np.sin(2. * ii)**2) +
+            0.6001 * np.sin(2. * ii) * np.cos(nu) +
+            0.1006)**0.5
 
 
 def node_factor_235(ii, nu):
-    return (19.0444*(np.sin(ii)**4) +
-                   2.7702*(np.sin(ii)**2) * np.cos(2.*nu) +
-                   0.0981)**0.5  # eq 235 schureman
+    return (19.0444 * (np.sin(ii)**4) +
+            2.7702 * (np.sin(ii)**2) * np.cos(2. * nu) +
+            0.0981)**0.5  # eq 235 schureman
 
 
 # ====================================
@@ -203,7 +203,7 @@ class Util:
                 p = self.phase[i]
             else:
                 p = (phase - np.average(phase)) + self.phase[i]
-            component = R*speed_dict[i]['FF']*np.cos(speed_dict[i]['speed']*hours - (p - speed_dict[i]['VAU'])*deg2rad)
+            component = R*speed_dict[i]['FF']*np.cos(speed_dict[i]['speed']*hours - (p - speed_dict[i]['VAU']) * deg2rad)
             total = total + component
         return total
 
@@ -274,7 +274,7 @@ class Util:
 
         const_1 = np.sin(i)**2 * np.sin(2.0*nu)
         const_2 = np.sin(i)**2 * np.cos(2.0*nu) + 0.0727
-        nupp = 0.5*np.arctan2(const_1, const_2) # eq 232
+        nupp = 0.5 * np.arctan2(const_1, const_2)  # eq 232
 
         hour = jd[0] - int(jd[0])
 
@@ -282,16 +282,16 @@ class Util:
 
         # pg 44, Schureman
         # Since R is only used for L2, should eventually move this
-        term1 = np.sin(2.*kap_p)
-        term2 = (1./6.)*(1./np.tan(i*0.5))**2
-        term3 = np.cos(2.*kap_p)
-        R = np.mod(np.arctan(term1/(term2 - term3)), 2*np.pi)
+        term1 = np.sin(2. * kap_p)
+        term2 = (1. / 6.)*(1. / np.tan(i * 0.5))**2
+        term3 = np.cos(2. * kap_p)
+        R = np.mod(np.arctan(term1 / (term2 - term3)), 2 * np.pi)
 
         # pg 42
         # Since Q is used only for NO1, should eventually move this
-        Q = np.mod(np.arctan(0.483*np.tan(kap_p)) + np.pi, 2*np.pi)
+        Q = np.mod(np.arctan(0.483 * np.tan(kap_p)) + np.pi, 2 * np.pi)
 
-        T = 360.*hour*deg2rad
+        T = 360. * hour * deg2rad
 
         # This should be stream lined... needed to support
         # the larger sized vector when filling missing values.
@@ -320,71 +320,71 @@ class Util:
         self.tidal_dict = {}
 
         self.tidal_dict["M2"] = {
-            'ospeed': 28.984104252*deg2rad,
-            'VAU': 2*(T - s + h + zeta - nu),
-            'u':   2*(zeta - nu),
+            'ospeed': 28.984104252 * deg2rad,
+            'VAU': 2 * (T - s + h + zeta - nu),
+            'u':   2 * (zeta - nu),
             'FF': node_factor_78(ii)
         }
         self.tidal_dict["K1"] = {
-            'ospeed': 15.041068632*deg2rad,
-            'VAU': T + h - 90*deg2rad - nup,
-            'u':   -nup,
+            'ospeed': 15.041068632 * deg2rad,
+            'VAU': T + h - 90 * deg2rad - nup,
+            'u': -nup,
             'FF': node_factor_227(ii, nu)
         }
         self.tidal_dict["M3"] = {
-            'ospeed': 43.476156360*deg2rad,
-            'VAU': 3*(T - s + h + zeta - nu),
-            'u': 3*(zeta - nu),
+            'ospeed': 43.476156360 * deg2rad,
+            'VAU': 3 * (T - s + h + zeta - nu),
+            'u': 3 * (zeta - nu),
             'FF': node_factor_149(ii)
         }
         self.tidal_dict["M4"] = {
-            'ospeed': 57.968208468*deg2rad,
-            'VAU': 2.*self.tidal_dict['M2']['VAU'],
+            'ospeed': 57.968208468 * deg2rad,
+            'VAU': 2. * self.tidal_dict['M2']['VAU'],
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["M6"] = {
-            'ospeed': 86.952312720*deg2rad,
-            'VAU': 3.*self.tidal_dict['M2']['VAU'],
+            'ospeed': 86.952312720 * deg2rad,
+            'VAU': 3. * self.tidal_dict['M2']['VAU'],
             # Parker, et. al node factor for M6 is square of M2.  This is
             # inconsistent with IHOTC, Schureman, and FF of M4 and M8.
             'FF': self.tidal_dict['M2']['FF']**3
         }
         self.tidal_dict["M8"] = {
-            'ospeed': 115.936416972*deg2rad,
-            'VAU': 4.*self.tidal_dict['M2']['VAU'],
+            'ospeed': 115.936416972 * deg2rad,
+            'VAU': 4. * self.tidal_dict['M2']['VAU'],
             'FF': self.tidal_dict['M2']['FF']**4
         }
         self.tidal_dict["S6"] = {
-            'ospeed': 90.0*deg2rad,
+            'ospeed': 90.0 * deg2rad,
             'VAU': 6*T,
             'FF': np.ones(length)
         }
         self.tidal_dict["O1"] = {
-            'ospeed': 13.943035584*deg2rad,
-            'VAU': T - 2*s + h + 90*deg2rad + 2*zeta - nu,
+            'ospeed': 13.943035584 * deg2rad,
+            'VAU': T - 2 * s + h + 90 * deg2rad + 2 * zeta - nu,
             'u': 2*zeta - nu,
             'FF': node_factor_75(ii)
         }
         self.tidal_dict["S2"] = {
-            'ospeed': 30.0000000*deg2rad,
-            'VAU': 2*T,
+            'ospeed': 30.0000000 * deg2rad,
+            'VAU': 2 * T,
             'FF': np.ones(length)
         }
         self.tidal_dict["2MS6"] = {
-            'ospeed': 87.968208492*deg2rad, #?
-            'VAU': (2.0*self.tidal_dict['M2']['VAU'] +
+            'ospeed': 87.968208492 * deg2rad,  # ?
+            'VAU': (2.0 * self.tidal_dict['M2']['VAU'] +
                     self.tidal_dict['S2']['VAU']),
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["2SM6"] = {
-            'ospeed': 88.984104228*deg2rad, #?
-            'VAU': (2.0*self.tidal_dict['S2']['VAU'] +
+            'ospeed': 88.984104228 * deg2rad,  # ?
+            'VAU': (2.0 * self.tidal_dict['S2']['VAU'] +
                     self.tidal_dict['M2']['VAU']),
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["MSf"] = {
-            'ospeed': 1.0158957720*deg2rad,
-            'VAU': 2.0*(s - h),
+            'ospeed': 1.0158957720 * deg2rad,
+            'VAU': 2.0 * (s - h),
             'FF': node_factor_75(ii)
         }
         self.tidal_dict["SK3"] = {
@@ -395,75 +395,75 @@ class Util:
         # Might need to move this to another time span - couldn't find this
         # in Foreman for Rayleigh comparison pair.
         self.tidal_dict["2SM2"] = {
-            'ospeed': 31.01589576*deg2rad,
-            'VAU': (2.0*self.tidal_dict['S2']['VAU'] -
+            'ospeed': 31.01589576 * deg2rad,
+            'VAU': (2.0 * self.tidal_dict['S2']['VAU'] -
                     self.tidal_dict['M2']['VAU']),
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["MS4"] = {
-            'ospeed': 58.984104240*deg2rad,
+            'ospeed': 58.984104240 * deg2rad,
             'VAU': (self.tidal_dict['M2']['VAU'] +
                     self.tidal_dict['S2']['VAU']),
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["S4"] = {
-            'ospeed': 60.0*deg2rad,
-            'VAU': 4*T,
+            'ospeed': 60.0 * deg2rad,
+            'VAU': 4 * T,
             'FF': np.ones(length)
         }
         self.tidal_dict["OO1"] = {
-            'ospeed': 16.139101680*deg2rad,
-            'VAU': T + 2*s + h - 90*deg2rad - 2*zeta - nu,
+            'ospeed': 16.139101680 * deg2rad,
+            'VAU': T + 2 * s + h - 90 * deg2rad - 2*zeta - nu,
             'FF': node_factor_77(ii)
         }
         self.tidal_dict["MK3"] = {
-            'ospeed': 44.025172884*deg2rad,
+            'ospeed': 44.025172884 * deg2rad,
             'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K1']['VAU'],
             'FF': self.tidal_dict['M2']['FF']*self.tidal_dict['K1']['FF']
         }
         # Seems like 2MK3 in Schureman is equivalent to MO3 in Foreman
         self.tidal_dict["MO3"] = {
-            'ospeed': 42.927139836*deg2rad,
-            'VAU': (2*self.tidal_dict['M2']['VAU'] -
+            'ospeed': 42.927139836 * deg2rad,
+            'VAU': (2 * self.tidal_dict['M2']['VAU'] -
                     self.tidal_dict['K1']['VAU']),
-            'FF': self.tidal_dict['M2']['FF']**2*self.tidal_dict['K1']['FF']
+            'FF': self.tidal_dict['M2']['FF']**2 * self.tidal_dict['K1']['FF']
         }
-        self.tidal_dict["N2"] =  {
-            'ospeed': 28.439729568*deg2rad,
-            'VAU': 2*T - 3*s + 2*h + p + 2*zeta - 2*nu,
+        self.tidal_dict["N2"] = {
+            'ospeed': 28.439729568 * deg2rad,
+            'VAU': 2 * T - 3 * s + 2 * h + p + 2 * zeta - 2 * nu,
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["2MN6"] = {
-            'ospeed': 86.407938036*deg2rad,
-            'VAU': (2*self.tidal_dict['M2']['VAU'] +
+            'ospeed': 86.407938036 * deg2rad,
+            'VAU': (2 * self.tidal_dict['M2']['VAU'] +
                     self.tidal_dict['N2']['VAU']),
             'FF': self.tidal_dict['M2']['FF']**3
         }
         self.tidal_dict["2Q1"] = {
-            'ospeed': 12.854286252*deg2rad,
-            'VAU': T - 4*s + h + 2*p + 90*deg2rad + 2*zeta - nu,
+            'ospeed': 12.854286252 * deg2rad,
+            'VAU': T - 4 * s + h + 2 * p + 90 * deg2rad + 2 * zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
-        self.tidal_dict["Q1"] =  {
-            'ospeed': 13.3986609*deg2rad,
-            'VAU': T - 3*s + h + p + 90*deg2rad + 2*zeta - nu,
+        self.tidal_dict["Q1"] = {
+            'ospeed': 13.3986609 * deg2rad,
+            'VAU': T - 3 * s + h + p + 90 * deg2rad + 2 * zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
-        self.tidal_dict["J1"] =  {
-            'ospeed': 15.5854433*deg2rad,
-            'VAU': T + s + h - p - 90*deg2rad - nu,
+        self.tidal_dict["J1"] = {
+            'ospeed': 15.5854433 * deg2rad,
+            'VAU': T + s + h - p - 90 * deg2rad - nu,
             'FF': node_factor_76(ii)
         }
         # Seems like KJ2 in Schureman is equivalent to eta2 in Foreman
         self.tidal_dict["eta2"] = {
-            'ospeed': 30.626511948*deg2rad,
-            'VAU': 2*T + s + 2*h - p - 2*nu,
+            'ospeed': 30.626511948 * deg2rad,
+            'VAU': 2 * T + s + 2 * h - p - 2 * nu,
             'FF': node_factor_79(ii)
         }
         # Seems like KQ1 in Schureman is equivalent to ups1 in Foreman
         self.tidal_dict["ups1"] = {
-            'ospeed': 16.683476328*deg2rad,
-            'VAU': T + 3*s + h - p - 90*deg2rad - 2*zeta - nu,
+            'ospeed': 16.683476328 * deg2rad,
+            'VAU': T + 3 * s + h - p - 90 * deg2rad - 2 * zeta - nu,
             'FF': node_factor_77(ii)
         }
         #
@@ -502,14 +502,14 @@ class Util:
         # M1            14.492052126  From Schureman A71
         # NO1           14.496693984  From Schureman M1
 
-        self.tidal_dict["M1"] =  {
-            'ospeed': 14.4920521*deg2rad,
-            'VAU': T - s + h + zeta + nu, # term A71 in Schureman
+        self.tidal_dict["M1"] = {
+            'ospeed': 14.4920521 * deg2rad,
+            'VAU': T - s + h + zeta + nu,  # term A71 in Schureman
             'FF': node_factor_144(ii)
         }
         self.tidal_dict["NO1"] = {
-            'ospeed': 14.496693984*deg2rad,
-            'VAU': T - s + h - 90*deg2rad + zeta - nu + Q,
+            'ospeed': 14.496693984 * deg2rad,
+            'VAU': T - s + h - 90 * deg2rad + zeta - nu + Q,
             # 2.307**0.5 factor was missed in Darwin's analysis and the wrong
             # factor was used for M1 for many years.  Indicates the importance
             # of M1 and NO1.  As with many constituents listed here, I have
@@ -518,175 +518,175 @@ class Util:
                    (2.31+1.435*np.cos(2.0*kap_p))**0.5/2.307**0.5)
         }
         self.tidal_dict["MN4"] = {
-            'ospeed': 57.423833820*deg2rad,   # From TASK
+            'ospeed': 57.423833820 * deg2rad,   # From TASK
             'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['N2']['VAU'],
             'FF': self.tidal_dict['M2']['FF']**2
         }
-        self.tidal_dict["Mm"] =  {
-            'ospeed': 0.5443747*deg2rad,
+        self.tidal_dict["Mm"] = {
+            'ospeed': 0.5443747 * deg2rad,
             'VAU': s - p,
             'FF': node_factor_73(ii)
         }
-        self.tidal_dict["L2"] =  {
-            'ospeed': 29.5284789*deg2rad,
-            'VAU': 2*T - s + 2*h - p + 180*deg2rad + 2*zeta - 2*nu - R,
+        self.tidal_dict["L2"] = {
+            'ospeed': 29.5284789 * deg2rad,
+            'VAU': 2 * T - s + 2 * h - p + 180 * deg2rad + 2 * zeta - 2 * nu - R,
             'FF': (self.tidal_dict['M2']['FF'] /
-                   (1.0/(1.0 - 12.0*np.tan(0.5*ii)**2 * np.cos(2.0*kap_p) +
-                    36.0*np.tan(0.5*ii)**4)**0.5)) # eq 215, schureman
+                   (1.0/(1.0 - 12.0 * np.tan(0.5 * ii)**2 * np.cos(2.0 * kap_p) +
+                    36.0 * np.tan(0.5 * ii)**4)**0.5))  # eq 215, schureman
         }
         self.tidal_dict["mu2"] = {
-            'ospeed': 27.9682084*deg2rad,
-            'VAU': 2*T - 4*s + 4*h + 2*zeta - 2*nu,
+            'ospeed': 27.9682084 * deg2rad,
+            'VAU': 2 * T - 4 * s + 4 * h + 2 * zeta - 2 * nu,
             'FF': self.tidal_dict['M2']['FF']
         }
 #        self.tidal_dict["ALPHA1"] =
 # eps2 = MNS2
         self.tidal_dict["MNS2"] = {
-            'ospeed': 27.423833796*deg2rad,
-            'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*nu, # verify
+            'ospeed': 27.423833796 * deg2rad,
+            'VAU': 2 * T - 5 * s + 4 * h + p + 4 * zeta - 4 * nu,  # verify
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["SN4"] = {
-            'ospeed': 58.4397295560*deg2rad,
-            'VAU': 2*T - 5*s + 4*h + p + 4*zeta - 4*nu,
+            'ospeed': 58.4397295560 * deg2rad,
+            'VAU': 2 * T - 5 * s + 4*h + p + 4 * zeta - 4 * nu,
             'FF': self.tidal_dict['M2']['FF']**2
         }
         self.tidal_dict["Ssa"] = {
-            'ospeed': 0.0821373*deg2rad,
-            'VAU': 2.0*h,
+            'ospeed': 0.0821373 * deg2rad,
+            'VAU': 2.0 * h,
             'FF': np.ones(length)
         }
-        self.tidal_dict["Mf"] =  {
-            'ospeed': 1.0980331*deg2rad,
-            'VAU': 2.0*(s - zeta),
+        self.tidal_dict["Mf"] = {
+            'ospeed': 1.0980331 * deg2rad,
+            'VAU': 2.0 * (s - zeta),
             'FF': node_factor_74(ii)
         }
         self.tidal_dict["P1"] = {
-            'ospeed': 14.9589314*deg2rad,
-            'VAU': T - h + 90*deg2rad,
+            'ospeed': 14.9589314 * deg2rad,
+            'VAU': T - h + 90 * deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["K2"] = {
-            'ospeed': 30.0821373*deg2rad,
-            'VAU': 2*(T + h - nupp),
+            'ospeed': 30.0821373 * deg2rad,
+            'VAU': 2 * (T + h - nupp),
             'FF': node_factor_235(ii, nu)
         }
         self.tidal_dict["SO3"] = {
-            'ospeed': 43.9430356*deg2rad,
-            'VAU': 3*T - 2*s + h + 90*deg2rad + 2*zeta - nu,
+            'ospeed': 43.9430356 * deg2rad,
+            'VAU': 3 * T - 2 * s + h + 90 * deg2rad + 2 * zeta - nu,
             'FF': self.tidal_dict["O1"]["FF"]
         }
         self.tidal_dict["phi1"] = {
-            'ospeed': 15.1232059*deg2rad,
-            'VAU': T + 3*h - 90*deg2rad,
+            'ospeed': 15.1232059 * deg2rad,
+            'VAU': T + 3 * h - 90 * deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["SO1"] = {
-            'ospeed': 16.0569644*deg2rad,
-            'VAU': T + 2*s - h - 90*deg2rad - nu,
+            'ospeed': 16.0569644 * deg2rad,
+            'VAU': T + 2 * s - h - 90 * deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         # Seems like A54 in Schureman is equivalent to MKS2 in Foreman
         self.tidal_dict["MKS2"] = {
-            'ospeed': 29.066241528*deg2rad,
-            'VAU': 2*T - 2*s + 4*h - 2*nu,
+            'ospeed': 29.066241528 * deg2rad,
+            'VAU': 2 * T - 2 * s + 4 * h - 2 * nu,
             'FF': self.tidal_dict['eta2']['FF']
         }
         # Seems like MP1 in Schureman is equivalent to tau1 in Foreman
         self.tidal_dict["MP1"] = {
-            'ospeed': 14.025172896*deg2rad,
-            'VAU': T - 2*s + 3*h - 90*deg2rad - nu,
+            'ospeed': 14.025172896 * deg2rad,
+            'VAU': T - 2 * s + 3 * h - 90 * deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         # Seems like A19 in Schureman is equivalent to BET1 in Foreman
         # Can't find BET1 in eXtended Doodson numbers
 #        self.tidal_dict["beta1"] = {
-#            'ospeed': 14.414556708*deg2rad,
-#            'VAU': T - s - h + p - 90*deg2rad - 2*zeta - nu,
+#            'ospeed': 14.414556708 * deg2rad,
+#            'VAU': T - s - h + p - 90 * deg2rad - 2*zeta - nu,
 #            'FF': self.tidal_dict['O1']['FF']
 #        }
         self.tidal_dict["MK4"] = {
-            'ospeed': 59.066241516*deg2rad,
+            'ospeed': 59.066241516 * deg2rad,
             'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K2']['VAU'],
             'FF': self.tidal_dict['M2']['FF'] * self.tidal_dict['K2']['FF']
         }
         self.tidal_dict["MSN2"] = {
-            'ospeed': 30.544374672*deg2rad,
+            'ospeed': 30.544374672 * deg2rad,
             'VAU': self.tidal_dict['M2']['VAU'] + self.tidal_dict['K2']['VAU'],
             'FF': self.tidal_dict['M2']['FF'] * self.tidal_dict['K2']['FF']
         }
         self.tidal_dict["2N2"] = {
-            'ospeed': 27.8953548*deg2rad,
-            'VAU': 2*(T - 2*s + h + p + zeta - nu),
+            'ospeed': 27.8953548 * deg2rad,
+            'VAU': 2 * (T - 2 * s + h + p + zeta - nu),
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["nu2"] = {
-            'ospeed': 28.5125831*deg2rad,
-            'VAU': 2*T - 3*s + 4*h - p + 2*zeta - 2*nu,
+            'ospeed': 28.5125831 * deg2rad,
+            'VAU': 2 * T - 3 * s + 4 * h - p + 2 * zeta - 2 * nu,
             'FF': self.tidal_dict['M2']['FF']
         }
         # Seems like A4 in Schureman is equivalent to MSm in Foreman
         self.tidal_dict["MSm"] = {
-            'ospeed': 0.4715210880*deg2rad,
-            'VAU': s - 2*h + p,
+            'ospeed': 0.4715210880 * deg2rad,
+            'VAU': s - 2 * h + p,
             'FF': self.tidal_dict['Mm']['FF']
         }
         # nuJ1 = sigma1
         self.tidal_dict["nuJ1"] = {
-            'ospeed': 12.9271398*deg2rad,
-            'VAU': T - 4*s + 3*h + 90*deg2rad + 2*zeta - nu,
+            'ospeed': 12.9271398 * deg2rad,
+            'VAU': T - 4 * s + 3 * h + 90 * deg2rad + 2 * zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["rho1"] = {
-            'ospeed': 13.4715145*deg2rad,
-            'VAU': T - 3*s + 3*h - p + 90*deg2rad + 2*zeta - nu,
+            'ospeed': 13.4715145 * deg2rad,
+            'VAU': T - 3 * s + 3 * h - p + 90 * deg2rad + 2 * zeta - nu,
             'FF': self.tidal_dict['O1']['FF']
         }
         self.tidal_dict["chi1"] = {
-            'ospeed': 14.5695476*deg2rad,
-            'VAU': T - s + 3*h - p - 90*deg2rad - nu,
+            'ospeed': 14.5695476 * deg2rad,
+            'VAU': T - s + 3 * h - p - 90 * deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
         self.tidal_dict["theta1"] = {
-            'ospeed': 15.5125897*deg2rad,
-            'VAU': T + s - h + p - 90*deg2rad - nu,
+            'ospeed': 15.5125897 * deg2rad,
+            'VAU': T + s - h + p - 90 * deg2rad - nu,
             'FF': self.tidal_dict['J1']['FF']
         }
 #        self.tidal_dict["OQ2"] =
         self.tidal_dict["lambda2"] = {
-            'ospeed': 29.4556253*deg2rad,
-            'VAU': 2*T - s + p + 180*deg2rad,
+            'ospeed': 29.4556253 * deg2rad,
+            'VAU': 2 * T - s + p + 180 * deg2rad,
             'FF': self.tidal_dict['M2']['FF']
         }
         self.tidal_dict["Sa"] = {
-            'ospeed': 0.0410686*deg2rad,
+            'ospeed': 0.0410686 * deg2rad,
             'VAU': h,
             'FF': np.ones(length)
         }
         self.tidal_dict["S1"] = {
-            'ospeed': 15.0000000*deg2rad,
+            'ospeed': 15.0000000 * deg2rad,
             'VAU': T,
             'FF': np.ones(length)
         }
         self.tidal_dict["T2"] = {
-            'ospeed': 29.9589333*deg2rad,
-            'VAU': 2*T - h + p1,
+            'ospeed': 29.9589333 * deg2rad,
+            'VAU': 2 * T - h + p1,
             'FF': np.ones(length)
         }
         self.tidal_dict["R2"] = {
-            'ospeed': 30.0410667*deg2rad,
-            'VAU': 2*T + h - p1 + 180*deg2rad,
+            'ospeed': 30.0410667 * deg2rad,
+            'VAU': 2 * T + h - p1 + 180 * deg2rad,
             'FF': np.ones(length)
         }
         self.tidal_dict["pi1"] = {
-            'ospeed': 14.9178647*deg2rad,
-            'VAU': T - 2*h + p1 + 90*deg2rad,
+            'ospeed': 14.9178647 * deg2rad,
+            'VAU': T - 2 * h + p1 + 90 * deg2rad,
             'FF': np.ones(length)
 #'pi1': [1, 'AAWZZAY', [1, 1, -3, 0, 0, 1, -1]],
         }
         self.tidal_dict["psi1"] = {
-            'ospeed': 15.0821352*deg2rad,
-            'VAU': T + 2*h - p1 - 90*deg2rad,
+            'ospeed': 15.0821352 * deg2rad,
+            'VAU': T + 2 * h - p1 - 90 * deg2rad,
             'FF': np.ones(length)
 #'psi1': [1, 'AAAZZYA', [1, 1, 1, 0, 0, -1, 1]],
         }
@@ -695,17 +695,17 @@ class Util:
         # Doesn't really matter unless analyzing tides in 5000 C.E., because
         # the speeds do change.
         (zetatoss, nutoss, nuptoss, nupptoss, kap_ptoss, itoss, Rtoss, Qtoss, Tbeg, jdtoss, sbeg, hbeg, Nvbeg, pbeg, p1beg) = self.astronomic([self.dates[0], self.dates[0] + datetime.timedelta(hours = 1)])
-        Tspeed = 15.0*deg2rad
+        Tspeed = 15.0 * deg2rad
         sspeed = (sbeg[1] - sbeg[0])
         hspeed = (hbeg[1] - hbeg[0])
         Nvspeed = (Nvbeg[1] - Nvbeg[0])
         pspeed = (pbeg[1] - pbeg[0])
         ppspeed = (p1beg[1] - p1beg[0])
-        w = np.array([(Tspeed - sspeed + hspeed), sspeed, hspeed, pspeed, Nvspeed, ppspeed, 0.0])*rad2deg
+        w = np.array([(Tspeed - sspeed + hspeed), sspeed, hspeed, pspeed, Nvspeed, ppspeed, 0.0]) * rad2deg
 
         # The equilibrium arguments can be for the first time only since the
         # VAU argument as it progresses will be at the same speed.
-        vw1 = [(15.0*deg2rad + h[0] - s[0]), s[0], h[0], p[0], Nv[0], p1[0], 90*deg2rad]
+        vw1 = [(15.0 * deg2rad + h[0] - s[0]), s[0], h[0], p[0], Nv[0], p1[0], 90 * deg2rad]
         vw1 = np.array(vw1)
 
         for key in self.tidal_dict:
@@ -714,14 +714,14 @@ class Util:
                                    for i in _master_speed_dict[key]['edn']]
             self.tidal_dict[key]['speed'] = np.sum(np.array(constituent_factors)*w)
             self.tidal_dict[key]['speed'] = np.mod(self.tidal_dict[key]['speed'], 360)
-            self.tidal_dict[key]['speed'] = self.tidal_dict[key]['speed']*deg2rad
+            self.tidal_dict[key]['speed'] = self.tidal_dict[key]['speed'] * deg2rad
 
             self.tidal_dict[key]['V'] = np.sum(np.array(constituent_factors)*vw1)
-            self.tidal_dict[key]['V'] = self.tidal_dict[key]['V']*rad2deg
+            self.tidal_dict[key]['V'] = self.tidal_dict[key]['V'] * rad2deg
             self.tidal_dict[key]['V'] = np.mod(self.tidal_dict[key]['V'], 360)
 
             # Change VAU to degree and between 0 and 360
-            self.tidal_dict[key]['VAU'] = self.tidal_dict[key]['VAU']*rad2deg
+            self.tidal_dict[key]['VAU'] = self.tidal_dict[key]['VAU'] * rad2deg
             try:
                 self.tidal_dict[key]['VAU'] = np.mod(self.tidal_dict[key]['VAU'], 360)[0]
             except IndexError:
@@ -1046,70 +1046,70 @@ class tappy(Util):
                 if 'J1' not in key_list:
                     self.inferred_key_list.append('J1')
                     self.inferred_r['J1'] = H['J1'] = 0.079 * H['O1']
-                    self.inferred_phase['J1'] = phase['J1'] = phase['K1'] + 0.496*(phase['K1'] - phase['O1'])
+                    self.inferred_phase['J1'] = phase['J1'] = phase['K1'] + 0.496 * (phase['K1'] - phase['O1'])
                 # How should I handle this?  Shureman seems to confuse M1 and NO1
                 if 'M1' not in key_list:
                     self.inferred_key_list.append('M1')
                     self.inferred_r['M1'] = H['M1'] = 0.071 * H['O1']
-                    self.inferred_phase['M1'] = phase['M1'] = phase['K1'] - 0.5*(phase['K1'] - phase['O1'])
+                    self.inferred_phase['M1'] = phase['M1'] = phase['K1'] - 0.5 * (phase['K1'] - phase['O1'])
                 if 'OO1' not in key_list:
                     self.inferred_key_list.append('OO1')
                     self.inferred_r['OO1'] = H['OO1'] = 0.043 * H['O1']
-                    self.inferred_phase['OO1'] = phase['OO1'] = phase['K1'] + 1.0*(phase['K1'] - phase['O1'])
+                    self.inferred_phase['OO1'] = phase['OO1'] = phase['K1'] + 1.0 * (phase['K1'] - phase['O1'])
                 if 'P1' not in key_list:
                     self.speed_dict["P1"] = self.tidal_dict["P1"]
                     self.inferred_key_list.append('P1')
                     self.inferred_r['P1'] = H['P1'] = 0.331 * H['K1']
-                    self.inferred_phase['P1'] = phase['P1'] = phase['K1'] - 0.075*(phase['K1'] - phase['O1'])
+                    self.inferred_phase['P1'] = phase['P1'] = phase['K1'] - 0.075 * (phase['K1'] - phase['O1'])
                 if 'Q1' not in key_list:
                     self.inferred_key_list.append('Q1')
                     self.inferred_r['Q1'] = H['Q1'] = 0.194 * H['O1']
-                    self.inferred_phase['Q1'] = phase['Q1'] = phase['K1'] - 1.496*(phase['K1'] - phase['O1'])
+                    self.inferred_phase['Q1'] = phase['Q1'] = phase['K1'] - 1.496 * (phase['K1'] - phase['O1'])
                 if '2Q1' not in key_list:
                     self.inferred_key_list.append('2Q1')
                     self.inferred_r['2Q1'] = H['2Q1'] = 0.026 * H['O1']
-                    self.inferred_phase['2Q1'] = phase['2Q1'] = phase['K1'] - 1.992*(phase['K1'] - phase['O1'])
+                    self.inferred_phase['2Q1'] = phase['2Q1'] = phase['K1'] - 1.992 * (phase['K1'] - phase['O1'])
                 if 'rho1' not in key_list:
                     self.inferred_key_list.append('rho1')
                     self.inferred_r['rho1'] = H['rho1'] = 0.038 * H['O1']
-                    self.inferred_phase['rho1'] = phase['rho1'] = phase['K1'] - 1.429*(phase['K1'] - phase['O1'])
+                    self.inferred_phase['rho1'] = phase['rho1'] = phase['K1'] - 1.429 * (phase['K1'] - phase['O1'])
             if 'S2' in key_list and 'M2' in key_list:
                 if 'K2' not in key_list:
                     self.inferred_key_list.append('K2')
                     self.inferred_r['K2'] = H['K2'] = 0.272 * H['S2']
-                    self.inferred_phase['K2'] = phase['K2'] = phase['S2'] + 0.081*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['K2'] = phase['K2'] = phase['S2'] + 0.081 * (phase['S2'] - phase['M2'])
                 if 'L2' not in key_list:
                     self.inferred_key_list.append('L2')
                     self.inferred_r['L2'] = H['L2'] = 0.028 * H['M2']
-                    self.inferred_phase['L2'] = phase['L2'] = phase['S2'] - 0.464*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['L2'] = phase['L2'] = phase['S2'] - 0.464 * (phase['S2'] - phase['M2'])
                 if 'N2' not in key_list:
                     self.inferred_key_list.append('N2')
                     self.inferred_r['N2'] = H['N2'] = 0.194 * H['M2']
-                    self.inferred_phase['N2'] = phase['N2'] = phase['S2'] - 1.536*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['N2'] = phase['N2'] = phase['S2'] - 1.536 * (phase['S2'] - phase['M2'])
                 if '2N2' not in key_list:
                     self.inferred_key_list.append('2N2')
                     self.inferred_r['2N2'] = H['2N2'] = 0.026 * H['M2']
-                    self.inferred_phase['2N2'] = phase['2N2'] = phase['S2'] - 2.072*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['2N2'] = phase['2N2'] = phase['S2'] - 2.072 * (phase['S2'] - phase['M2'])
                 if 'R2' not in key_list:
                     self.inferred_key_list.append('R2')
                     self.inferred_r['R2'] = H['R2'] = 0.008 * H['S2']
-                    self.inferred_phase['R2'] = phase['R2'] = phase['S2'] + 0.040*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['R2'] = phase['R2'] = phase['S2'] + 0.040 * (phase['S2'] - phase['M2'])
                 if 'T2' not in key_list:
                     self.inferred_key_list.append('T2')
                     self.inferred_r['T2'] = H['T2'] = 0.059 * H['S2']
-                    self.inferred_phase['T2'] = phase['T2'] = phase['S2'] - 0.040*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['T2'] = phase['T2'] = phase['S2'] - 0.040 * (phase['S2'] - phase['M2'])
                 if 'lambda2' not in key_list:
                     self.inferred_key_list.append('lambda2')
                     self.inferred_r['lambda2'] = H['lambda2'] = 0.007 * H['M2']
-                    self.inferred_phase['lambda2'] = phase['lambda2'] = phase['S2'] - 0.536*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['lambda2'] = phase['lambda2'] = phase['S2'] - 0.536 * (phase['S2'] - phase['M2'])
                 if 'mu2' not in key_list:
                     self.inferred_key_list.append('mu2')
                     self.inferred_r['mu2'] = H['mu2'] = 0.024 * H['M2']
-                    self.inferred_phase['mu2'] = phase['mu2'] = phase['S2'] - 2.0*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['mu2'] = phase['mu2'] = phase['S2'] - 2.0 * (phase['S2'] - phase['M2'])
                 if 'nu2' not in key_list:
                     self.inferred_key_list.append('nu2')
                     self.inferred_r['nu2'] = H['nu2'] = 0.038 * H['M2']
-                    self.inferred_phase['nu2'] = phase['nu2'] = phase['S2'] - 1.464*(phase['S2'] - phase['M2'])
+                    self.inferred_phase['nu2'] = phase['nu2'] = phase['S2'] - 1.464 * (phase['S2'] - phase['M2'])
             for key in self.inferred_key_list:
                 if self.inferred_r[key] < 0:
                     self.inferred_r[key] = abs(self.inferred_r[key])
@@ -1122,10 +1122,10 @@ class tappy(Util):
 
         sumterm = np.zeros((len(t)))
         for i in key_list + self.inferred_key_list:
-            sumterm = sumterm + H[i]*ff[i]['FF']*np.cos(self.tidal_dict[i]['speed']*t - phase[i])
+            sumterm = sumterm + H[i] * np.squeeze(ff[i]['FF']) * np.cos(self.tidal_dict[i]['speed'] * t - phase[i])
 
         if self.linear_trend:
-            self.err = ht - (p[-2]*t + p[-1] + sumterm)
+            self.err = ht - (p[-2] * t + p[-1] + sumterm)
         else:
             self.err = ht - (p[-1] + sumterm)
 
@@ -1141,7 +1141,7 @@ class tappy(Util):
             print("The date values reverse - they must be constantly increasing.")
             sys.exit()
 
-        p0 = [1.0]*(len(self.speed_dict)*2 + 2)
+        p0 = [1.0] * (len(self.speed_dict) * 2 + 2)
         p0[-2] = 0.0
         p0[-1] = np.average(self.elevation)
         self.ntimes = (self.jd - self.jd[0]) * 24
@@ -1152,7 +1152,7 @@ class tappy(Util):
         self.phase = {}
         for index, key in enumerate(self.key_list):
             self.r[key] = lsfit[0][index]
-            self.phase[key] = lsfit[0][index + len(self.key_list)]*rad2deg
+            self.phase[key] = lsfit[0][index + len(self.key_list)] * rad2deg
 
             if self.r[key] < 0:
                 self.r[key] = abs(self.r[key])
@@ -1169,8 +1169,8 @@ class tappy(Util):
     def cat_dates(self, dates, len_dates):
         interval = dates[1:] - dates[:-1]
         interval.sort()
-        interval = interval[len(interval)/2]
-        cnt = np.arange(1, len_dates + 1)*datetime.timedelta(minutes = interval.seconds/60)
+        interval = interval[len(interval) / 2]
+        cnt = np.arange(1, len_dates + 1)*datetime.timedelta(minutes=interval.seconds / 60)
         bdate = dates[0] - cnt[::-1]
         edate = dates[-1] + cnt
         return np.concatenate((bdate, dates, edate))
@@ -1185,9 +1185,9 @@ class tappy(Util):
             tnelevation = np.concatenate((np.array([np.average(nelevation[0:half_kern])]), nelevation, np.array([np.average(nelevation[-half_kern:])])))
             interval = ndates[1:] - ndates[:-1]
             interval.sort()
-            interval = interval[len(interval)/2]
-            deltat = datetime.timedelta(minutes = interval.seconds/60)
-            tndates = np.concatenate((np.array([ndates[0] - blen*deltat]), ndates, np.array([ndates[-1] + alen*deltat])))
+            interval = interval[len(interval) / 2]
+            deltat = datetime.timedelta(minutes=interval.seconds / 60)
+            tndates = np.concatenate((np.array([ndates[0] - blen * deltat]), ndates, np.array([ndates[-1] + alen * deltat])))
             (cndates, nelevation) = self.missing('fill', tndates, tnelevation)
 
         if self.pad_filters == "minimum":
@@ -1267,7 +1267,7 @@ class tappy(Util):
                 4) cosine-Lanczos filter
             """
             import filter
-            return dates_filled, filter.fft_lowpass(nelevation, 1/30.0, 1/40.0)
+            return dates_filled, filter.fft_lowpass(nelevation, 1 / 30.0, 1 / 40.0)
 
         if nstype == 'kalman':
             # I threw this in from an example on scipy's web site.  I will keep
@@ -1299,12 +1299,12 @@ class tappy(Util):
             for k in range(1, len(nelevation)):
                 # time update
                 xhatminus[k] = xhat[k-1]
-                Pminus[k] = P[k-1]+Q
+                Pminus[k] = P[k-1] + Q
 
                 # measurement update
-                K[k] = Pminus[k]/( Pminus[k]+R )
-                xhat[k] = xhatminus[k]+K[k]*(nelevation[k]-xhatminus[k])
-                P[k] = (1-K[k])*Pminus[k]
+                K[k] = Pminus[k] / (Pminus[k] + R)
+                xhat[k] = xhatminus[k] + K[k] * (nelevation[k] - xhatminus[k])
+                P[k] = (1 - K[k]) * Pminus[k]
 
             relevation = xhat
             return dates_filled, relevation
@@ -1326,7 +1326,7 @@ class tappy(Util):
             if self.pad_filters:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
 
-            relevation = 1.0/16.0*(self.delta_diff(nelevation, 24, 25)[25:]*self.delta_diff(nelevation, 25, 25)[25:])**2
+            relevation = 1.0 / 16.0 * (self.delta_diff(nelevation, 24, 25)[25:] * self.delta_diff(nelevation, 25, 25)[25:])**2
             return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'lecolazet2':
@@ -1384,7 +1384,7 @@ class tappy(Util):
 
             kern = np.concatenate((kern[:-1], kern[::-1]))
 
-            half_kern = len(kern)//2
+            half_kern = len(kern) // 2
 
             nslice = slice(half_kern, -half_kern)
 
@@ -1410,7 +1410,7 @@ class tappy(Util):
             blen = 12
             s_list = ['M2', 'K1', 'M3', 'M4']
 
-            p0 = [1.0]*(len(s_list)*2 + 2)
+            p0 = [1.0] * (len(s_list) * 2 + 2)
             p0[-2] = 0.0
             new_dates = np.concatenate(([ndates[0] - datetime.timedelta(hours = blen)],
                                     ndates,
@@ -1467,8 +1467,8 @@ class tappy(Util):
             ns_phase = {}
             constituent_residual = {}
             for key in self.key_list:
-                ntimes_filled = np.arange(len(dates_filled))*24
-                yt = new_elev*np.exp(-1j*self.speed_dict[key]['speed']*ntimes_filled)
+                ntimes_filled = np.arange(len(dates_filled)) * 24
+                yt = new_elev * np.exp(-1j * self.speed_dict[key]['speed'] * ntimes_filled)
 
                 ns_amplitude[key] = np.absolute(yt)
                 ns_amplitude[key] = yt.real
@@ -1507,9 +1507,9 @@ class tappy(Util):
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
             print(" %12s %12.8f %12.4f %12.4f" % (i,
-                                                self.speed_dict[i]['speed']*rad2deg,
-                                                self.r[i],
-                                                self.phase[i]))
+                                                  self.speed_dict[i]['speed'] * rad2deg,
+                                                  self.r[i],
+                                                  self.phase[i]))
         print("\n# INFERRED CONSTITUENTS")
         ndict = {}
         for k in self.inferred_key_list:
@@ -1519,9 +1519,9 @@ class tappy(Util):
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
             print(" %12s %12.8f %12.4f %12.4f" % (i,
-                                                self.tidal_dict[i]['speed']*rad2deg,
-                                                self.inferred_r[i],
-                                                self.inferred_phase[i]))
+                                                  self.tidal_dict[i]['speed'] * rad2deg,
+                                                  self.inferred_r[i],
+                                                  self.inferred_phase[i]))
 
         print("\n# AVERAGE (Z0) = ", self.fitted_average)
         if self.linear_trend:
@@ -1569,26 +1569,27 @@ class tappy(Util):
                      datetime.datetime(d, 1, 2, 0, 0)]
             package = self.astronomic(dates)
             (zeta, nu, nup, nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
-            Ra = 1.0/np.sqrt(1.0 - 12.0*(np.tan(0.5*ii))**2 * np.cos(2.0*kap_p) +
-                    36.0*(np.tan(0.5*ii))**4) # eq 215, schureman
+            Ra = 1.0/np.sqrt(1.0 - 12.0 * (np.tan(0.5 * ii))**2 *
+                             np.cos(2.0 * kap_p) + 36.0 *
+                             (np.tan(0.5 * ii))**4)  # eq 215, schureman
             print(dates[0].isoformat(), end=' ')
-            print(' h = ', h*rad2deg, h_schureman[d], h*rad2deg - h_schureman[d])
-            print(' p1 = ', p1[0]*rad2deg, p1_schureman[d], p1[0]*rad2deg - p1_schureman[d])
-            print(' s = ', s*rad2deg, s_schureman[d], s*rad2deg - s_schureman[d])
-            print(' p = ', p*rad2deg, p_schureman[d], p*rad2deg - p_schureman[d])
-            print(' Nv = ', Nv[0]*rad2deg, N_schureman[d], Nv[0]*rad2deg - N_schureman[d])
-            print(" zeta = ", zeta*rad2deg)
-            print(" nu = ", nu*rad2deg)
-            print(" nup = ", nup*rad2deg)
-            print(" nupp = ", nupp*rad2deg)
-            print(" kap_p = ", kap_p*rad2deg)
-            print(" ii = ", ii*rad2deg)
-            print(" R = ", R*rad2deg)
-            print(" Ra = ", Ra*rad2deg)
+            print(' h = ', h * rad2deg, h_schureman[d], h * rad2deg - h_schureman[d])
+            print(' p1 = ', p1[0] * rad2deg, p1_schureman[d], p1[0] * rad2deg - p1_schureman[d])
+            print(' s = ', s * rad2deg, s_schureman[d], s * rad2deg - s_schureman[d])
+            print(' p = ', p * rad2deg, p_schureman[d], p * rad2deg - p_schureman[d])
+            print(' Nv = ', Nv[0] * rad2deg, N_schureman[d], Nv[0] * rad2deg - N_schureman[d])
+            print(" zeta = ", zeta * rad2deg)
+            print(" nu = ", nu * rad2deg)
+            print(" nup = ", nup * rad2deg)
+            print(" nupp = ", nupp * rad2deg)
+            print(" kap_p = ", kap_p * rad2deg)
+            print(" ii = ", ii * rad2deg)
+            print(" R = ", R * rad2deg)
+            print(" Ra = ", Ra * rad2deg)
             print(" log(Ra) = ", np.log10(Ra))
-            print(" Q = ", Q*rad2deg)
+            print(" Q = ", Q * rad2deg)
             print(" log(Q) = ", np.log(Q))
-            print(" T = ", T*rad2deg)
+            print(" T = ", T * rad2deg)
 
         t = tappy(
             def_filename=None,
@@ -1608,9 +1609,8 @@ class tappy(Util):
             include_inferred=True)
         t.dates = [datetime.datetime(i, 1, 1, 0, 0) +
                    (datetime.datetime(i+1, 1, 1, 0, 0) -
-                    datetime.datetime(i, 1, 1, 0, 0))/2
-                  for i in range(1900, 2050)
-                  ]
+                   datetime.datetime(i, 1, 1, 0, 0)) / 2
+                   for i in range(1900, 2050)]
         package = self.astronomic(t.dates)
         (zeta, nu, nup, nupp, kap_p, ii, R, Q, T, self.jd, s, h, Nv, p, p1) = package
         (speed_dict, key_list) = t.which_constituents(len(t.dates), package)
@@ -1618,7 +1618,7 @@ class tappy(Util):
             for i in [1900, 1930]:
                 print(i, k, speed_dict[k]['FF'][i-1900])
                 if k == 'M2':
-                    print('M2>>', -2.14*np.sin(Nv[0]*deg2rad)*rad2deg, speed_dict[k]['VAU'])
+                    print('M2>>', -2.14 * np.sin(Nv[0] * deg2rad) * rad2deg, speed_dict[k]['VAU'])
         self.print_v_u_table()
 
     def print_v_u_table(self):
@@ -2002,12 +2002,12 @@ if __name__ == '__main__':
                     inferred.text = 'false'
                     amplitude.text = ampformatstr.format(x.r[key])
                     phaseangle.text = phaformatstr.format(x.phase[key])
-                    speed.text = str(x.tidal_dict[key]['speed']*rad2deg)
+                    speed.text = str(x.tidal_dict[key]['speed'] * rad2deg)
                 elif key in x.inferred_key_list:
                     inferred.text = 'true'
                     amplitude.text = ampformatstr.format(x.inferred_r[key])
                     phaseangle.text = phaformatstr.format(x.inferred_phase[key])
-                    speed.text = str(x.tidal_dict[key]['speed']*rad2deg)
+                    speed.text = str(x.tidal_dict[key]['speed'] * rad2deg)
                 elif key == 'Z0':
                     inferred.text = 'false'
                     amplitude.text = ampformatstr.format(x.fitted_average)
