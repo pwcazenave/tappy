@@ -189,7 +189,7 @@ class Util():
         self.r = r
         self.phase = phase
 
-    def sum_signals(self, skey_list, hours, speed_dict, amp = None, phase = None):
+    def sum_signals(self, skey_list, hours, speed_dict, amp=None, phase=None):
         total = np.zeros(len(hours), dtype='f')
         if isinstance(hours[0], datetime.datetime):
             hours = self.dates2jd(hours)
@@ -298,7 +298,7 @@ class Util():
         return (zeta, nu, nup, nupp, kap_p, i, R, Q, T, jd, s, h, Nv, p, p1)
 
 
-    def which_constituents(self, length, package, rayleigh_comp = 1.0):
+    def which_constituents(self, length, package, rayleigh_comp=1.0):
         """
         Establishes which constituents are able to be determined according to
         the length of the water elevation vector.
