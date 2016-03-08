@@ -692,7 +692,8 @@ class Util():
         }
 
         # Can calculate the speed at the begining of the time series.
-        # Doesn't really matter unless analyzing tides in 5000 C.E.,  because the speeds do change.
+        # Doesn't really matter unless analyzing tides in 5000 C.E., because
+        # the speeds do change.
         (zetatoss, nutoss, nuptoss, nupptoss, kap_ptoss, itoss, Rtoss, Qtoss, Tbeg, jdtoss, sbeg, hbeg, Nvbeg, pbeg, p1beg) = self.astronomic([self.dates[0], self.dates[0] + datetime.timedelta(hours = 1)])
         Tspeed = 15.0*deg2rad
         sspeed = (sbeg[1] - sbeg[0])
@@ -1671,15 +1672,15 @@ if __name__ == '__main__':
             interval,
             include_inferred=True,
             fname='-'):
-        '''Prediction based upon earlier constituent analysis saved in IHOTC XML transfer format.
+        """Prediction based upon earlier constituent analysis saved in IHOTC XML transfer format.
 
-           :param xml_filename: The tidal constituents in IHOTC XML transfer format.
-           :param start_date: The start date as a ISO 8601 string. '2010-01-01T00:00:00'
-           :param end_date: The end date as a ISO 8601 string. '2011-01-01T00:00:00:00'
-           :param interval: The interval as the number of minutes.
-           :param include_inferred: Include the inferred constituents.
-           :param fname: Output filename, default is '-' to print to screen.
-        '''
+        :param xml_filename: The tidal constituents in IHOTC XML transfer format.
+        :param start_date: The start date as a ISO 8601 string. '2010-01-01T00:00:00'
+        :param end_date: The end date as a ISO 8601 string. '2011-01-01T00:00:00:00'
+        :param interval: The interval as the number of minutes.
+        :param include_inferred: Include the inferred constituents.
+        :param fname: Output filename, default is '-' to print to screen.
+        """
         import xml.etree.ElementTree as et
         tree = et.parse(xml_filename)
         root = tree.getroot()
@@ -1756,36 +1757,63 @@ if __name__ == '__main__':
             xmlunits='m',
             xmldecimalplaces=None,
             ):
-        '''Traditional analysis with separately calculated nodal factors.
+        """Traditional analysis with separately calculated nodal factors.
             Constituent amplitude units are the same as the input heights.
             Constituent phases are based in the same time zone as the dates.
 
-           :param data_filename: The time-series of elevations to be analyzed.
-           :param def_filename: Containes the definition string to parse the input data.
-           :param config: Read command line options from config file, override config file entries on the command line.
-           :param quiet: Print nothing to the screen.
-           :param debug: Print debug messages.
-           :param outputts: Output time series for each constituent.
-           :param ephemeris: Print out ephemeris tables.
-           :param rayleigh: The Rayleigh coefficient is used to compare against to determine time series length to differentiate between two frequencies. [default: default]
-           :param missing_data: What should be done if there is missing data.  One of: fail, ignore, or fill. [default: default]
-           :param linear_trend: Include a linear trend in the least squares fit.
-           :param remove_extreme: Remove values outside of 2 standard deviations before analysis.
-           :param zero_ts: Zero the input time series before constituent analysis by subtracting filtered data. One of: transform,usgs,doodson,boxcar
-           :param filter:  Filter input data set with tide elimination filters. The -o outputts option is implied. Any mix separated by commas and no spaces: transform,usgs,doodson,boxcar
-           :param pad_filters: Pad input data set with values to return same size after filtering.  Realize edge effects are unavoidable.  One of ["tide", "minimum", "maximum", "mean", "median", "reflect", "wrap"]
-           :param include_inferred: Do not incorporate any inferred constituents into the least squares fit.
-           :param print_vau_table: For debugging - will print a table of V and u values to compare against Schureman.
-           :param outputxml: File name to output constituents as IHOTC XML format.
-           :param xmlname: Not used in analysis. Used ONLY to complete the XML file. Name of the station supplying the observations. Defaults to 'A port in a storm'.
-           :param xmlcountry: Not used in analysis. Used ONLY to complete the XML file. Name of the country containing the station. Defaults to 'A man without a country'.
-           :param xmllatitude: Not used in analysis. Used ONLY to complete the XML file. Latitude of the station. Defaults to 0.0.
-           :param xmllongitude: Not used in analysis. Used ONLY to complete the XML file. Longitude of the station. Defaults to 0.0.
-           :param xmltimezone: Not used in analysis. Used ONLY to complete the XML file. Time zone of the station. Defaults to '0000'.
-           :param xmlcomments: Not used in analysis. Used ONLY to complete the XML file. Station comments. Defaults to 'No comment'.
-           :param xmlunits: Not used in analysis. Used ONLY to complete the XML file. Units of the observed water level. Defaults to 'm'.
-           :param xmldecimalplaces: Not used in analysis. Used ONLY to complete the XML file. Format of the observed amplitude and phase. Default depends on length of analysis record.
-        '''
+        :param data_filename: The time-series of elevations to be analyzed.
+        :param def_filename: Containes the definition string to parse the input
+            data.
+        :param config: Read command line options from config file, override
+            config file entries on the command line.
+        :param quiet: Print nothing to the screen.
+        :param debug: Print debug messages.
+        :param outputts: Output time series for each constituent.
+        :param ephemeris: Print out ephemeris tables.
+        :param rayleigh: The Rayleigh coefficient is used to compare against to
+            determine time series length to differentiate between two
+            frequencies.  [default: default]
+        :param missing_data: What should be done if there is missing data.  One
+            of: fail, ignore, or fill. [default: default]
+        :param linear_trend: Include a linear trend in the least squares fit.
+        :param remove_extreme: Remove values outside of 2 standard deviations
+            before analysis.
+        :param zero_ts: Zero the input time series before constituent analysis
+            by subtracting filtered data. One of: transform,usgs,doodson,boxcar
+        :param filter:  Filter input data set with tide elimination filters. The
+            -o outputts option is implied. Any mix separated by commas and no
+            spaces: transform,usgs,doodson,boxcar
+        :param pad_filters: Pad input data set with values to return same size
+            after filtering.  Realize edge effects are unavoidable.  One of
+            ["tide", "minimum", "maximum", "mean", "median", "reflect", "wrap"]
+        :param include_inferred: Do not incorporate any inferred constituents
+            into the least squares fit.
+        :param print_vau_table: For debugging - will print a table of V and u
+            values to compare against Schureman.
+        :param outputxml: File name to output constituents as IHOTC XML format.
+        :param xmlname: Not used in analysis. Used ONLY to complete the XML
+            file. Name of the station supplying the observations. Defaults to 'A
+            port in a storm'.
+        :param xmlcountry: Not used in analysis. Used ONLY to complete the XML
+            file. Name of the country containing the station. Defaults to 'A man
+            without a country'.
+        :param xmllatitude: Not used in analysis. Used ONLY to complete the XML
+            file. Latitude of the station. Defaults to 0.0.
+        :param xmllongitude: Not used in analysis. Used ONLY to complete the XML
+            file. Longitude of the station. Defaults to 0.0.
+        :param xmltimezone: Not used in analysis. Used ONLY to complete the XML
+            file. Time zone of the station. Defaults to '0000'.
+        :param xmlcomments: Not used in analysis. Used ONLY to complete the XML
+            file. Station comments. Defaults to 'No comment'.
+        :param xmlunits: Not used in analysis. Used ONLY to complete the XML
+            file. Units of the observed water level. Defaults to 'm'.
+        :param xmldecimalplaces: Not used in analysis. Used ONLY to complete the
+            XML file. Format of the observed amplitude and phase. Default
+            depends on length of analysis record.  'full' is the default and
+            means that full accuracy, 'ihotc' is formatted according to IHOTC
+            standard which severly limits the number of decimal places, and if
+            an integer number lists the number of decimal places.
+        """
 
         if config:
             baker.readconfig(config)
