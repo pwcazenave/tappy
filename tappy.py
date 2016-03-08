@@ -1816,8 +1816,8 @@ if __name__ == '__main__':
 
         if x.missing_data == 'fail':
             x.dates_filled, x.elevation_filled = x.missing(x.missing_data,
-                                                           x.dates,
-                                                           x.elevation)
+                                                        x.dates,
+                                                        x.elevation)
 
         if x.remove_extreme:
             x.remove_extreme_values()
@@ -1830,8 +1830,8 @@ if __name__ == '__main__':
         else:
             ray = 1.0
         (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
-                                                          package,
-                                                          rayleigh_comp = ray)
+                                                        package,
+                                                        rayleigh_comp = ray)
         if x.zero_ts:
             # FIX - have to run the constituents package here in order to have
             # filters available , and then run AGAIN later on.
@@ -1840,15 +1840,15 @@ if __name__ == '__main__':
             x.dates_filled, x.elevation_filled = x.missing('fill', x.dates, x.elevation)
             print(len(x.dates_filled), len(x.elevation_filled))
             x.dates, filtered = x.filters(zero_ts,
-                                          x.dates_filled,
-                                          x.elevation_filled)
+                                        x.dates_filled,
+                                        x.elevation_filled)
             print(len(x.dates), len(filtered))
             x.elevation = x.elevation_filled - filtered
             package = x.astronomic(x.dates)
             (x.zeta, x.nu, x.nup, x.nupp, x.kap_p, x.ii, x.R, x.Q, x.T, x.jd, x.s, x.h, x.N, x.p, x.p1) = package
             (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
-                                                              package,
-                                                              rayleigh_comp = ray)
+                                                            package,
+                                                            rayleigh_comp = ray)
 
         x.constituents()
 
@@ -1864,8 +1864,8 @@ if __name__ == '__main__':
                     filtered_dates, result = x.filters(item, x.dates, x.elevation)
                     x.write_file(filtered_dates, result, fname='outts_filtered_%s.dat' % (item,))
             (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
-                                                              package,
-                                                              rayleigh_comp = ray)
+                                                            package,
+                                                            rayleigh_comp = ray)
 
         if not x.quiet:
             x.print_con()
@@ -1873,17 +1873,17 @@ if __name__ == '__main__':
         if x.outputts:
             for key in x.key_list:
                 x.write_file(x.dates,
-                             x.sum_signals([key], x.dates, x.speed_dict),
-                             fname="outts_%s.dat" % (key,))
+                            x.sum_signals([key], x.dates, x.speed_dict),
+                            fname="outts_%s.dat" % (key,))
                 x.write_file(x.dates,
-                             x.speed_dict[key]['FF'],
-                             fname="outts_ff_%s.dat" % (key,))
+                            x.speed_dict[key]['FF'],
+                            fname="outts_ff_%s.dat" % (key,))
             x.write_file(x.dates,
-                         x.sum_signals(x.key_list, x.dates, x.tidal_dict),
-                         fname="outts_total_tidal_components.dat")
+                        x.sum_signals(x.key_list, x.dates, x.tidal_dict),
+                        fname="outts_total_tidal_components.dat")
             x.write_file(x.dates,
-                         x.elevation,
-                         fname="outts_original.dat")
+                        x.elevation,
+                        fname="outts_original.dat")
 
         if x.outputxml:
             import xml.etree.ElementTree as et
