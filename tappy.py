@@ -184,7 +184,7 @@ def node_factor_235(ii, nu):
 
 
 #====================================
-class Util():
+class Util:
     def __init__(self, r, phase):
         self.r = r
         self.phase = phase
