@@ -75,14 +75,17 @@ def msg(txt):
     sys.stdout.write(txt)
     sys.stdout.flush()
 
+
 def debug(ftn, txt):
     if debug_p:
         sys.stdout.write("%s.%s:%s\n" % (modname, ftn, txt))
         sys.stdout.flush()
 
+
 def fatal(ftn, txt):
     msg = "%s.%s:FATAL:%s\n" % (modname, ftn, txt)
     raise SystemExit(msg)
+
 
 def usage():
     print(__doc__)
@@ -130,33 +133,55 @@ def zone_calculations(zftn, data, mask, limit = 25):
             start = None
             stop = None
 
+
 def node_factor_73(ii):
     return ((2./3.) - np.sin(ii)**2)/0.5021
+
+
 def node_factor_74(ii):
     return np.sin(ii)**2 /0.1578
+
+
 def node_factor_75(ii):
     return np.sin(ii)*np.cos(0.5*ii)**2 /0.37988
+
+
 def node_factor_76(ii):
     return np.sin(2.0*ii)/0.7214
+
+
 def node_factor_77(ii):
     return (np.sin(ii)*np.sin(0.5*ii)**2)/0.0164
+
+
 def node_factor_78(ii):
     return np.cos(0.5*ii)**4 /0.91544
+
+
 def node_factor_79(ii):
     return np.sin(ii)**2/0.1565
+
+
 def node_factor_149(ii):
     return np.cos(0.5*ii)**6 /0.8758
+
+
 def node_factor_144(ii):
     return (1.0 - 10.0*np.sin(0.5*ii)**2 +
                    15.0*np.sin(0.5*ii)**4)*np.cos(0.5*ii)**2/0.5873
+
+
 def node_factor_227(ii, nu):
     return (0.8965*(np.sin(2.*ii)**2) +
                    0.6001*np.sin(2.*ii)*np.cos(nu) +
                    0.1006)**0.5
+
+
 def node_factor_235(ii, nu):
     return (19.0444*(np.sin(ii)**4) +
                    2.7702*(np.sin(ii)**2) * np.cos(2.*nu) +
                    0.0981)**0.5  # eq 235 schureman
+
 
 #====================================
 class Util():
@@ -701,7 +726,6 @@ class Util():
             except IndexError:
                 self.tidal_dict[key]['VAU'] = np.mod(self.tidal_dict[key]['VAU'], 360)
 
-
         num_hours = (jd[-1] - jd[0]) * 24
         numpoint = len(jd) * 0.5 * rayleigh_comp
         if num_hours < 13:
@@ -876,7 +900,6 @@ class tappy(Util):
         self.elevation = []
         self.dates = []
 
-
     def open(self, filename, def_filename = None):
         # Read and parse data filename
         fp = sparser.ParseFileLineByLine(filename,
@@ -911,7 +934,6 @@ class tappy(Util):
             sys.exit()
         self.elevation = np.array(self.elevation)
         self.dates = np.array(self.dates)
-
 
     def missing(self, task, dates, elev):
         """
@@ -976,7 +998,6 @@ class tappy(Util):
             zone_calculations(interpolate, residuals, residuals == -99999)
             return (dates_filled, residuals + total)
 
-
     def remove_extreme_values(self):
         """
         Removes extreme elevation values from analsis.  Might be useful
@@ -993,7 +1014,6 @@ class tappy(Util):
         good = self.elevation > (avg - 2.0*std)
         self.elevation = np.compress(good, self.elevation)
         self.dates = np.compress(good, self.dates)
-
 
     def residuals(self, p, ht, t, key_list):
         """
@@ -1113,7 +1133,6 @@ class tappy(Util):
 
     #--------------------------
 
-
     def constituents(self):
         difference = np.asarray(self.dates[1:]) - np.asarray(self.dates[:-1])
         if np.any(difference < datetime.timedelta(seconds = 0)):
@@ -1146,7 +1165,6 @@ class tappy(Util):
         self.slope = p0[-2]
         # Should probably return something rather than change self.*
 
-
     def cat_dates(self, dates, len_dates):
         interval = dates[1:] - dates[:-1]
         interval.sort()
@@ -1155,7 +1173,6 @@ class tappy(Util):
         bdate = dates[0] - cnt[::-1]
         edate = dates[-1] + cnt
         return np.concatenate((bdate, dates, edate))
-
 
     def pad_f(self, nelevation, ndates, half_kern):
         blen = alen = half_kern
@@ -1187,7 +1204,6 @@ class tappy(Util):
 
         return nelevation, cndates, nslice
 
-
     def delta_diff(self, elev, delta, start_index):
         bindex = delta
         if start_index > delta:
@@ -1195,10 +1211,8 @@ class tappy(Util):
         tmpe = elev[bindex:]
         return tmpe - elev[bindex - delta:bindex - delta + len(tmpe)]
 
-
     def delta_sum(self, elev, delta):
         return elev[delta:] + elev[:-delta]
-
 
     def filters(self, nstype, dates, elevation, pad_type=None):
         delta_dt = datetime.timedelta(hours = 1)
@@ -1474,7 +1488,6 @@ class tappy(Util):
             relevation = everything_but
             return dates_filled[nslice], relevation[nslice]
 
-
     def sortbyvalue(self, dict):
         """ Return a list of (key, value) pairs, sorted by value. """
         _swap2 = lambda x_y: (x_y[1], x_y[0])
@@ -1482,7 +1495,6 @@ class tappy(Util):
         mdict.sort()
         mdict = list(map(_swap2, mdict))
         return mdict
-
 
     def print_con(self):
         ndict = {}
@@ -1513,7 +1525,6 @@ class tappy(Util):
         print("\n# AVERAGE (Z0) = ", self.fitted_average)
         if self.linear_trend:
             print("# SLOPE OF REMOVED LINEAR TREND = ", self.slope)
-
 
     def print_ephemeris_table(self):
         h_schureman = {
@@ -1609,8 +1620,6 @@ class tappy(Util):
                     print('M2>>', -2.14*np.sin(Nv[0]*deg2rad)*rad2deg, speed_dict[k]['VAU'])
         self.print_v_u_table()
 
-
-
     def print_v_u_table(self):
         t = tappy(
             outputts = False,
@@ -1639,7 +1648,6 @@ class tappy(Util):
         key_list.sort()
         for key in key_list:
             print(key, speed_dict[key]['VAU'])
-
 
     def print_node_factor_table(self):
         pass
@@ -1981,6 +1989,5 @@ if __name__ == '__main__':
             indent(transfer)
             tree = et.ElementTree(transfer)
             tree.write(x.outputxml)
-
 
     baker.run()
