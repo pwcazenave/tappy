@@ -1027,9 +1027,9 @@ class tappy(Util):
         for index, key in enumerate(key_list):
             H[key] = p[index]
             phase[key] = p[index + len(key_list)]
-            #print '---'
-            #print key
-            #print self.speed_dict[key]['FF'][:3]
+            #print('---')
+            #print(key)
+            #print(self.speed_dict[key]['FF'][:3])
         if len(self.speed_dict[key_list[0]]['FF']) == len(t):
             ff = self.tidal_dict
         else:
@@ -1503,7 +1503,7 @@ class tappy(Util):
             ndict[k] = self.speed_dict[k]['speed']
 
         print("\n#%12s %12s %12s %12s" % ("NAME", "SPEED", "H", "PHASE"))
-        print("#%12s %12s %12s %12s" % ("====", "=====", "=", "====="))
+        print(  "#%12s %12s %12s %12s" % ("====", "=====", "=", "====="))
         klist = [i[0] for i in self.sortbyvalue(ndict)]
         for i in klist:
             print(" %12s %12.8f %12.4f %12.4f" % (i,
