@@ -20,6 +20,10 @@ http://sourceforge.net/projects/tappy
 
 I (Pierre Cazenave) have made minor changes to the code to allow TAPPY to be used as a module in scripts.
 
+TAPPY requires the lunar package which is available with pip:
+
+    pip install lunar
+
 Examples
 --------
 
@@ -82,7 +86,7 @@ if __name__ == '__main__':
     x.constituents() # the analysis
 
     # Print the M2 amplitude and phase.
-    print('M2 amplitude: {}'.format(x.phase[x.key_list.index('M2')]))
-    print('M2 phase:     {}'.format(x.r[x.key_list.index('M2')]))
+    print('M2 phase:     {}'.format(x.phase[x.key_list.index('M2')]))
+    print('M2 amplitude: {}'.format(x.r[x.key_list.index('M2')]))
 
 ```
