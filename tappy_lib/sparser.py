@@ -446,7 +446,7 @@ class ParseFileLineByLine:
             else:
                 raise DefinitionFileNotFoundError(def_filename)
         if self.parsedef:
-            execfile(self.parsedef)
+            exec(open(self.parsedef).read())
             self.grammar = And(grammar[1:] + [restOfLine])
 
     def __del__(self):
