@@ -1,3 +1,5 @@
 #AUTHORS
 Tim Cera timcera@earthlink.net
   initial development
+Pierre Cazenave pica@pml.ac.uk
+  Minor changes for Python 3 plus changes to allow import as a module.

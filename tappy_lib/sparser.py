@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 """
 NAME:
     sparser.py
@@ -86,11 +88,11 @@ def debug(ftn, txt):
 def fatal(ftn, txt):
     """If can't continue."""
     msg = "%s.%s:FATAL:%s\n" % (modname, ftn, txt)
-    raise SystemExit, msg
+    raise SystemExit(msg)
 
 def usage():
     """Prints the docstring."""
-    print __doc__
+    print(__doc__)
 
 
 # Will hold list of pyparsing constructs.
@@ -137,8 +139,8 @@ def isotoDate(instring, loc, tokenlist):
 
 def integer(name,
             minimum=1,
-            maximum=None,
-            exact=None,
+            maximum=0,
+            exact=0,
             sign=Optional(oneOf("- +")),
             parseAct=toInteger):
     """Appends a skip/integer combination to the parse constructs."""
@@ -154,8 +156,8 @@ def integer(name,
 
 def positive_integer(name,
                      minimum=1,
-                     maximum=None,
-                     exact=None):
+                     maximum=0,
+                     exact=0):
     """Will only parse a positive integer."""
     integer(name,
             minimum=minimum,
@@ -165,8 +167,8 @@ def positive_integer(name,
 
 def negative_integer(name,
                      minimum=1,
-                     maximum=None,
-                     exact=None):
+                     maximum=0,
+                     exact=0):
     """Will only parse a negative integer."""
     integer(name,
             minimum=minimum,
@@ -194,8 +196,8 @@ def real(name,
 
 def positive_real(name,
                   minimum=1,
-                  maximum=None,
-                  exact=None):
+                  maximum=0,
+                  exact=0):
     """Will only parse a positive real."""
     real(name,
          minimum=minimum,
@@ -205,8 +207,8 @@ def positive_real(name,
 
 def negative_real(name,
                   minimum=1,
-                  maximum=None,
-                  exact=None):
+                  maximum=0,
+                  exact=0):
     """Will only parse a negative real."""
     real(name,
          minimum=minimum,
@@ -216,8 +218,8 @@ def negative_real(name,
 
 def real_as_string(name,
                    minimum=1,
-                   maximum=None,
-                   exact=None,
+                   maximum=0,
+                   exact=0,
                    sign=Optional(oneOf("- +")),
                    parseAct=toString):
     """Parses a real number, but returns it as a string."""
@@ -230,8 +232,8 @@ def real_as_string(name,
 
 def integer_as_string(name,
                       minimum=1,
-                      maximum=None,
-                      exact=None,
+                      maximum=0,
+                      exact=0,
                       sign=Optional(oneOf("- +")),
                       parseAct=toString):
     """Parses an integer, but returns it as a string."""
@@ -272,8 +274,8 @@ def real_as_datetime(name,
 
 def integer_as_datetime(name,
                       minimum=1,
-                      maximum=None,
-                      exact=None,
+                      maximum=0,
+                      exact=0,
                       sign=Optional(oneOf("- +")),
                       origin=datetime.datetime(1900,1,1),
                       unit='days',
@@ -312,31 +314,31 @@ def number_as_real(name,
 
 def number_as_integer(name,
                     minimum=1,
-                    maximum=None,
-                    exact=None,
+                    maximum=0,
+                    exact=0,
                     sign=Optional(oneOf("- +")),
                     parseAct=toInteger):
     """Parses any number as a integer."""
     integer(name,
-         minimum=1,
-         maximum=None,
-         exact=None,
-         sign=Optional(oneOf("- +")),
-         parseAct=toInteger)
+         minimum=minimum,
+         maximum=maximum,
+         exact=exact,
+         sign=sign,
+         parseAct=parseAct)
 
 def number_as_string(name,
                     minimum=1,
                     maximum=None,
-                    exact=None,
+                    exact=0,
                     sign=Optional(oneOf("- +")),
                     parseAct=toString):
     """Parses any number as a string."""
     real(name,
-         minimum=1,
-         maximum=None,
-         exact=None,
-         sign=Optional(oneOf("- +")),
-         parseAct=toString)
+         minimum=minimum,
+         maximum=maximum,
+         exact=exact,
+         sign=sign,
+         parseAct=parseAct)
 
 def insert(name, value):
     extra_dict[name] = value
@@ -444,7 +446,7 @@ class ParseFileLineByLine:
             else:
                 raise DefinitionFileNotFoundError(def_filename)
         if self.parsedef:
-            execfile(self.parsedef)
+            exec(open(self.parsedef).read())
             self.grammar = And(grammar[1:] + [restOfLine])
 
     def __del__(self):
@@ -516,7 +518,7 @@ def main(pargs):
     input_file = sys.argv[1]
     fp = ParseFileLineByLine(input_file)
     for i in fp:
-        print i
+        print(i)
 
 
 #-------------------------
@@ -526,11 +528,11 @@ if __name__ == '__main__':
                  ['help', 'version', 'debug', 'bb='])
     for opt in opts:
         if opt[0] == '-h' or opt[0] == '--help':
-            print modname+": version="+__version__
+            print(modname+": version="+__version__)
             usage()
             sys.exit(0)
         elif opt[0] == '-v' or opt[0] == '--version':
-            print modname+": version="+__version__
+            print(modname+": version="+__version__)
             sys.exit(0)
         elif opt[0] == '-d' or opt[0] == '--debug':
             debug_p = 1

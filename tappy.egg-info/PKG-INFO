@@ -1,0 +1,11 @@
+Metadata-Version: 1.1
+Name: tappy
+Version: 0.10.1
+Summary: Tidal Analysis Program in PYthon
+Home-page: http://tappy.sourceforge.net
+Author: Tim Cera, Pierre Cazenave
+Author-email: timcera@earthlink.net, pica@pml.ac.uk
+License: GPL-2
+Download-URL: http://prdownloads.sourceforge.net/tappy/tappy-0.9.0.tar.gz?download
+Description: TAPPY is a tidal analysis package. It breaks down an hourly record of water levels into the component sine waves. It is written in Python and uses the least squares optimization and other functions in SciPy?. The focus is to make the most accurate analysis possible. TAPPY only determines the constituents that are calculatable according to the length of the time series.
+Platform: UNKNOWN
