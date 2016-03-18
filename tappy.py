@@ -1142,7 +1142,7 @@ class tappy(Util):
         p0[-1] = np.average(self.elevation)
         self.ntimes = (self.jd - self.jd[0]) * 24
 
-        lsfit = leastsq(self.residuals, p0, args=(self.elevation, self.ntimes, self.key_list))
+        lsfit = leastsq(self.residuals, p0, args=(np.array(self.elevation), np.array(self.ntimes), self.key_list))
 
         self.r = {}
         self.phase = {}
