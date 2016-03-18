@@ -139,8 +139,8 @@ def isotoDate(instring, loc, tokenlist):
 
 def integer(name,
             minimum=1,
-            maximum=None,
-            exact=None,
+            maximum=0,
+            exact=0,
             sign=Optional(oneOf("- +")),
             parseAct=toInteger):
     """Appends a skip/integer combination to the parse constructs."""
@@ -156,8 +156,8 @@ def integer(name,
 
 def positive_integer(name,
                      minimum=1,
-                     maximum=None,
-                     exact=None):
+                     maximum=0,
+                     exact=0):
     """Will only parse a positive integer."""
     integer(name,
             minimum=minimum,
@@ -167,8 +167,8 @@ def positive_integer(name,
 
 def negative_integer(name,
                      minimum=1,
-                     maximum=None,
-                     exact=None):
+                     maximum=0,
+                     exact=0):
     """Will only parse a negative integer."""
     integer(name,
             minimum=minimum,
@@ -196,8 +196,8 @@ def real(name,
 
 def positive_real(name,
                   minimum=1,
-                  maximum=None,
-                  exact=None):
+                  maximum=0,
+                  exact=0):
     """Will only parse a positive real."""
     real(name,
          minimum=minimum,
@@ -207,8 +207,8 @@ def positive_real(name,
 
 def negative_real(name,
                   minimum=1,
-                  maximum=None,
-                  exact=None):
+                  maximum=0,
+                  exact=0):
     """Will only parse a negative real."""
     real(name,
          minimum=minimum,
@@ -218,8 +218,8 @@ def negative_real(name,
 
 def real_as_string(name,
                    minimum=1,
-                   maximum=None,
-                   exact=None,
+                   maximum=0,
+                   exact=0,
                    sign=Optional(oneOf("- +")),
                    parseAct=toString):
     """Parses a real number, but returns it as a string."""
@@ -232,8 +232,8 @@ def real_as_string(name,
 
 def integer_as_string(name,
                       minimum=1,
-                      maximum=None,
-                      exact=None,
+                      maximum=0,
+                      exact=0,
                       sign=Optional(oneOf("- +")),
                       parseAct=toString):
     """Parses an integer, but returns it as a string."""
@@ -274,8 +274,8 @@ def real_as_datetime(name,
 
 def integer_as_datetime(name,
                       minimum=1,
-                      maximum=None,
-                      exact=None,
+                      maximum=0,
+                      exact=0,
                       sign=Optional(oneOf("- +")),
                       origin=datetime.datetime(1900,1,1),
                       unit='days',
@@ -314,31 +314,31 @@ def number_as_real(name,
 
 def number_as_integer(name,
                     minimum=1,
-                    maximum=None,
-                    exact=None,
+                    maximum=0,
+                    exact=0,
                     sign=Optional(oneOf("- +")),
                     parseAct=toInteger):
     """Parses any number as a integer."""
     integer(name,
-         minimum=1,
-         maximum=None,
-         exact=None,
-         sign=Optional(oneOf("- +")),
-         parseAct=toInteger)
+         minimum=minimum,
+         maximum=maximum,
+         exact=exact,
+         sign=sign,
+         parseAct=parseAct)
 
 def number_as_string(name,
                     minimum=1,
                     maximum=None,
-                    exact=None,
+                    exact=0,
                     sign=Optional(oneOf("- +")),
                     parseAct=toString):
     """Parses any number as a string."""
     real(name,
-         minimum=1,
-         maximum=None,
-         exact=None,
-         sign=Optional(oneOf("- +")),
-         parseAct=toString)
+         minimum=minimum,
+         maximum=maximum,
+         exact=exact,
+         sign=sign,
+         parseAct=parseAct)
 
 def insert(name, value):
     extra_dict[name] = value
