@@ -1492,13 +1492,10 @@ class tappy(Util):
             relevation = everything_but
             return dates_filled[nslice], relevation[nslice]
 
-    def sortbyvalue(self, dict):
+
+    def sortbyvalue(self, mydict):
         """ Return a list of (key, value) pairs, sorted by value. """
-        _swap2 = lambda x_y: (x_y[1], x_y[0])
-        mdict = list(map(_swap2, list(dict.items())))
-        mdict.sort()
-        mdict = list(map(_swap2, mdict))
-        return mdict
+        return sorted(six.iteritems(mydict), key=operator.itemgetter(1))
 
     def print_con(self):
         ndict = {}
