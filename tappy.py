@@ -308,9 +308,9 @@ class Util:
 
         # Set data into speed_dict depending on length of time series
         # Required length of time series depends on Raleigh criteria to
-        # differentiate beteen constituents of simmilar speed.
+        # differentiate between constituents of similar speed.
         #  Key is tidal constituent name from Schureman
-        #    speed is how fast the constiuent moves in radians/hour
+        #    speed is how fast the constituent moves in radians/hour
         #    VAU is V+u taken from Schureman
         #    FF is the node factor from Schureman
 
@@ -1269,8 +1269,8 @@ class tappy(Util):
 
         if nstype == 'kalman':
             # I threw this in from an example on scipy's web site.  I will keep
-            # it here, but I can't see an immediate use for in in tidal
-            # analysis.  It dappens out all frequencies.
+            # it here, but I can't see an immediate use for it in tidal
+            # analysis.  It dampens out all frequencies.
 
             # Might be able to use it it fill missing values.
 
@@ -1761,7 +1761,7 @@ if __name__ == '__main__':
             Constituent phases are based in the same time zone as the dates.
 
         :param data_filename: The time-series of elevations to be analyzed.
-        :param def_filename: Containes the definition string to parse the input
+        :param def_filename: Contains the definition string to parse the input
             data.
         :param config: Read command line options from config file, override
             config file entries on the command line.
@@ -1810,7 +1810,7 @@ if __name__ == '__main__':
             XML file. Format of the observed amplitude and phase. Default
             depends on length of analysis record.  'full' is the default and
             means that full accuracy, 'ihotc' is formatted according to IHOTC
-            standard which severly limits the number of decimal places, and if
+            standard which severely limits the number of decimal places, and if
             an integer number lists the number of decimal places.
         """
 
