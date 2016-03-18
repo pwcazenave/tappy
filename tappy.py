@@ -253,10 +253,10 @@ class Util:
         in the dates vector.
         """
 
-        import astronomia.elp2000 as elp
-        import astronomia.sun as sun
+        from astronomia import lunar as elp
+        from astronomia import sun
 
-        lunar_eph = elp.ELP2000()
+        lunar_eph = elp.Lunar()
         solar_eph = sun.Sun()
 
         jd = self.dates2jd(dates)
