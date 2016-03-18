@@ -42,21 +42,23 @@ EXAMPLES:
 # ===imports======================
 from __future__ import print_function
 
-import sys
 import os
-import os.path
-import numpy as np
+import sys
 import datetime
 import operator
-from scipy.optimize import leastsq
 
 import tappy_lib
 import sparser
-import astronomia.calendar as cal
-import astronomia.util as uti
-import pad.pad as pad
 import baker
-from parameter_database import _master_speed_dict, letter_to_factor_map
+
+import numpy as np
+
+import astronomia.calendar as cal
+
+from scipy.optimize import leastsq
+from numpy import pad
+from tappy_lib.parameter_database import _master_speed_dict, letter_to_factor_map
+from tappy_lib import sparser
 
 # ===globals======================
 modname = "tappy"
