@@ -286,7 +286,7 @@ class Util:
         const_2 = np.sin(i)**2 * np.cos(2.0*nu) + 0.0727
         nupp = 0.5 * np.arctan2(const_1, const_2)  # eq 232
 
-        hour = jd[0] - int(jd[0])
+        hour = jd[0] - 2400000.5
 
         kap_p = (p - zeta)  # eq 191
 
