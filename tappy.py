@@ -1618,8 +1618,8 @@ class tappy(Util):
 
     def print_v_u_table(self):
         t = tappy(
-            outputts = False,
-            outputxml = False,
+            outputts=False,
+            outputxml=False,
             def_filename=None,
             quiet=False,
             debug=False,
@@ -1632,7 +1632,8 @@ class tappy(Util):
             zero_ts=None,
             filter=None,
             pad_filters=None,
-            include_inferred=True)
+            include_inferred=True
+        )
         t.dates = []
         for d in range(1851, 2001):
             t.dates.append(datetime.datetime(d, 1, 1, 0, 0))
