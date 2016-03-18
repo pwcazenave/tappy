@@ -46,9 +46,8 @@ import os
 import sys
 import datetime
 import operator
-
 import tappy_lib
-import sparser
+
 import baker
 
 import numpy as np
@@ -884,6 +883,7 @@ class Util:
 
 
 class tappy(Util):
+
     def __init__(self, **kwds):
         """
         The initialization of the Tappy class.
@@ -1497,7 +1497,12 @@ class tappy(Util):
 
     def sortbyvalue(self, mydict):
         """ Return a list of (key, value) pairs, sorted by value. """
-        return sorted(six.iteritems(mydict), key=operator.itemgetter(1))
+        _swap2 = lambda x_y: (x_y[1], x_y[0])
+        mdict = list(map(_swap2, list(mydict.items())))
+        mdict.sort()
+        mdict = list(map(_swap2, mdict))
+        return mdict
+
 
     def print_con(self):
         ndict = {}
