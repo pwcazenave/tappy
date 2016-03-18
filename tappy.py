@@ -220,8 +220,8 @@ class Util:
 
         if isinstance(dates[0], datetime.datetime):
             jd = [cal.cal_to_jd(i.year, i.month, i.day) +
-                  uti.hms_to_fday(i.hour, i.minute, i.second) for i in dates]
-            jd = np.array(jd)
+                  cal.hms_to_fday(i.hour, i.minute, i.second) for i in dates]
+            jd = np.array(jd).flatten()
         else:
             jd = dates
         return jd
