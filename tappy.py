@@ -47,6 +47,7 @@ import os
 import os.path
 import numpy as np
 import datetime
+import operator
 from scipy.optimize import leastsq
 
 import tappy_lib
@@ -1136,7 +1137,6 @@ class tappy(Util):
             self.err = ht - (p[-1] + sumterm)
 
         return self.err
-
 
     # --------------------------
 
