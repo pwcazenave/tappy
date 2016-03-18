@@ -1730,7 +1730,10 @@ if __name__ == '__main__':
             skey_list.remove('Z0')
         except ValueError:
             pass
-        prediction = prediction + u.sum_signals(skey_list, u.dates, u.tidal_dict)
+
+        calcdates = np.array(range(len(u.dates)),
+                             dtype=np.float64) * float(interval) / 60.0
+        prediction = prediction + u.sum_signals(skey_list, calcdates, u.tidal_dict)
 
         u.write_file(u.dates, prediction, fname=fname)
 
