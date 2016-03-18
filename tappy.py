@@ -1765,7 +1765,7 @@ if __name__ == '__main__':
             xmltimezone='0000',
             xmlcomments='No comment',
             xmlunits='m',
-            xmldecimalplaces=None,
+            xmldecimalplaces='full'
             ):
         """Traditional analysis with separately calculated nodal factors.
             Constituent amplitude units are the same as the input heights.
@@ -1987,16 +1987,19 @@ if __name__ == '__main__':
                 ndict[k] = x.tidal_dict[k]['speed']
             klist = [i[0] for i in x.sortbyvalue(ndict)]
 
-            if xmldecimalplaces:
-                ampformatstr = '0:.' + xmldecimalplaces + 'f}'
-                phaformatstr = ampformatstr
-            else:
+            if xmldecimalplaces == 'ihotc':
                 ampformatstr = '{0:.3f}'
                 phaformatstr = '{0:.1f}'
                 daterange = x.dates[-1] - x.dates[0]
-                if daterange < datetime.timedelta(days = 90):
+                if daterange < datetime.timedelta(days=90):
                     ampformatstr = '{0:.2f}'
                     phaformatstr = '{0:.0f}'
+            elif xmldecimalplaces == 'full':
+                ampformatstr = '{0}'
+                phaformatstr = ampformatstr
+            else:
+                ampformatstr = '{0:.' + xmldecimalplaces + 'f}'
+                phaformatstr = ampformatstr
 
             for key in klist:
                 if key in x.key_list:
