@@ -195,11 +195,11 @@ class Util:
             hours = self.dates2jd(hours)
             hours = (hours - hours[0]) * 24
         for i in skey_list:
-            if amp == None:
+            if amp is None:
                 R = self.r[i]
             else:
                 R = (amp - np.average(amp)) + self.r[i]
-            if phase == None:
+            if phase is None:
                 p = self.phase[i]
             else:
                 p = (phase - np.average(phase)) + self.phase[i]
