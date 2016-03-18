@@ -727,7 +727,6 @@ class Util:
                 self.tidal_dict[key]['VAU'] = np.mod(self.tidal_dict[key]['VAU'], 360)
 
         num_hours = (jd[-1] - jd[0]) * 24
-        numpoint = len(jd) * 0.5 * rayleigh_comp
         if num_hours < 13:
             print("Cannot calculate any constituents from this record length")
             sys.exit()
@@ -1429,7 +1428,6 @@ class tappy(Util):
 
         if nstype == 'wavelet':
             import pywt
-            import pylab
 
             for wl in pywt.wavelist():
 
