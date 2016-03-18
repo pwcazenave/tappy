@@ -112,10 +112,10 @@ def interpolate(data, start, stop, iavg):
 
     deltay = np.average(data[stop_sl]) - np.average(data[ssl])
     numx = stop - start + 2.0
-    m = deltay/numx
+    m = deltay / numx
     b = np.average(data[ssl]) - m*(start - 1)
     for i in range(start, stop + 1):
-        data[i] = m*i + b
+        data[i] = m * i + b
 
 
 def zone_calculations(zftn, data, mask, limit = 25):
@@ -274,19 +274,19 @@ class Util:
         i = np.arccos(0.9136949 - 0.0356926*np.cos(Nv))
 
         # pg 156
-        const_1 = 1.01883*np.tan(0.5*Nv)
-        const_2 = 0.64412*np.tan(0.5*Nv)
-        const_3 = 2.*np.arctan(const_1) - Nv
-        const_4 = 2.*np.arctan(const_2) - Nv
-        zeta = -0.5*(const_3 + const_4)
-        nu = 0.5*(const_3 - const_4)
+        const_1 = 1.01883 * np.tan(0.5 * Nv)
+        const_2 = 0.64412 * np.tan(0.5 * Nv)
+        const_3 = 2. * np.arctan(const_1) - Nv
+        const_4 = 2. * np.arctan(const_2) - Nv
+        zeta = -0.5 * (const_3 + const_4)
+        nu = 0.5 * (const_3 - const_4)
 
-        const_1 = np.sin(2.0*i)*np.sin(nu)
-        const_2 = np.sin(2.0*i)*np.cos(nu) + 0.3347
+        const_1 = np.sin(2.0 * i) * np.sin(nu)
+        const_2 = np.sin(2.0 * i) * np.cos(nu) + 0.3347
         nup = np.arctan2(const_1, const_2)  # eq 224
 
-        const_1 = np.sin(i)**2 * np.sin(2.0*nu)
-        const_2 = np.sin(i)**2 * np.cos(2.0*nu) + 0.0727
+        const_1 = np.sin(i)**2 * np.sin(2.0 * nu)
+        const_2 = np.sin(i)**2 * np.cos(2.0 * nu) + 0.0727
         nupp = 0.5 * np.arctan2(const_1, const_2)  # eq 232
 
         hour = jd[0] - 2400000.5
@@ -296,7 +296,7 @@ class Util:
         # pg 44, Schureman
         # Since R is only used for L2, should eventually move this
         term1 = np.sin(2. * kap_p)
-        term2 = (1. / 6.)*(1. / np.tan(i * 0.5))**2
+        term2 = (1. / 6.) * (1. / np.tan(i * 0.5))**2
         term3 = np.cos(2. * kap_p)
         R = np.mod(np.arctan(term1 / (term2 - term3)), 2 * np.pi)
 
@@ -527,7 +527,7 @@ class Util:
             # of M1 and NO1.  As with many constituents listed here, I have
             # included them for completeness rather than necessity.
             'FF': (self.tidal_dict['O1']['FF']*
-                   (2.31+1.435*np.cos(2.0*kap_p))**0.5/2.307**0.5)
+                   (2.31 + 1.435 * np.cos(2.0 * kap_p))**0.5 / 2.307**0.5)
         }
         self.tidal_dict["MN4"] = {
             'ospeed': 57.423833820 * deg2rad,   # From TASK
@@ -543,7 +543,7 @@ class Util:
             'ospeed': 29.5284789 * deg2rad,
             'VAU': 2 * T - s + 2 * h - p + 180 * deg2rad + 2 * zeta - 2 * nu - R,
             'FF': (self.tidal_dict['M2']['FF'] /
-                   (1.0/(1.0 - 12.0 * np.tan(0.5 * ii)**2 * np.cos(2.0 * kap_p) +
+                   (1.0 / (1.0 - 12.0 * np.tan(0.5 * ii)**2 * np.cos(2.0 * kap_p) +
                     36.0 * np.tan(0.5 * ii)**4)**0.5))  # eq 215, schureman
         }
         self.tidal_dict["mu2"] = {
@@ -724,11 +724,11 @@ class Util:
             # Calculate speeds
             constituent_factors = [letter_to_factor_map[i]
                                    for i in _master_speed_dict[key]['edn']]
-            self.tidal_dict[key]['speed'] = np.sum(np.array(constituent_factors)*w)
+            self.tidal_dict[key]['speed'] = np.sum(np.array(constituent_factors) * w)
             self.tidal_dict[key]['speed'] = np.mod(self.tidal_dict[key]['speed'], 360)
             self.tidal_dict[key]['speed'] = self.tidal_dict[key]['speed'] * deg2rad
 
-            self.tidal_dict[key]['V'] = np.sum(np.array(constituent_factors)*vw1)
+            self.tidal_dict[key]['V'] = np.sum(np.array(constituent_factors) * vw1)
             self.tidal_dict[key]['V'] = self.tidal_dict[key]['V'] * rad2deg
             self.tidal_dict[key]['V'] = np.mod(self.tidal_dict[key]['V'], 360)
 
@@ -1017,11 +1017,11 @@ class tappy(Util):
         avg = np.average(self.elevation)
         std = np.std(self.elevation)
 
-        good = self.elevation < (avg + 2.0*std)
+        good = self.elevation < (avg + 2.0 * std)
         self.elevation = np.compress(good, self.elevation)
         self.dates = np.compress(good, self.dates)
 
-        good = self.elevation > (avg - 2.0*std)
+        good = self.elevation > (avg - 2.0 * std)
         self.elevation = np.compress(good, self.elevation)
         self.dates = np.compress(good, self.dates)
 
@@ -1178,7 +1178,7 @@ class tappy(Util):
         interval = dates[1:] - dates[:-1]
         interval.sort()
         interval = interval[len(interval) / 2]
-        cnt = np.arange(1, len_dates + 1)*datetime.timedelta(minutes=interval.seconds / 60)
+        cnt = np.arange(1, len_dates + 1) * datetime.timedelta(minutes=interval.seconds / 60)
         bdate = dates[0] - cnt[::-1]
         edate = dates[-1] + cnt
         return np.concatenate((bdate, dates, edate))
@@ -1427,7 +1427,7 @@ class tappy(Util):
             (new_dates, new_elev) = self.missing('fill', new_dates, new_elevation)
             slope = []
             new_dates = self.dates2jd(new_dates)
-            ntimes = np.arange(2*blen + 1)
+            ntimes = np.arange(2 * blen + 1)
             for d in range(len(new_dates))[blen:-blen]:
                 # ntimes = (new_dates[d-12:d+12] - new_dates[d]) * 24
                 nelev = new_elev[d-blen:d+blen+1]
@@ -1449,7 +1449,7 @@ class tappy(Util):
 
                 for i in range(len(a))[1:]:
                     avg = np.average(a[i][:])
-                    std = 2.0*np.std(a[i][:])
+                    std = 2.0 * np.std(a[i][:])
                     a[i][(a[i][:] < (avg + std)) & (a[i][:] > (avg - std))] = 0.0
 
                 for index, items in enumerate(a):
