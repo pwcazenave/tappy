@@ -865,8 +865,7 @@ class Util:
         if num_hours >= 77554 * rayleigh_comp:
             speed_dict["M1"] = self.tidal_dict["M1"]
 
-        key_list = list(speed_dict.keys())
-        key_list.sort()
+        key_list = sorted(list(speed_dict.keys()))
 
         return (speed_dict, key_list)
 
