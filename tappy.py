@@ -69,8 +69,8 @@ debug_p = 0
 # opt_b=None  #string arg, default is undefined
 
 # ---other---
-deg2rad = np.pi/180.0
-rad2deg = 180.0/np.pi
+deg2rad = np.deg2rad(1)
+rad2deg = np.rad2deg(1)
 
 
 # ===utilities====================
