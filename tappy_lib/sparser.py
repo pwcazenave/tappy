@@ -88,7 +88,7 @@ def debug(ftn, txt):
 def fatal(ftn, txt):
     """If can't continue."""
     msg = "%s.%s:FATAL:%s\n" % (modname, ftn, txt)
-    raise SystemExit, msg
+    raise SystemExit(msg)
 
 def usage():
     """Prints the docstring."""
