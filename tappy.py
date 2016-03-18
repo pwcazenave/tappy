@@ -295,8 +295,7 @@ class Util:
 
         # This should be stream lined... needed to support
         # the larger sized vector when filling missing values.
-        return (zeta, nu, nup, nupp, kap_p, i, R, Q, T, jd, s, h, Nv, p, p1)
-
+        return zeta, nu, nup, nupp, kap_p, i, R, Q, T, jd, s, h, Nv, p, p1
 
     def which_constituents(self, length, package, rayleigh_comp=1.0):
         """
@@ -793,16 +792,16 @@ class Util:
             # Semidiurnal: N2, eta2
             # Shallow water: MN4, 2MN6
             # Need:
-            speed_dict["N2"] =  self.tidal_dict["N2"]
+            speed_dict["N2"] = self.tidal_dict["N2"]
             speed_dict["2MN6"] = self.tidal_dict["2MN6"]
             speed_dict["2Q1"] = self.tidal_dict["2Q1"]
-            speed_dict["Q1"] =  self.tidal_dict["Q1"]
-            speed_dict["J1"] =  self.tidal_dict["J1"]
+            speed_dict["Q1"] = self.tidal_dict["Q1"]
+            speed_dict["J1"] = self.tidal_dict["J1"]
             # Seems like KJ2 in Schureman is equivalent to eta2 in Foreman
             speed_dict["eta2"] = self.tidal_dict["eta2"]
             # Seems like KQ1 in Schureman is equivalent to ups1 in Foreman
             speed_dict["ups1"] = self.tidal_dict["ups1"]
-            speed_dict["NO1"] =  self.tidal_dict["NO1"]
+            speed_dict["NO1"] = self.tidal_dict["NO1"]
             speed_dict["MN4"] = self.tidal_dict["MN4"]
         if num_hours >= 764 * rayleigh_comp:
             # Slower than diurnal: Mm
@@ -810,8 +809,8 @@ class Util:
             # Semidiurnal: MNS2, mu2, L2
             # Shallow water: SN4
             # Need: ALPHA1
-            speed_dict["Mm"] =  self.tidal_dict["Mm"]
-            speed_dict["L2"] =  self.tidal_dict["L2"]
+            speed_dict["Mm"] = self.tidal_dict["Mm"]
+            speed_dict["L2"] = self.tidal_dict["L2"]
             speed_dict["mu2"] = self.tidal_dict["mu2"]
 #            speed_dict["ALPHA1"] = self.tidal_dict["ALPHA1"]
             speed_dict["MNS2"] = self.tidal_dict["MNS2"]
@@ -823,7 +822,7 @@ class Util:
             # Shallow water: SO1, MKS2, MSN3, SO3, MK4, SK4, 2MK6, MSK6
             # Need MSN3, SK4, 2MK6, MSK6
             speed_dict["Ssa"] = self.tidal_dict["Ssa"]
-            speed_dict["Mf"] =  self.tidal_dict["Mf"]
+            speed_dict["Mf"] = self.tidal_dict["Mf"]
             speed_dict["P1"] = self.tidal_dict["P1"]
             speed_dict["K2"] = self.tidal_dict["K2"]
             speed_dict["SO3"] = self.tidal_dict["SO3"]
@@ -835,7 +834,7 @@ class Util:
             speed_dict["MP1"] = self.tidal_dict["MP1"]
             # Seems like A19 in Schureman is equivalent to BET1 in Foreman
             # Can't find bet1 or beta1 in eXtended Doodson numbers
-            #speed_dict["beta1"] = self.tidal_dict["beta1"]
+            # speed_dict["beta1"] = self.tidal_dict["beta1"]
             speed_dict["MK4"] = self.tidal_dict["MK4"]
             speed_dict["MSN2"] = self.tidal_dict["MSN2"]
         if num_hours >= 4942 * rayleigh_comp:
@@ -888,7 +887,7 @@ class tappy(Util):
         self.ephemeris = kwds.pop('ephemeris')
         self.rayleigh = kwds.pop('rayleigh')
         self.print_vau_table = kwds.pop('print_vau_table')
-        self.missing_data= kwds.pop('missing_data')
+        self.missing_data = kwds.pop('missing_data')
         self.linear_trend = kwds.pop('linear_trend')
         self.remove_extreme = kwds.pop('remove_extreme')
         self.zero_ts = kwds.pop('zero_ts')
@@ -901,10 +900,10 @@ class tappy(Util):
         self.elevation = []
         self.dates = []
 
-    def open(self, filename, def_filename = None):
+    def open(self, filename, def_filename=None):
         # Read and parse data filename
         fp = sparser.ParseFileLineByLine(filename,
-                                         def_filename = def_filename,
+                                         def_filename=def_filename,
                                          mode='r')
         for line in fp:
             if 'water_level' not in list(line.parsed_dict.keys()):
@@ -912,19 +911,18 @@ class tappy(Util):
                 continue
             if 'datetime' in list(line.parsed_dict.keys()):
                 self.dates.append(line.parsed_dict['datetime'])
-            elif (
-                'year' in list(line.parsed_dict.keys()) and
-                'month' in list(line.parsed_dict.keys()) and
-                'day' in list(line.parsed_dict.keys()) and
-                'hour' in list(line.parsed_dict.keys())):
-                    line.parsed_dict.setdefault('minute', 0)
-                    line.parsed_dict.setdefault('second', 0)
-                    self.dates.append(datetime.datetime(line.parsed_dict['year'],
-                                                line.parsed_dict['month'],
-                                                line.parsed_dict['day'],
-                                                line.parsed_dict['hour'],
-                                                line.parsed_dict['minute'],
-                                                line.parsed_dict['second']))
+            elif ('year' in list(line.parsed_dict.keys()) and
+                  'month' in list(line.parsed_dict.keys()) and
+                  'day' in list(line.parsed_dict.keys()) and
+                  'hour' in list(line.parsed_dict.keys())):
+                line.parsed_dict.setdefault('minute', 0)
+                line.parsed_dict.setdefault('second', 0)
+                self.dates.append(datetime.datetime(line.parsed_dict['year'],
+                                                    line.parsed_dict['month'],
+                                                    line.parsed_dict['day'],
+                                                    line.parsed_dict['hour'],
+                                                    line.parsed_dict['minute'],
+                                                    line.parsed_dict['second']))
             else:
                 print('Warning: record %i did not parse the date and time according to the supplied definition file' % line.line_number)
                 print('Requires "year", "month", "day", and "hour" ("minute" and "second" are optional and default to zero) OR a Julian date/time')
@@ -1136,7 +1134,7 @@ class tappy(Util):
 
     def constituents(self):
         difference = np.asarray(self.dates[1:]) - np.asarray(self.dates[:-1])
-        if np.any(difference < datetime.timedelta(seconds = 0)):
+        if np.any(difference < datetime.timedelta(seconds=0)):
             print("Let's do the time warp again!")
             print("The date values reverse - they must be constantly increasing.")
             sys.exit()
@@ -1216,7 +1214,7 @@ class tappy(Util):
         return elev[delta:] + elev[:-delta]
 
     def filters(self, nstype, dates, elevation, pad_type=None):
-        delta_dt = datetime.timedelta(hours = 1)
+        delta_dt = datetime.timedelta(hours=1)
 
         # For the time being the filters and padding can only work on hourly data.
 
@@ -1233,7 +1231,7 @@ class tappy(Util):
 
             dt = dates[0]
             dates_filled = []
-            while dt <= (dates[-1] + datetime.timedelta(minutes = 1)):
+            while dt <= (dates[-1] + datetime.timedelta(minutes=1)):
                 dates_filled.append(dt)
                 dt = dt + delta_dt
             dates_filled = np.array(dates_filled)
@@ -1276,23 +1274,20 @@ class tappy(Util):
 
             # Might be able to use it it fill missing values.
 
-            # intial parameters
-            sz = (len(nelevation),) # size of array
-            x = -0.37727 # truth value
-
-            Q = (max(nelevation) - min(nelevation))/10000.0 # process variance
-            Q = 1.0e-2
+            # Initial parameters
+            sz = (len(nelevation),)  # size of array
 
             # allocate space for arrays
-            xhat = np.zeros(sz)      # a posteri estimate of x
-            P = np.zeros(sz)         # a posteri error estimate
-            xhatminus = np.zeros(sz) # a priori estimate of x
-            Pminus = np.zeros(sz)    # a priori error estimate
-            K = np.zeros(sz)         # gain or blending factor
+            xhat = np.zeros(sz)       # a posteri estimate of x
+            P = np.zeros(sz)          # a posteri error estimate
+            xhatminus = np.zeros(sz)  # a priori estimate of x
+            Pminus = np.zeros(sz)     # a priori error estimate
+            K = np.zeros(sz)          # gain or blending factor
 
-            R = np.var(nelevation)**0.5 # estimate of measurement variance, change to see effect
+            # Estimate of measurement variance, change to see effect
+            R = np.var(nelevation)**0.5
 
-            # intial guesses
+            # Initial guesses
             xhat[0] = np.average(nelevation)
             P[0] = 1.0
 
@@ -1324,7 +1319,9 @@ class tappy(Util):
             nslice = slice(half_kern, -half_kern)
 
             if self.pad_filters:
-                nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
+                nelevation, dates_filled, nslice = self.pad_f(nelevation,
+                                                              dates_filled,
+                                                              half_kern)
 
             relevation = 1.0 / 16.0 * (self.delta_diff(nelevation, 24, 25)[25:] * self.delta_diff(nelevation, 25, 25)[25:])**2
             return dates_filled[nslice], relevation[nslice]
@@ -1367,20 +1364,19 @@ class tappy(Util):
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
 
             kern = [i/30.0 for i in kern]
-            relevation = np.convolve(nelevation, kern, mode = 1)
+            relevation = np.convolve(nelevation, kern, mode=1)
             return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'usgs':
             # Filters out periods of 25 hours and less from self.elevation.
 
-            kern = [
-                  -0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
-                  -0.00537,-0.00641,-0.00735,-0.00811,-0.00864,
-                  -0.00887,-0.00872,-0.00816,-0.00714,-0.00560,
-                  -0.00355,-0.00097, 0.00213, 0.00574, 0.00980,
-                   0.01425, 0.01902, 0.02400, 0.02911, 0.03423,
-                   0.03923, 0.04399, 0.04842, 0.05237, 0.05576,
-                   0.05850, 0.06051, 0.06174, 0.06215, ]
+            kern = [-0.00027,-0.00114,-0.00211,-0.00317,-0.00427,
+                    -0.00537,-0.00641,-0.00735,-0.00811,-0.00864,
+                    -0.00887,-0.00872,-0.00816,-0.00714,-0.00560,
+                    -0.00355,-0.00097, 0.00213, 0.00574, 0.00980,
+                    0.01425, 0.01902, 0.02400, 0.02911, 0.03423,
+                    0.03923, 0.04399, 0.04842, 0.05237, 0.05576,
+                    0.05850, 0.06051, 0.06174, 0.06215]
 
             kern = np.concatenate((kern[:-1], kern[::-1]))
 
@@ -1391,7 +1387,7 @@ class tappy(Util):
             if self.pad_filters:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
 
-            relevation = np.convolve(nelevation, kern, mode = 1)
+            relevation = np.convolve(nelevation, kern, mode=1)
             return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'boxcar':
@@ -1403,7 +1399,7 @@ class tappy(Util):
             if self.pad_filters:
                 nelevation, dates_filled, nslice = self.pad_f(nelevation, dates_filled, half_kern)
 
-            relevation = np.convolve(nelevation, kern, mode = 1)
+            relevation = np.convolve(nelevation, kern, mode=1)
             return dates_filled[nslice], relevation[nslice]
 
         if nstype == 'mstha':
@@ -1412,12 +1408,12 @@ class tappy(Util):
 
             p0 = [1.0] * (len(s_list) * 2 + 2)
             p0[-2] = 0.0
-            new_dates = np.concatenate(([ndates[0] - datetime.timedelta(hours = blen)],
-                                    ndates,
-                                    [ndates[-1] + datetime.timedelta(hours = blen)]))
+            new_dates = np.concatenate(([ndates[0] - datetime.timedelta(hours=blen)],
+                                        ndates,
+                                        [ndates[-1] + datetime.timedelta(hours=blen)]))
             new_elevation = np.concatenate(([nelevation[0]],
-                                        nelevation,
-                                        [nelevation[-1]]))
+                                            nelevation,
+                                            [nelevation[-1]]))
             (new_dates, new_elev) = self.missing('fill', new_dates, new_elevation)
             slope = []
             new_dates = self.dates2jd(new_dates)
@@ -1475,11 +1471,11 @@ class tappy(Util):
                 ns_amplitude[key] = np.convolve(ns_amplitude[key], kern, mode='same')
                 print(key, np.average(ns_amplitude[key]))
                 ns_amplitude[key] = np.convolve(ns_amplitude[key],
-                                               kern,
-                                               mode = 1)
+                                                kern,
+                                                mode=1)
 
                 ns_phase[key] = np.arctan2(yt.imag, yt.real) * rad2deg
-                ns_phase[key] = np.convolve(ns_phase[key], kern, mode = 1)
+                ns_phase[key] = np.convolve(ns_phase[key], kern, mode=1)
 
                 new_list = [i for i in self.key_list if i != key]
                 everything_but = self.sum_signals(new_list,
@@ -1529,39 +1525,39 @@ class tappy(Util):
 
     def print_ephemeris_table(self):
         h_schureman = {
-            1600:279.857,
-            1700:280.624,
-            1800:280.407,
-            1900:280.190,
-            2000:279.973,
+            1600: 279.857,
+            1700: 280.624,
+            1800: 280.407,
+            1900: 280.190,
+            2000: 279.973,
         }
         s_schureman = {
-            1600:99.725,
-            1700:47.604,
-            1800:342.313,
-            1900:277.026,
-            2000:211.744,
+            1600: 99.725,
+            1700: 47.604,
+            1800: 342.313,
+            1900: 277.026,
+            2000: 211.744,
         }
         p1_schureman = {
-            1600:276.067,
-            1700:277.784,
-            1800:279.502,
-            1900:281.221,
-            2000:282.940,
+            1600: 276.067,
+            1700: 277.784,
+            1800: 279.502,
+            1900: 281.221,
+            2000: 282.940,
         }
         p_schureman = {
-            1600:7.417,
-            1700:116.501,
-            1800:225.453,
-            1900:334.384,
-            2000:83.294,
+            1600: 7.417,
+            1700: 116.501,
+            1800: 225.453,
+            1900: 334.384,
+            2000: 83.294,
         }
         N_schureman = {
-            1600:301.496,
-            1700:167.343,
-            1800:33.248,
-            1900:259.156,
-            2000:125.069,
+            1600: 301.496,
+            1700: 167.343,
+            1800: 33.248,
+            1900: 259.156,
+            2000: 125.069,
         }
 
         for d in range(1600, 2001, 100):
@@ -1598,15 +1594,16 @@ class tappy(Util):
             ephemeris=False,
             rayleigh=1.0,
             print_vau_table=False,
-            outputts = False,
-            outputxml = False,
+            outputts=False,
+            outputxml=False,
             missing_data='ignore',
             linear_trend=False,
             remove_extreme=False,
             zero_ts=None,
             filter=None,
             pad_filters=None,
-            include_inferred=True)
+            include_inferred=True
+        )
         t.dates = [datetime.datetime(i, 1, 1, 0, 0) +
                    (datetime.datetime(i+1, 1, 1, 0, 0) -
                    datetime.datetime(i, 1, 1, 0, 0)) / 2
@@ -1656,13 +1653,15 @@ class tappy(Util):
 if __name__ == '__main__':
 
     @baker.command()
-    def writeconfig(iniconffile = sys.argv[0] + '.ini'):
-        """OVERWRITES an ini style config file that holds all of default the command line options.
+    def writeconfig(iniconffile=sys.argv[0] + '.ini'):
+        """OVERWRITES an ini style config file that holds all of default the
+        command line options.
 
-        :param iniconffile: the file name of the ini file, defaults to 'script.ini'.
+        :param iniconffile: the file name of the ini file, defaults to
+        'script.ini'.
         """
 
-        baker.writeconfig(iniconffile = iniconffile)
+        baker.writeconfig(iniconffile=iniconffile)
 
     @baker.command()
     def prediction(
@@ -1700,9 +1699,9 @@ if __name__ == '__main__':
 
         u = Util(rin, phasein)
         u.dates = [datetime.datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S')]
-        delta = datetime.timedelta(minutes = int(interval))
+        delta = datetime.timedelta(minutes=int(interval))
         nextdate = u.dates[0] + delta
-        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S') + datetime.timedelta(minutes = 1)
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S') + datetime.timedelta(minutes=1)
         while nextdate < end_date:
             u.dates.append(nextdate)
             nextdate = u.dates[-1] + delta
@@ -1819,8 +1818,8 @@ if __name__ == '__main__':
             baker.readconfig(config)
 
         x = tappy(
-            outputts = outputts,
-            outputxml = outputxml,
+            outputts=outputts,
+            outputxml=outputxml,
             quiet=quiet,
             debug=debug,
             ephemeris=ephemeris,
@@ -1844,8 +1843,8 @@ if __name__ == '__main__':
 
         if x.missing_data == 'fail':
             x.dates_filled, x.elevation_filled = x.missing(x.missing_data,
-                                                        x.dates,
-                                                        x.elevation)
+                                                           x.dates,
+                                                           x.elevation)
 
         if x.remove_extreme:
             x.remove_extreme_values()
@@ -1858,30 +1857,34 @@ if __name__ == '__main__':
         else:
             ray = 1.0
         (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
-                                                        package,
-                                                        rayleigh_comp = ray)
+                                                          package,
+                                                          rayleigh_comp=ray)
         if x.zero_ts:
             # FIX - have to run the constituents package here in order to have
             # filters available , and then run AGAIN later on.
             x.constituents()
             print(len(x.dates), len(x.elevation))
-            x.dates_filled, x.elevation_filled = x.missing('fill', x.dates, x.elevation)
+            x.dates_filled, x.elevation_filled = x.missing('fill',
+                                                           x.dates,
+                                                           x.elevation)
             print(len(x.dates_filled), len(x.elevation_filled))
             x.dates, filtered = x.filters(zero_ts,
-                                        x.dates_filled,
-                                        x.elevation_filled)
+                                          x.dates_filled,
+                                          x.elevation_filled)
             print(len(x.dates), len(filtered))
             x.elevation = x.elevation_filled - filtered
             package = x.astronomic(x.dates)
             (x.zeta, x.nu, x.nup, x.nupp, x.kap_p, x.ii, x.R, x.Q, x.T, x.jd, x.s, x.h, x.N, x.p, x.p1) = package
             (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
-                                                            package,
-                                                            rayleigh_comp = ray)
+                                                              package,
+                                                              rayleigh_comp=ray)
 
         x.constituents()
 
         if x.missing_data == 'fill':
-            x.dates_filled, x.elevation_filled = x.missing(x.missing_data, x.dates, x.elevation)
+            x.dates_filled, x.elevation_filled = x.missing(x.missing_data,
+                                                           x.dates,
+                                                           x.elevation)
             x.write_file( x.dates_filled,
                             x.elevation_filled,
                             fname='outts_filled.dat')
@@ -1889,11 +1892,13 @@ if __name__ == '__main__':
         if x.filter:
             for item in x.filter.split(','):
                 if item in ['mstha', 'wavelet', 'cd', 'boxcar', 'usgs', 'doodson', 'lecolazet1', 'kalman', 'transform']:# 'lecolazet', 'godin', 'sfa']:
-                    filtered_dates, result = x.filters(item, x.dates, x.elevation)
+                    filtered_dates, result = x.filters(item,
+                                                       x.dates,
+                                                       x.elevation)
                     x.write_file(filtered_dates, result, fname='outts_filtered_%s.dat' % (item,))
             (x.speed_dict, x.key_list) = x.which_constituents(len(x.dates),
                                                             package,
-                                                            rayleigh_comp = ray)
+                                                            rayleigh_comp=ray)
 
         if not x.quiet:
             x.print_con()
@@ -1901,17 +1906,17 @@ if __name__ == '__main__':
         if x.outputts:
             for key in x.key_list:
                 x.write_file(x.dates,
-                            x.sum_signals([key], x.dates, x.speed_dict),
-                            fname="outts_%s.dat" % (key,))
+                             x.sum_signals([key], x.dates, x.speed_dict),
+                             fname="outts_%s.dat" % (key,))
                 x.write_file(x.dates,
-                            x.speed_dict[key]['FF'],
-                            fname="outts_ff_%s.dat" % (key,))
+                             x.speed_dict[key]['FF'],
+                             fname="outts_ff_%s.dat" % (key,))
             x.write_file(x.dates,
-                        x.sum_signals(x.key_list, x.dates, x.tidal_dict),
-                        fname="outts_total_tidal_components.dat")
+                         x.sum_signals(x.key_list, x.dates, x.tidal_dict),
+                         fname="outts_total_tidal_components.dat")
             x.write_file(x.dates,
-                        x.elevation,
-                        fname="outts_original.dat")
+                         x.elevation,
+                         fname="outts_original.dat")
 
         if x.outputxml:
             import xml.etree.ElementTree as et
@@ -1931,7 +1936,9 @@ if __name__ == '__main__':
                     if level and (not elem.tail or not elem.tail.strip()):
                         elem.tail = i
 
-            transfer = et.Element('Transfer', attrib={'ns0:noNamespaceSchemaLocation':'HC_Schema_V1.xsd', 'xmlns:ns0':'http://www.w3.org/2001/XMLSchema-instance'})
+            transfer = et.Element('Transfer',
+                                  attrib={'ns0:noNamespaceSchemaLocation':'HC_Schema_V1.xsd',
+                                          'xmlns:ns0':'http://www.w3.org/2001/XMLSchema-instance'})
 
             port = et.SubElement(transfer, 'Port')
 
@@ -1964,7 +1971,7 @@ if __name__ == '__main__':
             observationend = et.SubElement(port, 'observationEnd')
             observationend.text = x.dates[-1].isoformat()
 
-            ndict = {'Z0':0.0}
+            ndict = {'Z0': 0.0}
             for k in x.key_list + x.inferred_key_list:
                 ndict[k] = x.tidal_dict[k]['speed']
             klist = [i[0] for i in x.sortbyvalue(ndict)]
