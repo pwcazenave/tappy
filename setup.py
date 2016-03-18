@@ -56,7 +56,6 @@ license = "GPL-2"
 scripts=['tappy.py']
 packages=[
     'tappy_lib',
-    'tappy_lib/pad',
     ]
 
 install_requires=[
