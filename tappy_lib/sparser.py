@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 """
 NAME:
     sparser.py
@@ -90,7 +92,7 @@ def fatal(ftn, txt):
 
 def usage():
     """Prints the docstring."""
-    print __doc__
+    print(__doc__)
 
 
 # Will hold list of pyparsing constructs.
@@ -516,7 +518,7 @@ def main(pargs):
     input_file = sys.argv[1]
     fp = ParseFileLineByLine(input_file)
     for i in fp:
-        print i
+        print(i)
 
 
 #-------------------------
@@ -526,11 +528,11 @@ if __name__ == '__main__':
                  ['help', 'version', 'debug', 'bb='])
     for opt in opts:
         if opt[0] == '-h' or opt[0] == '--help':
-            print modname+": version="+__version__
+            print(modname+": version="+__version__)
             usage()
             sys.exit(0)
         elif opt[0] == '-v' or opt[0] == '--version':
-            print modname+": version="+__version__
+            print(modname+": version="+__version__)
             sys.exit(0)
         elif opt[0] == '-d' or opt[0] == '--debug':
             debug_p = 1
