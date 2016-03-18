@@ -190,6 +190,8 @@ class Util:
         self.phase = phase
 
     def sum_signals(self, skey_list, hours, speed_dict, amp=None, phase=None):
+        fpss = open('/tmp/ss.log', 'w')
+        fpss.write('{0}'.format(hours.shape))
         total = np.zeros(len(hours), dtype='f')
         if isinstance(hours[0], datetime.datetime):
             hours = self.dates2jd(hours)
@@ -204,7 +206,10 @@ class Util:
             else:
                 p = (phase - np.average(phase)) + self.phase[i]
             component = R*speed_dict[i]['FF']*np.cos(speed_dict[i]['speed']*hours - (p - speed_dict[i]['VAU']) * deg2rad)
+            fpss.write('{0}'.format(speed_dict[i]['FF'].shape))
+            fpss.write('{0}'.format(component.shape))
             total = total + component
+            fpss.write('{0}'.format(total.shape))
         return total
 
     def dates2jd(self, dates):
@@ -222,6 +227,11 @@ class Util:
         return jd
 
     def write_file(self, x, y, fname='-'):
+        fp = open('/tmp/tap.log', 'w')
+        fp.write('{0}'.format(x))
+        fp.write('{0}'.format(y))
+        fp.write('{0}'.format(y.shape))
+        fp.write(fname)
         if isinstance(y, dict):
             for key in list(y.keys()):
                 nfname = "%s_%s.dat" % (os.path.splitext(fname)[-2], key)
