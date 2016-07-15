@@ -18,7 +18,7 @@ Topic :: Software Development :: Libraries :: Python Modules
 
 setup(
     name = "TAPPY",
-    version = "0.10.1",
+    version = "0.10.2",
     author = "Tim Cera, Pierre Cazenave",
     author_email = "tim@cerazone.net, pica@pml.ac.uk",
     description = ("TAPPY is a tidal analysis package. It breaks down an hourly record of water levels into the component sine waves."),
